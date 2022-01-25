@@ -1,25 +1,170 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useRef, useState, useCallback } from 'react'
+import MapGL, {GeolocateControl } from 'react-map-gl'
+import DeckGL, { GeoJsonLayer } from "deck.gl";
+import Geocoder from "react-map-gl-geocoder";
+import {Editor, DrawPolygonMode, EditingMode} from 'react-map-gl-draw';
+import ControlPanel from './control-panel';
+import {getFeatureStyle, getEditHandleStyle} from './style';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+// import config from '../config'
+import 'mapbox-gl/dist/mapbox-gl.css'
+import "react-map-gl-geocoder/dist/mapbox-gl-geocoder.css"
+
+const TOKEN='pk.eyJ1IjoiZXNvbGJlcmc3NyIsImEiOiJja3l1ZmpqYWgwYzAxMnRxa3MxeHlvanVpIn0.co7_t1mXkXPRE8BOnOHJXQ'
+
+const geolocateStyle = {
+  float: 'left',
+  margin: '50px',
+  padding: '10px'
+};
+
+
+const App = () => {
+
+  // const [viewport, setViewPort ] = useState({
+  //   width: "100%",
+  //   height: 900,
+  //   latitude: 0,
+  //   longitude: 0,
+  //   zoom: 1
+  // })
+
+  const [viewport, setViewPort] = useState({
+    width: "100%",
+    height: 900,
+    latitude: 0,
+    longitude: 0,
+    zoom: 1,
+    transitionDuration: 100
+  })
+
+  const [searchResultLayer, setSearchResult ] = useState(null)
+  const [mode, setMode] = useState(null);
+  const [selectedFeatureIndex, setSelectedFeatureIndex] = useState(null);
+  const editorRef = useRef(null);
+
+  const onSelect = useCallback(options => {
+    setSelectedFeatureIndex(options && options.selectedFeatureIndex);
+  }, []);
+
+  const onDelete = useCallback(() => {
+    if (selectedFeatureIndex !== null && selectedFeatureIndex >= 0) {
+      editorRef.current.deleteFeatures(selectedFeatureIndex);
+    }
+  }, [selectedFeatureIndex]);
+
+  const onUpdate = useCallback(({editType}) => {
+    if (editType === 'addFeature') {
+      setMode(new EditingMode());
+    }
+  }, []);
+
+
+
+  const mapRef = useRef()
+
+  const handleOnResult = event => {
+    console.log(event.result)
+    setSearchResult( new GeoJsonLayer({
+        id: "search-result",
+        data: event.result.geometry,
+        getFillColor: [255, 0, 0, 128],
+        getRadius: 1000,
+        pointRadiusMinPixels: 10,
+        pointRadiusMaxPixels: 10
+      })
+    )
+  }
+
+  function getPolygons() {
+    let data = editorRef.current.getFeatures()
+    let result = data.map(currentElement => currentElement.geometry.coordinates[0]);
+
+    console.log(result)
+
+  }
+
+  const handleGeocoderViewportChange = viewport => {
+    const geocoderDefaultOverrides = { transitionDuration: 1000 };
+    console.log("Updating")
+
+    return setViewPort({
+      ...viewport,
+      ...geocoderDefaultOverrides
+    });
+  }
+
+  // useEffect(() => {
+  //   console.log({viewport})
+  // },[viewport])
+
+  const drawTools = (
+    <div className="mapboxgl-ctrl-top-left">
+      <div className="mapboxgl-ctrl-group mapboxgl-ctrl">
+        <button
+          className="mapbox-gl-draw_ctrl-draw-btn mapbox-gl-draw_polygon"
+          title="Polygon tool (p)"
+          onClick={() => setMode(new DrawPolygonMode())}
+        />
+        <button
+          className="mapbox-gl-draw_ctrl-draw-btn mapbox-gl-draw_trash"
+          title="Delete"
+          onClick={onDelete}
+        />
+      </div>
     </div>
   );
-}
 
-export default App;
+  const features = editorRef.current && editorRef.current.getFeatures();
+  const selectedFeature =
+    features && (features[selectedFeatureIndex] || features[features.length - 1]);
+
+
+  const _onViewportChange = viewport => setViewPort({...viewport, transitionDuration: 0 })
+
+  return (
+      <div style={{ height: '100vh'}}>
+      <button
+        style={{height: '30px', width : '100px'}}
+        onClick={() => getPolygons()}
+        >
+        Test Button
+        </button>
+
+        <h1 style={{textAlign: 'center', fontSize: '25px', fontWeight: 'bolder' }}>Use the search bar to find a location on the map</h1>
+      <MapGL
+        ref={mapRef}
+        {...viewport}
+        width="100%"
+        height="100%"
+        mapboxApiAccessToken={TOKEN}
+        mapStyle="mapbox://styles/mapbox/streets-v11"
+        onViewportChange={_onViewportChange}
+       >
+       <Geocoder
+            mapRef={mapRef}
+            onResult={handleOnResult}
+            onViewportChange={handleGeocoderViewportChange}
+            mapboxApiAccessToken={TOKEN}
+            position='top-left'
+          />
+          <Editor
+          ref={editorRef}
+          style={{width: '100%', height: '100%'}}
+          clickRadius={12}
+          mode={mode}
+          onSelect={onSelect}
+          onUpdate={onUpdate}
+          editHandleShape={'circle'}
+          featureStyle={getFeatureStyle}
+          editHandleStyle={getEditHandleStyle}
+        />
+          {drawTools}
+        </MapGL>
+        <ControlPanel polygon={selectedFeature} />
+
+      </div>
+     )
+    }
+
+    export default App;
