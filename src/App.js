@@ -21,14 +21,44 @@ const geolocateStyle = {
 
 const App = () => {
 
-  // const [viewport, setViewPort ] = useState({
-  //   width: "100%",
-  //   height: 900,
-  //   latitude: 0,
-  //   longitude: 0,
-  //   zoom: 1
-  // })
+  async function putPostData(method, url = '', data = {}) {
+    const response = await fetch(url, {
+      method: method, // *GET, POST, PUT, DELETE, etc.
+      mode: 'cors', // no-cors, *cors, same-origin
+      cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: 'same-origin', // include, *same-origin, omit
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      redirect: 'follow', // manual, *follow, error
+      referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+      body: JSON.stringify(data) // body data type must match "Content-Type" header
+    });
+    return response.json(); // parses JSON response into native JavaScript objects
+  }
 
+  function createSession(name) {
+    putPostData('POST', '/session', {"name": name, "regions": getPolygons()}).then(data => {
+      console.log("test:", data);
+    })
+  }
+
+  function searchAllSessions() {
+    fetch('/test', {method: 'GET'}).then(res => res.json()).then(data => {
+      console.log(data);
+      for (let row in data["returned"]) {
+        console.log(row)
+      }
+    })
+  }
+
+  function getSessionDetails(key) {
+    fetch(`/session/${key}`, {method: 'GET'}).then(res => res.json()).then(data => {
+      console.log(data);
+    })
+  }
+
+// ------------------------------------------
   const [viewport, setViewPort] = useState({
     width: "100%",
     height: 900,
@@ -41,7 +71,9 @@ const App = () => {
   const [searchResultLayer, setSearchResult ] = useState(null)
   const [mode, setMode] = useState(null);
   const [selectedFeatureIndex, setSelectedFeatureIndex] = useState(null);
+
   const editorRef = useRef(null);
+  const mapRef = useRef()
 
   const onSelect = useCallback(options => {
     setSelectedFeatureIndex(options && options.selectedFeatureIndex);
@@ -59,10 +91,6 @@ const App = () => {
     }
   }, []);
 
-
-
-  const mapRef = useRef()
-
   const handleOnResult = event => {
     console.log(event.result)
     setSearchResult( new GeoJsonLayer({
@@ -79,9 +107,8 @@ const App = () => {
   function getPolygons() {
     let data = editorRef.current.getFeatures()
     let result = data.map(currentElement => currentElement.geometry.coordinates[0]);
-
     console.log(result)
-
+    return result
   }
 
   const handleGeocoderViewportChange = viewport => {
@@ -93,10 +120,6 @@ const App = () => {
       ...geocoderDefaultOverrides
     });
   }
-
-  // useEffect(() => {
-  //   console.log({viewport})
-  // },[viewport])
 
   const drawTools = (
     <div className="mapboxgl-ctrl-top-left">
@@ -118,8 +141,6 @@ const App = () => {
   const features = editorRef.current && editorRef.current.getFeatures();
   const selectedFeature =
     features && (features[selectedFeatureIndex] || features[features.length - 1]);
-
-
   const _onViewportChange = viewport => setViewPort({...viewport, transitionDuration: 0 })
 
   return (
@@ -130,6 +151,27 @@ const App = () => {
         >
         Test Button
         </button>
+
+        <button
+          style={{height: '30px', width : '100px'}}
+          onClick={() => searchAllSessions()}
+          >
+          Search Button
+          </button>
+
+        <button
+          style={{height: '30px', width : '100px'}}
+          onClick={() => getSessionDetails("1-8235-aaaaa")}
+          >
+          API Get Button
+          </button>
+
+          <button
+            style={{height: '30px', width : '100px'}}
+            onClick={() => createSession("erics")}
+            >
+            API POST username Button
+            </button>
 
         <h1 style={{textAlign: 'center', fontSize: '25px', fontWeight: 'bolder' }}>Use the search bar to find a location on the map</h1>
       <MapGL
