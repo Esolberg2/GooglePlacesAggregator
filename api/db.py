@@ -17,10 +17,10 @@ def query(sql, args):
 # print(query("""DELETE FROM sessions where sessionID = 4"""))
 
 
-results = query("select * from sessions", [])
-print(results)
-for r in results["returned"]:
-    print(r)
+# results = query("select * from sessions", [])
+# print(results)
+# for r in results["returned"]:
+#     print(r)
 
 
 #
