@@ -92,8 +92,14 @@ const App = () => {
     })
   }
 
+  // function getValue() {
+  //   putPostData('POST', `/get/test`, {"searchRegions": getPolygons(), "searchKey": "1234512"}).then(data => {
+  //     console.log(data)
+  //   })
+  // }
+
   function getValue(value) {
-    fetch(`/get/test/${value}`, {method: 'GET'}).then(res => res.text()).then(data => {
+    fetch(`/get/test`, {method: 'GET'}).then(res => res.text()).then(data => {
       console.log(data);
     })
   }

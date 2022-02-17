@@ -5,26 +5,37 @@ from flask_session import Session
 import json
 from db import query
 import time
+import math
 import numpy as np
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 from shapely.geometry.multipolygon import MultiPolygon
 from shapely.ops import unary_union
+from shapely.ops import polygonize
+from shapely.geometry import MultiPoint
+from coordinateFunctions import makeGrid, knn, flatToMatrixIndex
+from sessionDataManager import initData, getSearchedCoords, getUnsearchedCoords, saveDataToFile
+import matplotlib.pyplot as plt
 
 
 app = Flask(__name__)
-
 app.config['SECRET_KEY'] = 'mysecret'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 app.config['SESSION_TYPE'] = "sqlalchemy"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 app.config['SESSION_SQLALCHEMY'] = db
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
 sess = Session(app)
 
 # db.create_all()
+# RESOLUTION = 1
+# LAT_CONVERSION = 69
+# LON_CONVERSION = 54.6
+# LATSTEP = 1/(LAT_CONVERSION/RESOLUTION)
+# LONSTEP = 1/(LON_CONVERSION/RESOLUTION)
+
 
 def custom_error(status_code, message):
     return make_response(jsonify({"message": message}), status_code)
@@ -39,6 +50,109 @@ def custom_error(status_code, message):
 #     return session.get("test")[value]
 
 
+# @app.route('/get/test', methods=['POST'])
+
+def getAdjacent(r, c, rows, columns):
+    #           right  left    down
+    options = [(0,1), (0,-1), (-1,0), (1,0)]
+    adjacent = []
+    for opt in options:
+        rowOffset = opt[0]
+        colOffset = opt[1]
+
+        if 0 <= r + rowOffset < rows and 0 <= c + colOffset < columns:
+            adjacent.append((r + rowOffset, c + colOffset))
+    # adjacent = [(r+o[0], c+o[1]) for o in options if r+o[0] < rows and c+o[1] < columns]
+    return adjacent
+
+
+def bfsFlipNodes(center, maxDist, searchKey):
+    searchCoordsList = getSearchedCoords(searchKey)
+    unsearchedData = getUnsearchedCoords(searchKey)
+
+    # used to lookup the index within the coord matrix
+    unsearchedCoordsMap = unsearchedData["matrixMap"]
+    coordsMatrix = unsearchedData["unsearchedCoordsMatrix"]
+
+
+    # print("unsearchedCoordsMap", unsearchedCoordsMap.keys())
+    # print("center", center)
+    # print(unsearchedCoordsMap[tuple(center)])
+    # print(coordsMatrix[0])
+    matrixIndex = flatToMatrixIndex(17, coordsMatrix)
+    # print("matrix index", matrixIndex)
+    # print("matrix value", coordsMatrix[matrixIndex[0]][matrixIndex[1]])
+    q = [matrixIndex]
+    d = 0
+    nodesInCircle = []
+    while q:
+        curNodeKey = q.pop(0)
+        curNode = coordsMatrix[curNodeKey[0]][curNodeKey[1]]
+        # curNodeMatrixIndex = unsearchedCoordsMap[curNodeKey]
+
+        adjacent = getAdjacent(curNodeKey[0], curNodeKey[1], len(coordsMatrix), len(coordsMatrix[0]))
+
+        # adjacent = [node for node in curNode["adjacent"].values() if node is not None]
+
+        print("adjacent", adjacent)
+        # for n in adjacent:
+        #     print("dist input", center, n)
+        #     if math.dist(center, n) < maxDist and coordsMatrix[n[0]][n[1]]:
+        #         q.append(n)
+
+    #     # curNode["status"] = 1
+    #     nodesInCircle.append(curNodeKey)
+    # print("nodesInCircle", nodesInCircle)
+
+# def bfsFlipNodes(center, maxDist, searchSession):
+#     q = [tuple(center)]
+#     d = 0
+#     nodesInCircle = []
+#     while q:
+#         curNodeKey = q.pop(0)
+#         curNode = unsearchedCoordsMap[curNodeKey]
+#         adjacent = [node for node in curNode["adjacent"].values() if node is not None]
+#         print("adjacent", adjacent)
+#         for n in adjacent:
+#             print("dist input", center, n)
+#             if math.dist(center, n) < maxDist and curNode["status"] == 0:
+#                 q.append(n)
+#
+#         curNode["status"] = 1
+#         nodesInCircle.append(curNodeKey)
+#     print(nodesInCircle)
+
+@app.route('/get/test')
+def get_test():
+    # s = session.get("1234512")
+    searchKey = "1234512"
+    searchedPoints = np.array(getSearchedCoords(searchKey))
+    unsearchedData = getUnsearchedCoords(searchKey)
+    nextPoint = knn(searchedPoints, unsearchedData)
+    print(nextPoint)
+    print(unsearchedData["unsearchedCoordsMatrix"][nextPoint[0]][nextPoint[1]])
+    # bfsFlipNodes(nextPoint, .1, "1234512")
+    return {"test": "True"}
+
+    # args = request.json
+    # if "searchKey" not in args or "searchRegions" not in args:
+    #     return custom_error(400, "searchKey and searchRegions are required inputs")
+    #
+    # searchKey = args["searchKey"]
+    # searchRegions = args["searchRegions"]
+    #
+    # output = makeGrid(searchRegions)
+    # fig, ax = plt.subplots()
+    #
+    # xus, yus = zip(*output["unsearchedCoordinates"])
+    #
+    # ax.scatter(xus, yus)
+    # xs, ys = zip(*output["searchedCoordinates"])
+    #
+    # ax.scatter(xs, ys)
+    #
+    # plt.show()
+    # return {"test": "True"}
 
 set_user_search_parser = reqparse.RequestParser()
 set_user_search_parser.add_argument('searchRegions')
@@ -57,63 +171,16 @@ def abort_if_key_exists(searchKey):
     return False
 
 # gets called by any endpoint that needs to return a coordinate to be used in the next search.
-def chooseNextSearch(unsearchedCoords, searchedCoords, searchRegions):
+# def chooseNextSearch(unsearchedCoords, searchedCoords, searchRegions):
+#     # uses the search region as a boundry, and selects from the unsearched points.
+#     pass
+
+def chooseNextSearch(searchKey):
     # uses the search region as a boundry, and selects from the unsearched points.
+    searchState = session.get(searchKey)
+    unsearchedCoordinates = searchState["unsearchedCoordinates"]
+    searchedCoordinates = searchState["searchedCoordinates"]
     pass
-
-
-def polygonizeSelfIntersects(polygon):
-    be = polygon.exterior
-    mls = be.intersection(be)
-    polygons = polygonize(mls)
-    return polygons
-
-def cleanPolygons(searchRegions):
-    searchPolygons = []
-    for region in searchRegions:
-        regionPoly = Polygon(region)
-        if not regionPoly.is_valid:
-            print("self intersect found")
-            split_polys = polygonizeSelfIntersects(regionPoly)
-            searchPolygons.extend(split_polys)
-        else:
-            searchPolygons.append(regionPoly)
-
-    searchPolygons = unary_union(searchPolygons)
-    return searchPolygons
-
-def makeGrid(searchRegions):
-    polys = MultiPolygon(searchRegions)
-    resolution = 1
-    LAT_CONVERSION = 69
-    LON_CONVERSION = 54.6
-    latStep = 1/(LAT_CONVERSION/resolution)
-    lonStep = 1/(LON_CONVERSION/resolution)
-    output = {"multipolygon": polys, "unsearched": [], "searched": []}
-    xmin, ymin, xmax, ymax = polys.bounds
-    x = np.arange(xmin, xmax, lonStep)
-    y = np.arange(ymin, ymax, latStep)
-
-    # add border to searched points -- probably not needed
-    # top = [(xCoord, ymax) for xCoord in x]
-    # bottom = [(xCoord, ymin) for xCoord in x]
-    # left = [(xmin, yCoord) for yCoord in y]
-    # right = [(xmax, yCoord) for yCoord in y]
-    # border = MultiPoint(top + bottom + left + right)
-
-    points = MultiPoint(np.transpose([np.tile(x, len(y)), np.repeat(y, len(x))]))
-
-    output["searched"] = points.difference(polys)
-    for p in polys:
-        xmin, ymin, xmax, ymax = p.bounds  # -4.85674599573635, 37.174925051829, -4.85258684662671, 37.1842384372115
-
-        # x = np.arange(xmin, xmax, lonStep)  # array([-4.857, -4.856, -4.855, -4.854, -4.853])
-        # y = np.arange(ymin, ymax, latStep)  # array([37.174, 37.175, 37.176, 37.177, 37.178, 37.179, 37.18 , 37.181, 37.182, 37.183, 37.184, 37.185])
-        # points = MultiPoint(np.transpose([np.tile(x, len(y)), np.repeat(y, len(x))]))
-        # print(points)
-        gridPoly = {"polygon": p, "points": points.intersection(p)}
-        output["unsearched"].append(gridPoly)
-    return output
 
 @app.route('/setUserSearch', methods=['POST'])
 def set_user_search():
@@ -136,63 +203,11 @@ def set_user_search():
 
     # for region in searchRegions:
 
-
-    maxX = float("-inf")
-    minX = float("inf")
-    maxY = float("-inf")
-    minY = float("inf")
-    polys = []
-
-    for region in searchRegions:
-        polys.append(Polygon(region))
-        for point in region:
-            maxX = point[0] if point[0] > maxX else maxX
-            maxY = point[1] if point[1] > maxY else maxY
-
-            minX = point[0] if point[0] < minX else minX
-            minY = point[1] if point[1] < minY else minY
-    #
-    resolution = .1
-    # topRight = (maxX, maxY)
-    # bottomLeft = (minX, minY)
-    # unionedPolys = unary_union(polys)
-    # unionedPolys = unionedPolys if isinstance(unionedPolys, list) else [unionedPolys]
-    # print(list(unionedPolys[0].exterior.coords))
-    polygon = MultiPolygon(unionedPolys)
-
-
-    # print("unionedPolys:", polygon.contains(Point(-71.31497353789433, 42.3770134669321)))
-
-    LAT_CONVERSION = 69
-    LON_CONVERSION = 54.6
-
-    xBase = [minX]
-    yBase = [minY]
-
-    latDelta = 1/(LAT_CONVERSION/resolution)
-    lonDelta = 1/(LON_CONVERSION/resolution)
-
-    while xBase[-1] < maxX:
-        xBase.append(xBase[-1]+lonDelta)
-
-    while yBase[-1] < maxY:
-        yBase.append(yBase[-1] +latDelta)
-
-    xBase = np.array(xBase)
-    yBase = np.array(yBase)
-
-    xx, yy = np.meshgrid(xBase, yBase)
-
-    unsearchedCoords = []
-    for i, row in enumerate(xx):
-        for j, element in enumerate(row):
-            if polygon.contains(Point(element, yy[i][j])):
-                unsearchedCoords.append((element, yy[i][j]))
-
-    print("run")
-
-    session[searchKey] = {"searchRegions": searchRegions, "unsearchedCoords": unsearchedCoords, "searchedCoords": []}
-    return jsonify(session.get(searchKey))
+    output = makeGrid(searchRegions)
+    initData(searchKey, output)
+    saveDataToFile()
+    return {"test": "True"}
+    # return jsonify(session.get(searchKey))
 
 
 @app.route('/getUserSearch/<string:searchKey>', methods=['GET'])
