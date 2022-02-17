@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from shapely.ops import unary_union
 from shapely.ops import polygonize
+from shapely.geometry import LineString
+from shapely.ops import substring
+from coordinateFunctions import makeGrid
 # searchRegions = [
 # [[-72.71530577920957, 42.54129792331209], [-71.3183020370349, 42.603503565624635], [-72.32544426976574, 41.37687949983432], [-71.4157674143961, 43.174778261573856], [-72.71530577920957, 42.54129792331209]]
 # # [[-71.9375074746647, 42.474237853288], [-71.98446280001215, 42.4946071004365], [-72.01208357962797, 42.451824021752465], [-71.9375074746647, 42.474237853288]]
@@ -36,58 +39,75 @@ searchRegions = [
 [[-71.15435366339125, 42.5100005766435], [-71.0708860072338, 42.302215908013196], [-70.63208461486391, 42.332193417174715], [-70.69408915943784, 42.65749563868442], [-71.15435366339125, 42.5100005766435]]
 ]
 
-def polygonizeSelfIntersects(polygon):
-    be = polygon.exterior
-    mls = be.intersection(be)
-    polygons = polygonize(mls)
-    return polygons
-
-def cleanPolygons(searchRegions):
-    searchPolygons = []
-    for region in searchRegions:
-        regionPoly = Polygon(region)
-        if not regionPoly.is_valid:
-            print("self intersect found")
-            split_polys = polygonizeSelfIntersects(regionPoly)
-            searchPolygons.extend(split_polys)
-        else:
-            searchPolygons.append(regionPoly)
-
-    searchPolygons = unary_union(searchPolygons)
-    return searchPolygons
-
-def makeGrid(searchRegions):
-    polys = MultiPolygon(searchRegions)
-    resolution = 1
-    LAT_CONVERSION = 69
-    LON_CONVERSION = 54.6
-    latStep = 1/(LAT_CONVERSION/resolution)
-    lonStep = 1/(LON_CONVERSION/resolution)
-    output = {"multipolygon": polys, "unsearched": [], "searched": []}
-    xmin, ymin, xmax, ymax = polys.bounds
-    x = np.arange(xmin, xmax, lonStep)
-    y = np.arange(ymin, ymax, latStep)
-
-    # add border to searched points -- probably not needed
-    # top = [(xCoord, ymax) for xCoord in x]
-    # bottom = [(xCoord, ymin) for xCoord in x]
-    # left = [(xmin, yCoord) for yCoord in y]
-    # right = [(xmax, yCoord) for yCoord in y]
-    # border = MultiPoint(top + bottom + left + right)
-
-    points = MultiPoint(np.transpose([np.tile(x, len(y)), np.repeat(y, len(x))]))
-
-    output["searched"] = points.difference(polys)
-    for p in polys:
-        xmin, ymin, xmax, ymax = p.bounds  # -4.85674599573635, 37.174925051829, -4.85258684662671, 37.1842384372115
-
-        # x = np.arange(xmin, xmax, lonStep)  # array([-4.857, -4.856, -4.855, -4.854, -4.853])
-        # y = np.arange(ymin, ymax, latStep)  # array([37.174, 37.175, 37.176, 37.177, 37.178, 37.179, 37.18 , 37.181, 37.182, 37.183, 37.184, 37.185])
-        # points = MultiPoint(np.transpose([np.tile(x, len(y)), np.repeat(y, len(x))]))
-        # print(points)
-        gridPoly = {"polygon": p, "points": points.intersection(p)}
-        output["unsearched"].append(gridPoly)
-    return output
+# def polygonizeSelfIntersects(polygon):
+#     be = polygon.exterior
+#     mls = be.intersection(be)
+#     polygons = polygonize(mls)
+#     return polygons
+#
+# def cleanPolygons(searchRegions):
+#     searchPolygons = []
+#     for region in searchRegions:
+#         regionPoly = Polygon(region)
+#         if not regionPoly.is_valid:
+#             print("self intersect found")
+#             split_polys = polygonizeSelfIntersects(regionPoly)
+#             searchPolygons.extend(split_polys)
+#         else:
+#             searchPolygons.append(regionPoly)
+#
+#     searchPolygons = unary_union(searchPolygons)
+#     return searchPolygons
+#
+# def makeGrid(searchRegions):
+#     polys = MultiPolygon(searchRegions)
+#     resolution = 1
+#     LAT_CONVERSION = 69
+#     LON_CONVERSION = 54.6
+#     latStep = 1/(LAT_CONVERSION/resolution)
+#     lonStep = 1/(LON_CONVERSION/resolution)
+#     output = {"multipolygon": polys, "unsearched": [], "searched": []}
+#     xmin, ymin, xmax, ymax = polys.bounds
+#     x = np.arange(xmin, xmax, lonStep)
+#     y = np.arange(ymin, ymax, latStep)
+#
+#     # add border to searched points -- probably not needed
+#     # top = [(xCoord, ymax) for xCoord in x]
+#     # bottom = [(xCoord, ymin) for xCoord in x]
+#     # left = [(xmin, yCoord) for yCoord in y]
+#     # right = [(xmax, yCoord) for yCoord in y]
+#     # border = MultiPoint(top + bottom + left + right)
+#
+#     points = MultiPoint(np.transpose([np.tile(x, len(y)), np.repeat(y, len(x))]))
+#
+#     # output["searched"] = points.difference(polys)
+#     # border = MultiPoint()
+#     border = []
+#     for p in polys:
+#         xmin, ymin, xmax, ymax = p.bounds  # -4.85674599573635, 37.174925051829, -4.85258684662671, 37.1842384372115
+#         line = p.exterior
+#         dist = 0
+#         borderPoints = []
+#         while dist < line.length:
+#             newPoint = line.interpolate(dist)
+#             borderPoints.append(newPoint)
+#             dist += latStep
+#
+#         border.extend(borderPoints)
+#         # border = unary_union([MultiPoint(borderPoints), border])
+#         # print("borderPoints", borderPoints)
+#         # print("newline", border)
+#
+#
+#         # x = np.arange(xmin, xmax, lonStep)  # array([-4.857, -4.856, -4.855, -4.854, -4.853])
+#         # y = np.arange(ymin, ymax, latStep)  # array([37.174, 37.175, 37.176, 37.177, 37.178, 37.179, 37.18 , 37.181, 37.182, 37.183, 37.184, 37.185])
+#         # points = MultiPoint(np.transpose([np.tile(x, len(y)), np.repeat(y, len(x))]))
+#         # print(points)
+#         print("---")
+#         gridPoly = {"polygon": p, "points": points.intersection(p)}
+#         output["unsearched"].append(gridPoly)
+#     output["searched"] = MultiPoint(border)
+#     return output
 
 # def makeGrid():
 #     p = Polygon([(-73.27729481721627, 42.73420736409423), (-71.63240648949409, 42.023352129138104), (-71.07292066373826, 41.765141748583765), (-70.5246245544977, 42.68487403458647), (-73.27729481721627, 42.73420736409423)])
@@ -103,10 +123,10 @@ def makeGrid(searchRegions):
 
 output = makeGrid(cleanPolygons(searchRegions))
 fig, ax = plt.subplots()
-for out in output["unsearched"]:
-    xs = [point.x for point in out["points"]]
-    ys = [point.y for point in out["points"]]
-    ax.scatter(xs, ys)
+# for out in output["unsearched"]:
+#     xs = [point.x for point in out["points"]]
+#     ys = [point.y for point in out["points"]]
+#     ax.scatter(xs, ys)
 
 xs = [point.x for point in output["searched"]]
 ys = [point.y for point in output["searched"]]
