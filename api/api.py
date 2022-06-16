@@ -12,22 +12,42 @@ from shapely.geometry.polygon import Polygon
 from shapely.geometry.multipolygon import MultiPolygon
 from shapely.ops import unary_union
 from shapely.ops import polygonize
-from shapely.geometry import MultiPoint
-from coordinateFunctions import makeGrid, knn, flatToMatrixIndex
-from sessionDataManager import initData, getSearchedCoords, getUnsearchedCoords, saveDataToFile
+from shapely.geometry import MultiPoint, mapping, shape, asShape
+from coordinateFunctions import makeGrid, knn
+from fiassKnn import FaissKNeighbors
+# from sessionDataManager import initData, getSearchedCoords, getUnsearchedCoords, saveDataToFile
 import matplotlib.pyplot as plt
+import geopandas as gpd
+import time
+import redis
+import pickle
+import bz2
+# import shapely.speedups
+# shapely.speedups.enable()
+
+r = redis.Redis(host= 'localhost',port= '6379')
+#
+# redis.set('mykey', 'Hello from Python!')
+# value = redis.get('mykey')
+# print(value)
+#
+# redis.zadd('vehicles', {'car' : 0})
+# redis.zadd('vehicles', {'bike' : 0})
+# vehicles = redis.zrange('vehicles', 0, -1)
+# print(vehicles)
+
 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'mysecret'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
-app.config['SESSION_TYPE'] = "sqlalchemy"
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///searches.sqlite3'
+# app.config['SESSION_TYPE'] = "sqlalchemy"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
-app.config['SESSION_SQLALCHEMY'] = db
+# app.config['SESSION_SQLALCHEMY'] = db
 
-sess = Session(app)
+# sess = Session(app)
 
 # db.create_all()
 # RESOLUTION = 1
@@ -39,120 +59,6 @@ sess = Session(app)
 
 def custom_error(status_code, message):
     return make_response(jsonify({"message": message}), status_code)
-
-# @app.route('/set/test/<string:value>')
-# def set_test(value):
-#     session['test'] = {value: {}}
-#     return value
-#
-# @app.route('/get/test/<string:value>')
-# def get_test(value):
-#     return session.get("test")[value]
-
-
-# @app.route('/get/test', methods=['POST'])
-
-def getAdjacent(r, c, rows, columns):
-    #           right  left    down
-    options = [(0,1), (0,-1), (-1,0), (1,0)]
-    adjacent = []
-    for opt in options:
-        rowOffset = opt[0]
-        colOffset = opt[1]
-
-        if 0 <= r + rowOffset < rows and 0 <= c + colOffset < columns:
-            adjacent.append((r + rowOffset, c + colOffset))
-    # adjacent = [(r+o[0], c+o[1]) for o in options if r+o[0] < rows and c+o[1] < columns]
-    return adjacent
-
-
-def bfsFlipNodes(center, maxDist, searchKey):
-    searchCoordsList = getSearchedCoords(searchKey)
-    unsearchedData = getUnsearchedCoords(searchKey)
-
-    # used to lookup the index within the coord matrix
-    unsearchedCoordsMap = unsearchedData["matrixMap"]
-    coordsMatrix = unsearchedData["unsearchedCoordsMatrix"]
-
-
-    # print("unsearchedCoordsMap", unsearchedCoordsMap.keys())
-    # print("center", center)
-    # print(unsearchedCoordsMap[tuple(center)])
-    # print(coordsMatrix[0])
-    matrixIndex = flatToMatrixIndex(17, coordsMatrix)
-    # print("matrix index", matrixIndex)
-    # print("matrix value", coordsMatrix[matrixIndex[0]][matrixIndex[1]])
-    q = [matrixIndex]
-    d = 0
-    nodesInCircle = []
-    while q:
-        curNodeKey = q.pop(0)
-        curNode = coordsMatrix[curNodeKey[0]][curNodeKey[1]]
-        # curNodeMatrixIndex = unsearchedCoordsMap[curNodeKey]
-
-        adjacent = getAdjacent(curNodeKey[0], curNodeKey[1], len(coordsMatrix), len(coordsMatrix[0]))
-
-        # adjacent = [node for node in curNode["adjacent"].values() if node is not None]
-
-        print("adjacent", adjacent)
-        # for n in adjacent:
-        #     print("dist input", center, n)
-        #     if math.dist(center, n) < maxDist and coordsMatrix[n[0]][n[1]]:
-        #         q.append(n)
-
-    #     # curNode["status"] = 1
-    #     nodesInCircle.append(curNodeKey)
-    # print("nodesInCircle", nodesInCircle)
-
-# def bfsFlipNodes(center, maxDist, searchSession):
-#     q = [tuple(center)]
-#     d = 0
-#     nodesInCircle = []
-#     while q:
-#         curNodeKey = q.pop(0)
-#         curNode = unsearchedCoordsMap[curNodeKey]
-#         adjacent = [node for node in curNode["adjacent"].values() if node is not None]
-#         print("adjacent", adjacent)
-#         for n in adjacent:
-#             print("dist input", center, n)
-#             if math.dist(center, n) < maxDist and curNode["status"] == 0:
-#                 q.append(n)
-#
-#         curNode["status"] = 1
-#         nodesInCircle.append(curNodeKey)
-#     print(nodesInCircle)
-
-@app.route('/get/test')
-def get_test():
-    # s = session.get("1234512")
-    searchKey = "1234512"
-    searchedPoints = np.array(getSearchedCoords(searchKey))
-    unsearchedData = getUnsearchedCoords(searchKey)
-    nextPoint = knn(searchedPoints, unsearchedData)
-    print(nextPoint)
-    print(unsearchedData["unsearchedCoordsMatrix"][nextPoint[0]][nextPoint[1]])
-    # bfsFlipNodes(nextPoint, .1, "1234512")
-    return {"test": "True"}
-
-    # args = request.json
-    # if "searchKey" not in args or "searchRegions" not in args:
-    #     return custom_error(400, "searchKey and searchRegions are required inputs")
-    #
-    # searchKey = args["searchKey"]
-    # searchRegions = args["searchRegions"]
-    #
-    # output = makeGrid(searchRegions)
-    # fig, ax = plt.subplots()
-    #
-    # xus, yus = zip(*output["unsearchedCoordinates"])
-    #
-    # ax.scatter(xus, yus)
-    # xs, ys = zip(*output["searchedCoordinates"])
-    #
-    # ax.scatter(xs, ys)
-    #
-    # plt.show()
-    # return {"test": "True"}
 
 set_user_search_parser = reqparse.RequestParser()
 set_user_search_parser.add_argument('searchRegions')
@@ -170,44 +76,131 @@ def abort_if_key_exists(searchKey):
         return custom_error(400, "a search with this name already exists")
     return False
 
-# gets called by any endpoint that needs to return a coordinate to be used in the next search.
-# def chooseNextSearch(unsearchedCoords, searchedCoords, searchRegions):
-#     # uses the search region as a boundry, and selects from the unsearched points.
-#     pass
 
-def chooseNextSearch(searchKey):
-    # uses the search region as a boundry, and selects from the unsearched points.
-    searchState = session.get(searchKey)
-    unsearchedCoordinates = searchState["unsearchedCoordinates"]
-    searchedCoordinates = searchState["searchedCoordinates"]
-    pass
+def checksum(obj):
+    JSON = js2py.eval_js('JSON')
+    msg = JSON.stringify(dictionary["1"]["searched"]);
+    msg = msg.encode(encoding='utf-8')
+    hash = hashlib.md5(msg)
+    return hash.hexdigest()
 
+
+# loads an existing search from a user file.
+# might be useable to add regions to existing search by modifying the
+# user data file to include a new set of points.
+@app.route('/loadSearch', methods=['POST'])
+def load_search():
+    print("running loadSearch")
+    args = request.json
+    redis_save(args["searchID"], args["searched"], args["unsearched"])
+    return True
+
+def redisEncode(obj):
+    pickled_object = pickle.dumps(obj)
+    bz2Obj = bz2.compress(pickled_object)
+    return bz2Obj
+
+def redisDecode(obj):
+    bz2ObjDecom = bz2.decompress(obj)
+    pickled_object_decom = pickle.loads(bz2ObjDecom)
+    return pickled_object_decom
+
+def redis_save(searchID, searched, unsearched):
+    r.set(str(searchID), redisEncode({"searched": searched, "unsearched": unsearched}))
+    return True
+
+def redis_get(searchID):
+    return redisDecode(r.get(str(searchID)))
+
+
+# only used for brand new searches
 @app.route('/setUserSearch', methods=['POST'])
 def set_user_search():
-
+    print("running setUserSearch")
     args = request.json
-    if "searchKey" not in args or "searchRegions" not in args:
-        return custom_error(400, "searchKey and searchRegions are required inputs")
-
-    searchKey = args["searchKey"]
+    print(args)
     searchRegions = args["searchRegions"]
-    print("")
-    print("")
-    print(searchRegions)
-    print("")
-    print("")
 
-    # error = abort_if_key_exists(searchKey)
-    # if error:
-    #     return error
-
-    # for region in searchRegions:
-
+    # returns shapely geometries
     output = makeGrid(searchRegions)
-    initData(searchKey, output)
-    saveDataToFile()
-    return {"test": "True"}
-    # return jsonify(session.get(searchKey))
+
+    # Fiass KNN
+    # knn = FaissKNeighbors()
+
+    s = output["searchedCoords"].__geo_interface__["coordinates"]
+    us = output["unsearchedCoords"].__geo_interface__["coordinates"]
+
+    # knn.fit(s, us)
+    # # furthestNearest = knn.predict(us).tolist()
+    # furthestNearest = knn.predict(us)
+
+    # sklearn KNN
+    furthestNearest = knn(s, us)
+
+    # add error if searchID is found.  Seting a search should always be net new.
+    assert not args["searchID"]
+    searchID = query('''insert into searchIDs values(Null)''', [])
+    assert redis_save(searchID["lastRowID"], s, us)
+
+    print("-- searchID", searchID)
+
+    return {
+        "searchedCoords": s,
+        "unsearchedCoords": us,
+        "furthestNearest": [*furthestNearest],
+        "searchID": searchID
+        }
+
+
+# used for each google api call.
+@app.route('/getNextSearch', methods=['POST'])
+def get_next_search():
+    args = request.json
+
+    # check if the searchID exists in redis:
+    #   if missing: send response to trigger data load from client.
+    #   if present: take checksum of redis data and compare to received client checksum.
+    # If client checksum and redis checksum do not match:
+    #   send response to client requesting data load from client.
+    # If client checksum matches, load redis data.
+
+    # unsearchedPoints = MultiPoint(args["unsearchedData"])
+    searchID = args["searchID"]
+    data = redis_get(searchID)
+    unsearchedPoints = MultiPoint(data["unsearched"])
+    circle_border = Polygon(args["circleCoordinates"])
+    newlySearchedCoordinates = []
+
+    unsearched = []
+    for p in unsearchedPoints:
+        if not circle_border.contains(p):
+            unsearched.append(p.__geo_interface__["coordinates"])
+        else:
+            newlySearchedCoordinates.append(p.__geo_interface__["coordinates"])
+
+    searched = list(data["searched"]) + args["circleCoordinates"]
+
+    unsearched_new = unsearched
+    searched_new = searched
+    s = searched_new
+    us = unsearched_new
+
+    # start = time.process_time()
+    # knn = FaissKNeighbors()
+    # knn.fit(s, us)
+    # furthestNearest = knn.predict(us)
+
+    furthestNearest = knn(s, us)
+
+    redis_save(searchID, searched_new, unsearched_new)
+    return {
+        "center": furthestNearest,
+        "unsearched": unsearched_new,
+        "searched": searched_new,
+        "newlySearchedCoordinates": newlySearchedCoordinates
+    }
+
+
 
 
 @app.route('/getUserSearch/<string:searchKey>', methods=['GET'])
@@ -220,117 +213,4 @@ def get_user_search(searchKey):
     if error:
         return error
 
-    return session.get(searchKey)
-
-
-
-
-@app.route('/set/search_region')
-def set_search_region(value):
-    session['search_region'] = value
-    return value
-
-@app.route('/set/searched_coords')
-def set_searched_coords(value):
-    session['searched_coords'] = value
-    return value
-
-@app.route('/set/unsearched_coords')
-def set_unsearched_coords(value):
-    session['unsearched_coords'] = value
-    return value
-
-
-
-@app.route('/get/search_region')
-def get_search_region():
-    return session.get("search_region")
-
-@app.route('/get/searched_coords')
-def get_searched_coords():
-    return session.get("searched_coords")
-
-@app.route('/get/unsearched_coords')
-def get_unsearched_coords():
-    return session.get("unsearched_coords")
-
-
-
-# app = Flask(__name__)
-# api = Api(app)
-
-
-
-
-# class Test(Resource):
-#     def put(self):
-#         json_data = request.get_json(force=True)
-#         print(json_data)
-#         return json_data
-#
-#     def get(self):
-#         results = query("Select * from sessions", [])
-#         return results
-#
-#     def post(self):
-#         json_data = request.get_json(force=True)
-#         print(json_data)
-#         data = json_data['data']
-#         return jsonify(dataOut=data)
-#
-# class Session(Resource):
-#     def get(self, key):
-#         print(key.split("|"))
-#         results = query("Select * from sessions where sessionID=? and salt=? and user=?", key.split("-"))
-#         print("results:", results)
-#         return {"data": results["returned"][0]}
-#
-#     # used to issue a new sessionID.  This happens only when a user clears their results from the
-#     # browser and restarts a new search.  The key returned by this endpoint
-#     # is unique to the user, and can be used to fetch past results or continue from an
-#     # old search.
-#     def post(self):
-#         json_data = request.get_json(force=True)
-#         name = json_data["name"]
-#         regions = json.dumps(json_data["regions"])
-#         newSessionID = query("INSERT INTO sessions (user, regions) VALUES(?, ?)", [name, regions])['lastRowID']
-#         results = query("Select * from sessions where sessionID=?", [newSessionID])['returned'][0]
-#         return jsonify(userKey=results)
-#
-#
-# class Searches(Resource):
-#     def get(self):
-#         return {"data": [7, 8, 9]}
-#
-#     def post(self):
-#         json_data = request.get_json(force=True)
-#         data = json_data['data']
-#
-#         return jsonify(dataOut=data)
-#
-# class Archive(Resource):
-#     def get(self):
-#         return {"data": [7, 8, 9]}
-#
-#     def post(self):
-#         json_data = request.get_json(force=True)
-#         data = json_data['data']
-#
-#         return jsonify(dataOut=data)
-#
-#
-# class sessionProgress(Resource):
-#     def get(self):
-#         return {"data": [7, 8, 9]}
-#
-#     def post(self):
-#         json_data = request.get_json(force=True)
-#         data = json_data['data']
-#
-#         return jsonify(dataOut=data)
-#
-# api.add_resource(Test, "/test")
-# api.add_resource(Session, "/session", "/session/<string:key>")
-# api.add_resource(Searches, "/searches")
-# api.add_resource(Archive, "/archive")
-# api.add_resource(sessionProgress, "/sessionprogress")
+    return {"true": True}

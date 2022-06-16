@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, session, make_response
-from coordinateFunctions import flatToMatrixIndex
+# from coordinateFunctions import flatToMatrixIndex
 import json
 
 def saveDataToFile():
@@ -59,7 +59,7 @@ def removeUnsearchedCoords(searchKey, unsearchedIndexestoRemove):
 
     coords = []
     for i in unsearchedIndexestoRemove:
-        maxtrixCoordIndex = flatToMatrixIndex(indexMap[i])
+        # maxtrixCoordIndex = flatToMatrixIndex(indexMap[i])
         maxtrixCoord[maxtrixCoordIndex[0]][maxtrixCoordIndex[1]] = None
         coords.append(unsearchedCoords[i])
         unsearchedCoords[i] == None
