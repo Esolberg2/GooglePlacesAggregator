@@ -10,7 +10,8 @@ from sklearn.neighbors import NearestNeighbors
 from shapely.ops import substring
 import geopandas as gpd
 import shapely
-# import pygeos
+import shapely.speedups
+shapely.speedups.enable()
 
 RESOLUTION = .5
 LAT_CONVERSION = 69
@@ -45,7 +46,7 @@ def knn(searchedPoints, unsearchedData):
 
     K = 1
 
-    nbrs = NearestNeighbors(n_neighbors=K, algorithm='ball_tree').fit(searchedPoints)
+    nbrs = NearestNeighbors(n_neighbors=1, algorithm='ball_tree', n_jobs=-1).fit(searchedPoints)
     distances, indices = nbrs.kneighbors(unsearchedPoints, 1)
 
     indexes = np.where(distances == np.amax(distances))
