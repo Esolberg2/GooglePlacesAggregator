@@ -22,8 +22,8 @@ import time
 import redis
 import pickle
 import bz2
-# import shapely.speedups
-# shapely.speedups.enable()
+import shapely.speedups
+shapely.speedups.enable()
 
 r = redis.Redis(host= 'localhost',port= '6379')
 #
@@ -120,18 +120,24 @@ def set_user_search():
     args = request.json
     print(args)
     searchRegions = args["searchRegions"]
+    print("")
+    print("")
+    print(args["searchRegions"])
+    print("")
+    print("")
+    print(args["searchID"])
+    print("")
+    print("")
 
     # returns shapely geometries
     output = makeGrid(searchRegions)
 
-    # Fiass KNN
-    # knn = FaissKNeighbors()
-
     s = output["searchedCoords"].__geo_interface__["coordinates"]
     us = output["unsearchedCoords"].__geo_interface__["coordinates"]
 
+    # Fiass KNN
+    # knn = FaissKNeighbors()
     # knn.fit(s, us)
-    # # furthestNearest = knn.predict(us).tolist()
     # furthestNearest = knn.predict(us)
 
     # sklearn KNN
@@ -167,6 +173,10 @@ def get_next_search():
     # unsearchedPoints = MultiPoint(args["unsearchedData"])
     searchID = args["searchID"]
     data = redis_get(searchID)
+    print("")
+    print("---- data ---")
+    print(data)
+
     unsearchedPoints = MultiPoint(data["unsearched"])
     circle_border = Polygon(args["circleCoordinates"])
     newlySearchedCoordinates = []
@@ -177,8 +187,8 @@ def get_next_search():
             unsearched.append(p.__geo_interface__["coordinates"])
         else:
             newlySearchedCoordinates.append(p.__geo_interface__["coordinates"])
-
-    searched = list(data["searched"]) + args["circleCoordinates"]
+    print(args["circleCoordinates"])
+    searched = list(data["searched"]) + list(args["circleCoordinates"])
 
     unsearched_new = unsearched
     searched_new = searched

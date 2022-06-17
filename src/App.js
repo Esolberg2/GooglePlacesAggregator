@@ -72,14 +72,43 @@ const geolocateStyle = {
 
 const App = () => {
 
+
+  useEffect(() => {
+    console.log("useEffect")
+    window.addEventListener('beforeunload', alertUser)
+    window.addEventListener('unload', handleEndConcert)
+    return () => {
+      window.removeEventListener('beforeunload', alertUser)
+      window.removeEventListener('unload', handleEndConcert)
+      handleEndConcert()
+    }
+  }, [])
+  const alertUser = e => {
+    e.preventDefault()
+    e.returnValue = ''
+  }
+  const handleEndConcert = async () => {
+    console.log("handleEndConcert")
+    // await fetcher({
+    //   url: endConcert(concert.id),
+    //   method: 'PUT'
+    // })
+  }
+
+  const inputFile = useRef(null);
+  const googleData = useRef(null);
+  const searchTerm = useRef(null);
+  const searchID = useRef(null);
+
   const counter = useRef(0)
   const editorRef = useRef(null);
-  const mapRef = useRef()
-  const searchedData = useRef(undefined)
-  const unsearchedData = useRef(undefined)
-  const nextCenter = useRef(undefined)
-  const radius = useRef(undefined)
-  const circleCoordinates = useRef(undefined)
+  const containerRef = useRef(null);
+  const mapRef = useRef();
+  const searchedData = useRef(undefined);
+  const unsearchedData = useRef(undefined);
+  const nextCenter = useRef(undefined);
+  const radius = useRef(undefined);
+  const circleCoordinates = useRef(undefined);
 
   const [viewport, setViewPort] = useState({
     width: "100%",
@@ -90,6 +119,8 @@ const App = () => {
     transitionDuration: 100
   })
   const [searchResultLayer, setSearchResult ] = useState(null)
+  const [budget, setBudget] = useState(0)
+  const [budgetUsed, setBudgetUsed] = useState(0);
   const [mode, setMode] = useState(null);
   const [selectedFeatureIndex, setSelectedFeatureIndex] = useState(null);
   // const [circleLayers, setCircleLayers] = useState([<Layer key={"-1"} {...unsearchedStyle} />])
@@ -142,7 +173,7 @@ const App = () => {
   function checksumDataBundler() {
     return {"searched": searchedData.current, "unsearched": unsearchedData.current}
   }
-  
+
   function checksum(obj) {
     let data =  JSON.stringify(obj)
     var dataChecksum = CryptoJS.MD5(data);
@@ -222,15 +253,19 @@ const App = () => {
     }
   }
 
+
   function setValue() {
     putPostData('POST', `/setUserSearch`, {"searchRegions": getPolygons(), "searchID": undefined}).then(data => {
       console.log(data)
       searchedData.current = data["searchedCoords"]
       unsearchedData.current = data["unsearchedCoords"]
       nextCenter.current = data["furthestNearest"]
-      // setCoordinatesFeatures to include the geojson for each unsearched coordinate
-
+      searchID.current = data["searchID"]
+      addCoordinates(data["unsearchedCoords"], coordinatesFeatures, setCoordinatesFeatures)
+      addCoordinates(data["searchedCoords"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
     })
+
+
     console.log(searchedData)
     console.log(unsearchedData)
     console.log(nextCenter)
@@ -245,6 +280,8 @@ const App = () => {
     console.log(nextCenter)
     console.log("radius")
     console.log(radius)
+    console.log("circleCoordinates")
+    console.log(circleCoordinates)
   }
 
   function getNextSearchCoord() {
@@ -258,12 +295,12 @@ const App = () => {
     console.log(circleCoordinates.current)
     putPostData('POST', `/getNextSearch`,
     {
-      "searchedData": searchedData.current,
-      "unsearchedData": unsearchedData.current,
+      // "searchedData": searchedData.current,
+      // "unsearchedData": unsearchedData.current,
       "lastCenter": nextCenter.current,
       "lastRadius": radius.current,
       "circleCoordinates": circleCoordinates.current,
-      "searchID": 17
+      "searchID": 49
     }).then(data => {
         console.log("------- received --------")
         console.log(data)
@@ -373,7 +410,17 @@ const App = () => {
     getNextSearchCoord()
   }
 
-
+  function packageData() {
+    let searchDataObject = {}
+    searchDataObject[searchID.current] = {
+          "searchedData": searchedData.current,
+          "unsearchedData": unsearchedData.current,
+          "googleData": googleData.current,
+          "searchTerm": searchTerm.current,
+          "budget": budget,
+          "budgetUsed": budgetUsed
+        }
+  }
   // --- Map ---
 
   const onSelect = useCallback(options => {
@@ -392,6 +439,11 @@ const App = () => {
     }
   }, []);
 
+  const onButtonClick = () => {
+    // `current` points to the mounted file input element
+   inputFile.current.click();
+  };
+
   const handleOnResult = event => {
     console.log(event.result)
     setSearchResult( new GeoJsonLayer({
@@ -404,6 +456,10 @@ const App = () => {
       })
     )
   }
+
+  function handleBudgetChange(event) {
+        // setBudget(event.target.value);
+    }
 
   const handleGeocoderViewportChange = viewport => {
     const geocoderDefaultOverrides = { transitionDuration: 1000 };
@@ -421,64 +477,134 @@ const App = () => {
   const _onViewportChange = viewport => setViewPort({...viewport, transitionDuration: 0 })
 
 
+  // function downloadData() {
+  //
+  //   let searchDataObject[data["searchID"]] = {
+  //       "searchedData": searchedData.current,
+  //       "unsearchedData": unsearchedData.current,
+  //       "googleData": "",
+  //       "searchTerm": "",
+  //       "budget": "",
+  //       "budgetUsed": ""
+  //     }
+  //
+  //   const blob = new Blob(JSON.stringify(searchDataObject));                   // Step 3
+  //   const fileDownloadUrl = URL.createObjectURL(blob); // Step 4
+  //   let searchDataObject = {}
+  //
+  //   URL.revokeObjectURL(fileDownloadUrl);
+  // }
+
+  const downloadFile = ({ data, fileName, fileType }) => {
+    // Create a blob with the data we want to download as a file
+    const blob = new Blob([data], { type: fileType })
+    // Create an anchor element and dispatch a click event on it
+    // to trigger a download
+    const a = document.createElement('a')
+    a.download = fileName
+    a.href = window.URL.createObjectURL(blob)
+    const clickEvt = new MouseEvent('click', {
+      view: window,
+      bubbles: true,
+      cancelable: true,
+    })
+    a.dispatchEvent(clickEvt)
+    a.remove()
+  }
+
+  const exportToJson = e => {
+    e.preventDefault()
+    let searchDataObject = {}
+    searchDataObject[searchID.current] = {
+        "searchedData": searchedData.current,
+        "unsearchedData": unsearchedData.current,
+        "googleData": "",
+        "searchTerm": "",
+        "budget": "",
+        "budgetUsed": ""
+      }
+    downloadFile({
+      data: JSON.stringify(searchDataObject),
+      fileName: 'users.json',
+      fileType: 'text/json',
+    })
+  }
+
   const drawTools = (
-    <div className="mapboxgl-ctrl-top-left">
-      <div className="mapboxgl-ctrl-group mapboxgl-ctrl">
+
+      <div style={{flex: '1', flexDirection: 'column'}}>
         <button
           className="mapbox-gl-draw_ctrl-draw-btn mapbox-gl-draw_polygon"
           title="Polygon tool (p)"
           onClick={() => setMode(new DrawPolygonMode())}
-        />
+        >
+        draw polygon
+        </button>
         <button
           className="mapbox-gl-draw_ctrl-draw-btn mapbox-gl-draw_trash"
           title="Delete"
           onClick={onDelete}
-        />
-      </div>
+        >
+        delete
+        </button>
     </div>
   );
 
   return (
-      <div style={{ height: '100vh'}}>
-      <button
-        style={{height: '30px', width : '100px'}}
-        onClick={() => search()}
-        >
-        search
-        </button>
-      <button
-        style={{height: '30px', width : '100px'}}
-        onClick={() => addCircle()}
-        >
-        addCircle
-        </button>
-      <button
-        style={{height: '30px', width : '100px'}}
-        onClick={() => setValue()}
-        >
-        Set value
-        </button>
+      <div style={{ height: '100vh', flex: '1'}}>
+        <div style={{
+          backgroundColor: 'blue',
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'space-between'
 
-        <button
-          style={{height: '30px', width : '100px'}}
-          onClick={() => getNextSearchCoord()}
-          >
-          getNextSearchCoord
-          </button>
+            }}>
+            <input type='file' id='file' ref={inputFile} style={{}}/>
 
-        <button
-          style={{height: '30px', width : '100px'}}
-          onClick={() => printState()}
-          >
-          print state
-          </button>
+            <button onClick={() => console.log(inputFile.current )}>log file</button>
 
-          <button
-            style={{height: '30px', width : '100px'}}
-            onClick={() => {dummyGoogleCall(); console.log(radius.current)}}
-            >
-            dummy google call
-            </button>
+            <button type='button' onClick={exportToJson}>
+              Export to JSON
+              </button>
+            <button
+              style={{height: '30px', width : '100px'}}
+              onClick={() => search()}
+              >
+              search
+              </button>
+            <button
+              style={{height: '30px', width : '100px'}}
+              onClick={() => addCircle()}
+              >
+              addCircle
+              </button>
+            <button
+              style={{height: '30px', width : '100px'}}
+              onClick={() => setValue()}
+              >
+              Set value
+              </button>
+
+            <button
+              style={{height: '30px', width : '100px'}}
+              onClick={() => getNextSearchCoord()}
+              >
+              getNextSearchCoord
+              </button>
+
+            <button
+              style={{height: '30px', width : '100px'}}
+              onClick={() => printState()}
+              >
+              print state
+              </button>
+
+            <button
+              style={{height: '30px', width : '100px'}}
+              onClick={() => {dummyGoogleCall(); console.log(radius.current)}}
+              >
+              dummy google call
+              </button>
 
             <button
               style={{height: '30px', width : '100px'}}
@@ -501,21 +627,25 @@ const App = () => {
               build next searhced coords
               </button>
 
-          <button
+            <button
               style={{height: '30px', width : '100px'}}
               onClick={() => {addCoordinates(searchedData.current, searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)}}
-            >
-            build searhced coordinates
-          </button>
+              >
+              build searhced coordinates
+              </button>
 
-          <button
-            style={{height: '30px', width : '100px'}}
-            onClick={() => console.log(nextCenter)}
-            >
-            next Center
-            </button>
+            <button
+              style={{height: '30px', width : '100px'}}
+              onClick={() => console.log(nextCenter)}
+              >
+              next Center
+              </button>
+          </div>
 
-        <h1 style={{textAlign: 'center', fontSize: '25px', fontWeight: 'bolder' }}>Use the search bar to find a location on the map</h1>
+          <div style={{padding: '10px', display: 'flex', backgroundColor: 'green', flexDirection: 'column', width: '200px'}}>
+
+          </div>
+
       <MapGL
         ref={mapRef}
         {...viewport}
@@ -536,14 +666,38 @@ const App = () => {
       <Source id="searchedCoordinateLayer" type="geojson" data={searchedCoordinatesFeatures}>
         <Layer key={"3"} {...searchedCoordinateStyle} />
       </Source>
+      <div ref={containerRef}>
+        <Geocoder
+           mapRef={mapRef}
+           containerRef={containerRef}
+           onResult={handleOnResult}
+           onViewportChange={handleGeocoderViewportChange}
+           mapboxApiAccessToken={TOKEN}
+           position='top-left'
+           />
+           <button
+             className="mapbox-gl-draw_ctrl-draw-btn mapbox-gl-draw_polygon"
+             title="Polygon tool (p)"
+             onClick={() => setMode(new DrawPolygonMode())}
+             style={{padding: '5px', margin: '5px'}}
+           >
+           Select Search Area
+           </button>
+           <button
+             className="mapbox-gl-draw_ctrl-draw-btn mapbox-gl-draw_trash"
+             title="Delete"
+             onClick={onDelete}
+             style={{padding: '5px', margin: '5px'}}
+           >
+           Delete Search Area
+           </button>
+        </div>
+        <div>
+        <input type="number" value={budget} onChange={handleBudgetChange} placeholder="Set Max Budget" />
+        </div>
+        <div>
 
-       <Geocoder
-            mapRef={mapRef}
-            onResult={handleOnResult}
-            onViewportChange={handleGeocoderViewportChange}
-            mapboxApiAccessToken={TOKEN}
-            position='top-left'
-          />
+        </div>
           <Editor
           ref={editorRef}
           style={{width: '100%', height: '100%'}}
@@ -555,7 +709,6 @@ const App = () => {
           featureStyle={getFeatureStyle}
           editHandleStyle={getEditHandleStyle}
         />
-          {drawTools}
         </MapGL>
         <ControlPanel polygon={selectedFeature} />
 
