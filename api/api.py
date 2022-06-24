@@ -22,6 +22,8 @@ import time
 import redis
 import pickle
 import bz2
+import js2py
+import hashlib
 import shapely.speedups
 shapely.speedups.enable()
 
@@ -35,6 +37,7 @@ r = redis.Redis(host= 'localhost',port= '6379')
 # redis.zadd('vehicles', {'bike' : 0})
 # vehicles = redis.zrange('vehicles', 0, -1)
 # print(vehicles)
+# 'AIzaSyBhJRgpD2FTMa8_q68645LQRb2qNVD6wlE'
 
 
 
@@ -79,7 +82,8 @@ def abort_if_key_exists(searchKey):
 
 def checksum(obj):
     JSON = js2py.eval_js('JSON')
-    msg = JSON.stringify(dictionary["1"]["searched"]);
+    # msg = JSON.stringify(dictionary["1"]["searched"]);
+    msg = JSON.stringify(obj);
     msg = msg.encode(encoding='utf-8')
     hash = hashlib.md5(msg)
     return hash.hexdigest()
@@ -130,7 +134,7 @@ def set_user_search():
     print("")
 
     # returns shapely geometries
-    output = makeGrid(searchRegions)
+    output = makeGrid(searchRegions, float(args["coordinateResolution"]))
 
     s = output["searchedCoords"].__geo_interface__["coordinates"]
     us = output["unsearchedCoords"].__geo_interface__["coordinates"]
@@ -154,7 +158,8 @@ def set_user_search():
         "searchedCoords": s,
         "unsearchedCoords": us,
         "furthestNearest": [*furthestNearest],
-        "searchID": searchID
+        "searchID": searchID,
+        "border": output["shape"]
         }
 
 
@@ -162,6 +167,14 @@ def set_user_search():
 @app.route('/getNextSearch', methods=['POST'])
 def get_next_search():
     args = request.json
+    searchID = args["searchID"]
+    print("---searchID", searchID)
+    print(redis_get(searchID))
+    print("+++")
+    print(checksum(redis_get(searchID)))
+    # if searchID does not exist in redis or checksum fails:
+        #  return -1 to trigger a load of data from client.
+
 
     # check if the searchID exists in redis:
     #   if missing: send response to trigger data load from client.
@@ -171,8 +184,22 @@ def get_next_search():
     # If client checksum matches, load redis data.
 
     # unsearchedPoints = MultiPoint(args["unsearchedData"])
-    searchID = args["searchID"]
-    data = redis_get(searchID)
+    try:
+        searchID = args["searchID"]
+        clientChecksum = args["checksum"]
+        print("")
+        print("clientChecksum")
+        print(clientChecksum)
+        data = redis_get(searchID)
+        serverChecksum = checksum(data)
+        print("")
+        print("serverChecksum")
+        print(serverChecksum)
+        if serverChecksum != clientChecksum:
+            return {"checksumStatus": -1}
+    except:
+        return {"data": -1}
+
     print("")
     print("---- data ---")
     print(data)
@@ -187,8 +214,9 @@ def get_next_search():
             unsearched.append(p.__geo_interface__["coordinates"])
         else:
             newlySearchedCoordinates.append(p.__geo_interface__["coordinates"])
-    print(args["circleCoordinates"])
-    searched = list(data["searched"]) + list(args["circleCoordinates"])
+    # print(args["circleCoordinates"])
+    circleCoordinates = args["circleCoordinates"] if args["circleCoordinates"] else []
+    searched = list(data["searched"]) + circleCoordinates
 
     unsearched_new = unsearched
     searched_new = searched

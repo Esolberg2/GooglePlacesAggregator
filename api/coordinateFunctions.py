@@ -13,17 +13,20 @@ import shapely
 import shapely.speedups
 shapely.speedups.enable()
 
-RESOLUTION = .5
-LAT_CONVERSION = 69
+# RESOLUTION = .5
+# LAT_CONVERSION = 69
 # LON_CONVERSION = 69
-LON_CONVERSION = 54.6
-LATSTEP = round((RESOLUTION/LAT_CONVERSION), 15)
+# LON_CONVERSION = 54.6
+# LATSTEP = round((RESOLUTION/LAT_CONVERSION), 15)
 # LONSTEP = round((RESOLUTION/LON_CONVERSION), 15)
 # LONSTEP = round((RESOLUTION/LON_CONVERSION)*(LON_CONVERSION/LAT_CONVERSION), 15)
-LONSTEP = round((RESOLUTION/LON_CONVERSION), 15)
+# LONSTEP = round((RESOLUTION/LON_CONVERSION), 15)
 
-print("LATSTEP", LATSTEP)
-print("LONSTEP", LONSTEP)
+def latStep(resolution):
+    return round((resolution/69), 15)
+
+def lonStep(resolution):
+    return round((resolution/54.6), 15)
 
 
 # def flatToMatrixIndex(flatIndex, matrix):
@@ -75,16 +78,15 @@ def cleanPolygons(searchRegions):
     return joinedPolys
 
 def lineToPoints(lines, resolution):
-    interval = resolution / 10
     mp = shapely.geometry.MultiPoint()
     for line in lines.boundary.explode():
-        for i in np.arange(0, line.length, interval):
-            s = substring(line, i, i+interval)
+        for i in np.arange(0, line.length, resolution):
+            s = substring(line, i, i+resolution)
             mp = mp.union(s.boundary)
 
     return mp
 
-def makeGrid(searchRegions):
+def makeGrid(searchRegions, resolution):
     '''
     Takes an array of geojson, containing one or more polygons.  These polygons
     are merged if they overlap.  The resulting polygons are used as a mask to
@@ -94,6 +96,8 @@ def makeGrid(searchRegions):
     These points initialize the "searched" points.
     '''
     unionedPolys = cleanPolygons(searchRegions)
+    LATSTEP = latStep(resolution)
+    LONSTEP = lonStep(resolution)
 
     xmin, ymin, xmax, ymax = unionedPolys.bounds
     x = np.arange(xmin, xmax, LONSTEP).round(15)
@@ -110,5 +114,6 @@ def makeGrid(searchRegions):
     return {
         "unsearchedCoords": MultiPoint(unsearched),
         "searchedCoords": borderPoints,
-        "rawSearchPolygons": searchRegions
+        "rawSearchPolygons": searchRegions,
+        "shape": unionedPolys.__geo_interface__["coordinates"]
         }
