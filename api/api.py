@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, session, make_response
+from flask import Flask, request, jsonify, session, make_response, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api, Resource, reqparse, abort
 from flask_session import Session
@@ -196,9 +196,10 @@ def get_next_search():
         print("serverChecksum")
         print(serverChecksum)
         if serverChecksum != clientChecksum:
-            return {"checksumStatus": -1}
+            # return {"checksumStatus": -1}
+            return custom_error(409, "Server data out of sync with client, please refresh data.")
     except:
-        return {"data": -1}
+        return custom_error(500, "Internal data error.")
 
     print("")
     print("---- data ---")
