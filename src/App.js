@@ -91,6 +91,7 @@ const App = () => {
     e.returnValue = ''
   }
 
+  const featureSaver = useRef(undefined)
   const googleScript = useRef(undefined)
   const googleData = useRef([]);
   const dataFile = useRef(undefined)
@@ -536,6 +537,7 @@ const App = () => {
   // }
 
 
+
   function setValue() {
     if (searchRunning) {
       console.log("abort search")
@@ -584,9 +586,10 @@ const App = () => {
 
   function clearData() {
     let features = editorRef.current.getFeatures()
-    for (let i=0; i < features.length; i++) {
-      editorRef.current.deleteFeatures(i)
-    }
+    editorRef.current.deleteFeatures([...Array(features.length).keys()])
+    // for (let i=0; i < features.length; i++) {
+    //   editorRef.current.deleteFeatures(i)
+    // }
 
     // ref reset
     googleData.current = []
@@ -626,33 +629,96 @@ const App = () => {
     )
   }
 
-  const newFeature = {
-    "type": "Feature",
-    "properties": {},
-    "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-            [
+//   const newFeature = {
+//     "type": "Feature",
+//     "properties": {},
+//     "geometry": {
+//         "type": "Polygon",
+//         "coordinates": [
+//             [
+//                 [
+//                     -71.16116969569079,
+//                     42.32778820561197
+//                 ],
+//                 [
+//                     -71.14994789273689,
+//                     42.312679640574856
+//                 ],
+//                 [
+//                     -71.14793801758066,
+//                     42.32989320948443
+//                 ],
+//                 [
+//                     -71.16116969569079,
+//                     42.32778820561197
+//                 ]
+//             ]
+//         ]
+//     }
+// }
+
+const newFeature = [
+    {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
                 [
-                    -71.16116969569079,
-                    42.32778820561197
-                ],
-                [
-                    -71.14994789273689,
-                    42.312679640574856
-                ],
-                [
-                    -71.14793801758066,
-                    42.32989320948443
-                ],
-                [
-                    -71.16116969569079,
-                    42.32778820561197
+                    [
+                        -71.31318848831043,
+                        42.47951580398625
+                    ],
+                    [
+                        -71.49070717188904,
+                        42.15668684634079
+                    ],
+                    [
+                        -70.77343573418638,
+                        42.113992424205804
+                    ],
+                    [
+                        -70.49756210430102,
+                        42.46359066532927
+                    ],
+                    [
+                        -71.31318848831043,
+                        42.47951580398625
+                    ]
                 ]
             ]
-        ]
+        }
     }
+]
+
+const newF = {
+    "type": "Polygon",
+    "coordinates": [
+        [
+            [
+                -74.87349421258035,
+                40.739230233727
+            ],
+            [
+                -74.70769365606867,
+                40.41633530050895
+            ],
+            [
+                -74.43561069153628,
+                40.774653499143234
+            ],
+            [
+                -74.87349421258035,
+                40.739230233727
+            ]
+        ]
+    ]
 }
+
+  function buildBorders() {
+
+  }
+
   function printState() {
     console.log("")
     console.log("")
@@ -660,7 +726,7 @@ const App = () => {
     console.log(Object.getOwnPropertyNames(CurrencyInput))
     console.log("editorRef.current")
     console.log(editorRef.current.getFeatures())
-    // editorRef.current.addFeatures(newFeature)
+    editorRef.current.addFeatures(newF)
     // console.log("after add")
     // console.log(editorRef.current.getFeatures())
     console.log("googleData")
@@ -730,7 +796,7 @@ const App = () => {
       })
     }
 
-    let getNextSearchCoord = () => new Promise((resolve) => {
+    let getNextSearchCoord = () => new Promise((resolve, reject) => {
       console.log("getNextSearchCoord")
         putPostData('POST', `/getNextSearch`,
         {
@@ -740,11 +806,6 @@ const App = () => {
           "searchID": searchID.current,
           "checksum": checksum(checksumDataBundler())
         }).then(data => {
-
-            if (data["checksumStatus"] == -1) {
-              console.log("!!!! checksum mismatch !!!!")
-              return
-            }
             console.log("--------")
             console.log("last center")
             console.log(nextCenter.current)
@@ -767,7 +828,7 @@ const App = () => {
             setSearchedCoordinatesFeatures((prevValue) => ({ ...prevValue, features: newSearchedCoordinates }));
             console.log("getNextSearchCoord Complete")
             resolve("ok")
-          })
+          }).catch((error) => reject(error))
     }
 )
     // let getNextSearchCoord = new Promise (() => {
@@ -881,9 +942,8 @@ const App = () => {
     return result
   }
 
-  function search() {
+  function search(end=false) {
     if (budget <= budgetUsed) {
-      console.log("budget limit reached")
       window.alert("You set budget has been met.  Please increase your Budget setting if you would like to continue using the Google API.")
       return
     }
@@ -898,23 +958,32 @@ const App = () => {
         setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
         if (unsearchedData.current.length == 0) {
           console.log("search area complete")
+          setSearchRunning((prev) => false)
           return
         } else {
-          // dummyGoogleCall(nextCenter);
-          apiCaller4().then(() => addCircle())
-          // addCircle();
-
-          console.log("complete search")
+          try {
+            apiCaller4().then(() => addCircle())
+          } catch {}
           setSearchRunning((prev) => false)
+        }
+      }).catch(() => {
+        setSearchRunning((prev) => false)
+        if (!end) {
+          console.log("catch after checksum mismatch")
+          syncBackend().then(() => search(true))
         }
       })
     }
-    // addCircle()
-    // gets the radius
-    // await dummyGoogleCall()
-    // add circle
-    // addCircle()
   }
+
+  async function syncBackend() {
+    await putPostData('POST', `/loadSearch`,
+      {
+        "searched": searchedData.current,
+        "unsearched": unsearchedData.current,
+        "searchID": searchID.current,
+      })
+      }
 
   function loadFile(value) {
     let fileReader;
@@ -1020,6 +1089,17 @@ const App = () => {
     features && (features[selectedFeatureIndex] || features[features.length - 1]);
   const _onViewportChange = viewport => setViewPort({...viewport, transitionDuration: 0 })
 
+  function loadFeatures() {
+    editorRef.current.addFeatures(featureSaver.current)
+  }
+
+  function saveFeatures() {
+    featureSaver.current = features
+  }
+
+  function printFeatures() {
+    console.log(features)
+  }
 
   const downloadFile = ({ data, fileName, fileType }) => {
     // Create a blob with the data we want to download as a file
@@ -1466,57 +1546,6 @@ const App = () => {
     }
 
 
-  function selectNewSearch1() {
-    if (editorRef.current.getFeatures().length > 0 || googleData.current.length || searchedData.current || unsearchedData.current) {
-      let selection = window.confirm(
-        "WARNING: Data is present from an in progress search session." +
-        " If you continue, this data will be lost.  Please use the 'Download Data'"+
-        " option if you wish to keep this information."
-      )
-      if (selection) {
-        // ref reset
-        clearShapes()
-        googleData.current = undefined
-        setSearchType(undefined)
-        searchID.current = undefined
-        searchedData.current = undefined
-        circleCoordinates.current = undefined
-        nextCenter.current = undefined
-        radius.current = undefined
-        circleCoordinates.current = undefined
-
-        // state reset
-        setSearchResultLayer(undefined);
-        setSearchResolution(undefined);
-        setSelectedFeatureIndex(undefined);
-        setSearchedAreas(
-          {
-          'type': 'FeatureCollection',
-          'features': []
-          }
-        )
-
-        setSearchedCoordinatesFeatures(
-          {
-          'type': 'FeatureCollection',
-          'features': []
-          }
-        )
-
-        setCoordinatesFeatures(
-          {
-          'type': 'FeatureCollection',
-          'features': []
-          }
-        )
-
-        setNewSearch((prev) => !prev)
-      }
-    } else {
-      setNewSearch((prev) => !prev)
-    }
-  }
-
   const exportToJson = e => {
     e.preventDefault()
     let datetime = new Date().toLocaleString();
@@ -1534,7 +1563,7 @@ const App = () => {
           "userSearchKey": userSearchKey,
           "nextCenter": nextCenter.current,
           "searchID": searchID.current,
-          "searchBorders": editorRef.current.getFeatures()
+          "searchBorders": features
         }
     console.log("--- searchedAreas ----")
     console.log(searchedAreas)
@@ -1808,10 +1837,28 @@ const App = () => {
               </button>
             <button
               style={{height: '30px', width : '100px'}}
-              onClick={() =>  googlePlacesCall('-71.0112371727878', '43.968510619528146')}
+              onClick={() =>  buildBorders()}
               >
-              googlePlacesCall
+              build borders
               </button>
+              <button
+                style={{height: '30px', width : '100px'}}
+                onClick={() =>  printFeatures()}
+                >
+                print features
+                </button>
+                <button
+                  style={{height: '30px', width : '100px'}}
+                  onClick={() =>  saveFeatures()}
+                  >
+                  save features
+                  </button>
+                  <button
+                    style={{height: '30px', width : '100px'}}
+                    onClick={() =>  loadFeatures()}
+                    >
+                    load features
+                    </button>
               <button
                 style={{height: '30px', width : '100px'}}
                 onClick={() => apiCaller4().then((data) => console.log(data))}
