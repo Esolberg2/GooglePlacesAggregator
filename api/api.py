@@ -96,8 +96,11 @@ def checksum(obj):
 def load_search():
     print("running loadSearch")
     args = request.json
-    redis_save(args["searchID"], args["searched"], args["unsearched"])
-    return True
+    try:
+        redis_save(args["searchID"], args["searched"], args["unsearched"])
+        return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
+    except:
+        return json.dumps({'success':False}), 400, {'ContentType':'application/json'}
 
 def redisEncode(obj):
     pickled_object = pickle.dumps(obj)
@@ -167,23 +170,14 @@ def set_user_search():
 @app.route('/getNextSearch', methods=['POST'])
 def get_next_search():
     args = request.json
+    print("---args---")
+    print(args)
     searchID = args["searchID"]
     print("---searchID", searchID)
     print(redis_get(searchID))
     print("+++")
     print(checksum(redis_get(searchID)))
-    # if searchID does not exist in redis or checksum fails:
-        #  return -1 to trigger a load of data from client.
 
-
-    # check if the searchID exists in redis:
-    #   if missing: send response to trigger data load from client.
-    #   if present: take checksum of redis data and compare to received client checksum.
-    # If client checksum and redis checksum do not match:
-    #   send response to client requesting data load from client.
-    # If client checksum matches, load redis data.
-
-    # unsearchedPoints = MultiPoint(args["unsearchedData"])
     try:
         searchID = args["searchID"]
         clientChecksum = args["checksum"]

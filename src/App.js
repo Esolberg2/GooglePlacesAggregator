@@ -25,15 +25,15 @@ const geolocateStyle = {
   padding: '10px'
 };
 
-  const searchedAreaStyle = {
-    id: 'searchedAreaLayers',
-    type: 'fill',
-    source: 'searchedAreas', // reference the data source
-    paint: {
-          'fill-color': '#0080ff', // blue color fill
-          'fill-opacity': 0.5
-          }
-    }
+const searchedAreaStyle = {
+  id: 'searchedAreaLayers',
+  type: 'fill',
+  source: 'searchedAreas', // reference the data source
+  paint: {
+        'fill-color': '#0080ff', // blue color fill
+        'fill-opacity': 0.5
+        }
+  }
 
     const searchedCoordinateStyle = {
       id: 'searchedCoordinatesLayers',
@@ -61,30 +61,98 @@ const App = () => {
   // let googleScript = undefined
   let script = useRef(undefined);
   let service = useRef(undefined);
+  const [apiKey, setApiKey] = useState('IzaSyBhJRgpD2FTMa8_q68645LQRb2qNVD6wlE')
 
   useEffect(() => {
     window.addEventListener('beforeunload', alertUser)
     // window.addEventListener('unload', handleEndConcert)
-
-    console.log(!script.current)
-    if (!script.current) {
-          console.log("script not yet defined")
-          let s = document.createElement('script');
-          s.type = 'text/javascript';
-          s.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=geometry,places`;
-          s.id = 'googleMaps';
-          s.async = true;
-          s.defer = true;
-          script.current = s
-          document.body.appendChild(s);
-    }
-
-
     return () => {
       window.removeEventListener('beforeunload', alertUser)
       // window.removeEventListener('unload', handleEndConcert)
     }
   }, [])
+
+  // useEffect(() => {
+  //   if (window.google) {
+  //     console.log(Object.keys(window.google))
+  //     delete window.google
+  //   }
+  //   console.log(!script.current)
+  //   if (!script.current) {
+  //         console.log("script not yet defined")
+  //         let s = document.createElement('script');
+  //         s.type = 'text/javascript';
+  //         s.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=places`;
+  //         s.id = 'googleMaps';
+  //         s.async = true;
+  //         s.defer = true;
+  //         s.key = apiKey
+  //         script.current = s
+  //         document.body.appendChild(s);
+  //         // document.body.appendChild(s);
+  //   } else {
+  //     // console.log(script.current)
+  //     // console.log(document.getElementsByTagName('script'))
+  //     // console.log(Object.is(script.current, document.getElementsByTagName('script')))
+  //     // script.current.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=places`
+  //     // console.log(script.current)
+  //     document.getElementById('googleMaps').src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=places&foo`
+  //     console.log(document.getElementById('googleMaps'))
+  //     console.log(document.getElementsByTagName('script'))
+  //     console.log(window.google)
+  //   }
+  // }, [apiKey])
+
+  async function removeGoogle() {
+    await delete window.google
+    let scripts = document.getElementsByTagName('script')
+    for await (const element of [...scripts]) {
+      if (element.src.includes('https://maps.googleapis.com')) {
+        element.parentNode.removeChild(element)
+      }
+    }
+    console.log("done removing google")
+  }
+
+
+  async function addGoogle() {
+    let s = document.createElement('script');
+    s.type = 'text/javascript';
+    s.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=places`;
+    s.id = 'googleMaps';
+    s.async = false;
+    s.defer = false;
+    let node = await document.head.appendChild(s);
+    console.log("done adding google")
+  }
+
+
+  // useEffect(() => {
+  //   // if (window.google) {
+  //   //   console.log(Object.keys(window.google))
+  //   //   delete window.google
+  //   // }
+  //   console.log(!script.current)
+  //         console.log("script not yet defined")
+  //         let s = document.createElement('script');
+  //         s.type = 'text/javascript';
+  //         s.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=places`;
+  //         s.id = 'googleMaps';
+  //         s.async = true;
+  //         s.defer = true;
+  //         s.key = apiKey
+  //         script.current = s
+  //         document.head.appendChild(s);
+  //         // document.body.appendChild(s);
+  //
+  // }, [])
+
+  // useEffect(() => {
+  //   var script = document.getElementById("googleMaps");
+  //   script.setAttribute("src",`https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=geometry,places&callback=initialize`);
+  //   // document.getElementsByTagName("head")[0].appendChild(script);
+  //   // document.body.appendChild(script);
+  // }, [apiKey])
 
   const alertUser = e => {
     e.preventDefault()
@@ -123,7 +191,6 @@ const App = () => {
   const [fileNameText, setFileNameText] = useState("");
   const [searchResolution, setSearchResolution] = useState(0.5)
   const [searchRunning, setSearchRunning] = useState(false)
-  const [apiKey, setApiKey] = useState('AIzaSyBhJRgpD2FTMa8_q68645LQRb2qNVD6wlE')
   const [newSearch, setNewSearch] = useState(true)
   const [bulkSearchCount, setBulkSearchCount] = useState(false)
   const [searchResultLayer, setSearchResultLayer ] = useState(undefined)
@@ -210,41 +277,88 @@ const App = () => {
     return distance
   }
 
+  // function apiCaller4() {
+  //
+  //   function callback(results) {
+  //     let lastLat = results[results.length-1].geometry.location.lat()
+  //     let lastLon = results[results.length-1].geometry.location.lng()
+  //
+  //     let from = turf.point(nextCenter.current);
+  //     let to = turf.point([lastLon, lastLat]);
+  //     let options = {units: 'miles'};
+  //     let distance = turf.distance(from, to, options);
+  //     radius.current = distance
+  //     googleData.current = [...googleData.current, ...results]
+  //     console.log("distance set")
+  //     return distance
+  //   }
+  //
+  //   const service = new window.google.maps.places.PlacesService(document.createElement('div'));
+  //
+  //   try {
+  //     var request = {
+  //     location: new window.google.maps.LatLng(nextCenter.current[1],nextCenter.current[0]),
+  //     rankBy: window.google.maps.places.RankBy.DISTANCE,
+  //     type: searchType
+  //     };
+  //   } catch (error) {
+  //     console.log("api error")
+  //   }
+  //
+  //
+  //   return new Promise((resolve,reject)=>{
+  //
+  //     try {
+  //     service.nearbySearch(request,function(results,status){
+  //         if(status === window.google.maps.places.PlacesServiceStatus.OK)
+  //         {
+  //             resolve(callback(results));
+  //         }else
+  //         {
+  //             reject(status);
+  //         }
+  //     });
+  //   } catch (error) {
+  //     console.log('here')
+  //   }
+  // })
+  // }
   function apiCaller4() {
-    let include = [
-    'west',
-    'compound_code',
-    'viewport',
-    'width',
-    'types',
-    'icon_background_color',
-    'place_id',
-    // 'isOpen',
-    'east',
-    'opening_hours',
-    'name',
-    'reference',
-    'photos',
-    'height',
-    'south',
-    'getUrl',
-    'north',
-    'rating',
-    'lng',
-    'icon',
-    'html_attributions',
-    'geometry',
-    'location',
-    'scope',
-    'lat',
-    'vicinity',
-    'plus_code',
-    'user_ratings_total',
-    'global_code',
-    'icon_mask_base_uri',
-    'price_level',
-    'business_status',
-    ]
+    console.log("caller called")
+    // let include = [
+    // 'west',
+    // 'compound_code',
+    // 'viewport',
+    // 'width',
+    // 'types',
+    // 'icon_background_color',
+    // 'place_id',
+    // // 'isOpen',
+    // 'east',
+    // 'opening_hours',
+    // 'name',
+    // 'reference',
+    // 'photos',
+    // 'height',
+    // 'south',
+    // 'getUrl',
+    // 'north',
+    // 'rating',
+    // 'lng',
+    // 'icon',
+    // 'html_attributions',
+    // 'geometry',
+    // 'location',
+    // 'scope',
+    // 'lat',
+    // 'vicinity',
+    // 'plus_code',
+    // 'user_ratings_total',
+    // 'global_code',
+    // 'icon_mask_base_uri',
+    // 'price_level',
+    // 'business_status',
+    // ]
 
     function callback(results) {
       let lastLat = results[results.length-1].geometry.location.lat()
@@ -256,18 +370,25 @@ const App = () => {
       let distance = turf.distance(from, to, options);
       radius.current = distance
       googleData.current = [...googleData.current, ...results]
+      console.log("distance set")
       return distance
     }
 
     const service = new window.google.maps.places.PlacesService(document.createElement('div'));
 
-    var request = {
-    location: new window.google.maps.LatLng(nextCenter.current[1],nextCenter.current[0]),
-    rankBy: window.google.maps.places.RankBy.DISTANCE,
-    type: searchType
-    };
+    try {
+      var request = {
+      location: new window.google.maps.LatLng(nextCenter.current[1],nextCenter.current[0]),
+      rankBy: window.google.maps.places.RankBy.DISTANCE,
+      type: searchType
+      };
+    } catch (error) {
+      console.log("api error")
+    }
+
 
     return new Promise((resolve,reject)=>{
+
       service.nearbySearch(request,function(results,status){
           if(status === window.google.maps.places.PlacesServiceStatus.OK)
           {
@@ -465,10 +586,70 @@ const App = () => {
     return dataChecksum.toString()
   }
 
-  async function putPostData(method, url = '', data = {}) {
+  // const putPostData = (method, url = '', data = {}) => new Promise((resolve, reject) => {
+  //   const replacer = (key, value) => typeof value === 'undefined' ? null : value;
+  //
+  //   const response = fetch(url, {
+  //     method: method, // *GET, POST, PUT, DELETE, etc.
+  //     mode: 'cors', // no-cors, *cors, same-origin
+  //     cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+  //     credentials: 'same-origin', // include, *same-origin, omit
+  //     headers: {
+  //       'Content-Type': 'application/json'
+  //     },
+  //     redirect: 'follow', // manual, *follow, error
+  //     referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+  //     body: JSON.stringify(data, replacer) // body data type must match "Content-Type" header
+  //   }).then((response) => {
+  //     console.log(response.json())
+  //     if (response.ok) {
+  //       resolve(response)
+  //     } else {
+  //       reject()
+  //     }
+  //   });
+  // })
+
+
+  function search() {
+        setSearchRunning((prev) => true)
+
+        try {
+          console.log('1')
+          getNextSearchCoord()
+          console.log('2')
+          // await setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
+          // await apiCaller4().then(() => addCircle())
+
+        }
+        catch (error) {
+          setSearchRunning((prev) => false)
+          console.log(error)
+        }
+    }
+
+    async function axiosPutPostData(method, url = '', data = {}) {
+      console.log("data")
+      console.log(data)
+      const replacer = (key, value) => typeof value === 'undefined' ? null : value;
+      let axiosArgs = {
+        method: method,
+        url: url,
+        responseType: 'stream',
+        data: data
+      }
+      console.log("axios args")
+      console.log(axiosArgs)
+
+      let result = await axios(axiosArgs)
+      console.log('baz')
+      return result
+    }
+
+  function putPostData(method, url = '', data = {}) {
     const replacer = (key, value) => typeof value === 'undefined' ? null : value;
 
-    const response = await fetch(url, {
+    fetch(url, {
       method: method, // *GET, POST, PUT, DELETE, etc.
       mode: 'cors', // no-cors, *cors, same-origin
       cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
@@ -479,9 +660,46 @@ const App = () => {
       redirect: 'follow', // manual, *follow, error
       referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
       body: JSON.stringify(data, replacer) // body data type must match "Content-Type" header
+    }).then(res => {
+      if(!res.ok) {
+        throw res
+       }
+      else {
+       return res.json();
+     }
+    })
+    .catch(err => {
+      console.log(err)
+       // return (err.text())
+       throw err
     });
-    return response.json(); // parses JSON response into native JavaScript objects
   }
+
+  // async function putPostData(method, url = '', data = {}) {
+  //   const replacer = (key, value) => typeof value === 'undefined' ? null : value;
+  //
+  //   const response = await fetch(url, {
+  //     method: method, // *GET, POST, PUT, DELETE, etc.
+  //     mode: 'cors', // no-cors, *cors, same-origin
+  //     cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+  //     credentials: 'same-origin', // include, *same-origin, omit
+  //     headers: {
+  //       'Content-Type': 'application/json'
+  //     },
+  //     redirect: 'follow', // manual, *follow, error
+  //     referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+  //     body: JSON.stringify(data, replacer) // body data type must match "Content-Type" header
+  //   });
+  //   // return response.json(); // parses JSON response into native JavaScript objects
+  //
+  //   return new Promise((resolve, reject) => {
+  //     if (response.ok) {
+  //       resolve(response.json())
+  //     } else {
+  //       reject()
+  //     }
+  //   })
+  // }
 
 
 
@@ -537,45 +755,85 @@ const App = () => {
   // }
 
 
-
-  function setValue() {
+  async function setValue() {
     if (searchRunning) {
       console.log("abort search")
       return
     } else {
         if (getPolygons().length == 0) {
           window.alert('Please use the "Select Search Area" option to choose a search region before building your search.')
+          setSearchRunning((prev) => false)
           return
         }
         if (searchResolution < 0.1 || !searchResolution) {
           window.alert('Please enter a value for the "Search Resolution".  This is the distance in miles between each potential search coordinate that will be evaluated.')
+          setSearchRunning((prev) => false)
           return
         }
         if (searchType == "Select") {
           window.alert('Please select an "Entity Type" before building your search.  This is the type of Google Places Entity that the Places API will search for.')
+          setSearchRunning((prev) => false)
           return
         }
-        putPostData('POST', `/setUserSearch`,
+        setSearchRunning((prev) => true)
+        let response = await axiosPutPostData('POST', `/setUserSearch`,
           {
             "searchRegions": getPolygons(),
-            "searchID": undefined,
+            "searchID": null,
             "coordinateResolution": searchResolution
-            }).then(data => {
-                searchedData.current = data["searchedCoords"]
-                unsearchedData.current = data["unsearchedCoords"]
-                nextCenter.current = data["furthestNearest"]
-                searchID.current = data["searchID"]["lastRowID"]
-                let border = data["border"]
-                console.log(border)
-                addCoordinates(data["unsearchedCoords"], coordinatesFeatures, setCoordinatesFeatures)
-                addCoordinates(data["searchedCoords"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
-                // dummyGoogleCall()
-                // apiCaller()
-                // add circle
-                // addCircle()
-            })
+          })
+            console.log(response["data"])
+            searchedData.current = response["data"]["searchedCoords"]
+            unsearchedData.current = response["data"]["unsearchedCoords"]
+            nextCenter.current = response["data"]["furthestNearest"]
+            searchID.current = response["data"]["searchID"]["lastRowID"]
+            let border = response["data"]["border"]
+            console.log(border)
+            addCoordinates(response["data"]["unsearchedCoords"], coordinatesFeatures, setCoordinatesFeatures)
+            addCoordinates(response["data"]["searchedCoords"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
+
+            await apiCaller4()
+            addCircle()
         }
+    setSearchRunning((prev) => false)
   }
+  // async function setValue() {
+  //   if (searchRunning) {
+  //     console.log("abort search")
+  //     return
+  //   } else {
+  //       if (getPolygons().length == 0) {
+  //         window.alert('Please use the "Select Search Area" option to choose a search region before building your search.')
+  //         return
+  //       }
+  //       if (searchResolution < 0.1 || !searchResolution) {
+  //         window.alert('Please enter a value for the "Search Resolution".  This is the distance in miles between each potential search coordinate that will be evaluated.')
+  //         return
+  //       }
+  //       if (searchType == "Select") {
+  //         window.alert('Please select an "Entity Type" before building your search.  This is the type of Google Places Entity that the Places API will search for.')
+  //         return
+  //       }
+  //       let response = await axiosPutPostData('POST', `/setUserSearch`,
+  //         {
+  //           "searchRegions": getPolygons(),
+  //           "searchID": null,
+  //           "coordinateResolution": searchResolution
+  //         })
+  //           console.log(response["data"])
+  //           searchedData.current = response["data"]["searchedCoords"]
+  //           unsearchedData.current = response["data"]["unsearchedCoords"]
+  //           nextCenter.current = response["data"]["furthestNearest"]
+  //           searchID.current = response["data"]["searchID"]["lastRowID"]
+  //           let border = response["data"]["border"]
+  //           console.log(border)
+  //           addCoordinates(response["data"]["unsearchedCoords"], coordinatesFeatures, setCoordinatesFeatures)
+  //           addCoordinates(response["data"]["searchedCoords"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
+  //
+  //           await apiCaller4()
+  //           // addCircle()
+  //       }
+  // }
 
   function clearShapes() {
     let features = editorRef.current.getFeatures()
@@ -759,116 +1017,162 @@ const newF = {
     console.log(searchedCoordinatesFeatures)
     console.log("coordinatesFeatures")
     console.log(coordinatesFeatures)
+    console.log("apiKey")
+    console.log(apiKey)
   }
 
-  function getNextSearchCoord1() {
-    // radius.current = dummyGoogleCall()
-    putPostData('POST', `/getNextSearch`,
-    {
-      // "searchedData": searchedData.current,
-      // "unsearchedData": unsearchedData.current,
-      "lastCenter": nextCenter.current,
-      "lastRadius": radius.current,
-      "circleCoordinates": circleCoordinates.current,
-      "searchID": searchID.current,
-      "checksum": checksum(checksumDataBundler())
-    }).then(data => {
-        if (data["checksumStatus"] == -1) {
-          console.log("!!!! checksum mismatch !!!!")
-          // reload data file
-          return
-        }
-
-        nextCenter.current = data["center"]
-        searchedData.current = data["searched"]
-        unsearchedData.current = data["unsearched"]
+  async function caller() {
+    if (searchRunning) {
+      console.log("abort")
+      return
+    }
+    try {
+      setSearchRunning((prev) => true)
+      console.log('1')
+      // gets google results and calculates the radius
+      // await apiCaller4()
+      // console.log('2')
+      // // creates the circle layer, and generates the circle border coordinates
+      // await addCircle()
+      // console.log('3')
+      // uses the circle border to determine which coordinates are now searched,
+      // and returns the next search coordinate.
+      let response = await getNextSearchCoord()
+      // console.log(data)
+        nextCenter.current = response["data"]["center"]
+        searchedData.current = response["data"]["searched"]
+        unsearchedData.current = response["data"]["unsearched"]
 
         let prevSearchedCoords = [...searchedCoordinatesFeatures.features]
         let newSearchedCoordinates = []
 
-        data["newlySearchedCoordinates"].forEach((coord, i) => {
-          newSearchedCoordinates.push(buildCoord(coord))
+        response["data"]["newlySearchedCoordinates"].forEach((coord, i) => {
+          newSearchedCoordinates.push(buildCoordJSON(coord))
         })
 
         newSearchedCoordinates = newSearchedCoordinates.concat(prevSearchedCoords)
         setSearchedCoordinatesFeatures((prevValue) => ({ ...prevValue, features: newSearchedCoordinates }));
 
-      })
+
+      console.log('4')
+      setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
+      console.log('5')
+      await apiCaller4()
+      // creates the circle layer, and generates the circle border coordinates
+      await addCircle()
+    } catch (error) {
+      if (error.response.status == '409') {
+        console.log('checksum error')
+        try {
+          await syncBackend()
+          console.log("sync successful")
+        } catch (error) {
+          console.log("sync failed")
+        }
+      } else {
+        console.log(error)
+      }
+    }
+    setSearchRunning((prev) => false)
+  }
+
+
+
+
+  async function getNextSearchCoord() {
+    console.log({ "circleCoordinates": circleCoordinates.current,
+      "searchID": searchID.current,
+      "checksum": checksum(checksumDataBundler())
+    })
+    let request = await axiosPutPostData('POST', `/getNextSearch`,
+    { "circleCoordinates": circleCoordinates.current,
+      "searchID": searchID.current,
+      "checksum": checksum(checksumDataBundler())
+    })
+    // let request = await axiosPutPostData('GET', 'https://deelay.me/700/https://httpstat.us/200')
+    console.log('fooBar')
+    return request
     }
 
-    let getNextSearchCoord = () => new Promise((resolve, reject) => {
-      console.log("getNextSearchCoord")
-        putPostData('POST', `/getNextSearch`,
-        {
-          "lastCenter": nextCenter.current,
-          "lastRadius": radius.current,
-          "circleCoordinates": circleCoordinates.current,
-          "searchID": searchID.current,
-          "checksum": checksum(checksumDataBundler())
-        }).then(data => {
-            console.log("--------")
-            console.log("last center")
-            console.log(nextCenter.current)
-            console.log("")
-            console.log("next center")
-            console.log(data["center"])
-            console.log("--------")
-            nextCenter.current = data["center"]
-            searchedData.current = data["searched"]
-            unsearchedData.current = data["unsearched"]
+  // let getNextSearchCoord = () => new Promise((resolve, reject) => {
+  //     let request = await putPostData('POST', `/getNextSearch`,
+  //     { "circleCoordinates": circleCoordinates.current,
+  //       "searchID": searchID.current,
+  //       "checksum": checksum(checksumDataBundler())
+  //     })
+  //     console.log(request)
+  //   })
 
-            let prevSearchedCoords = [...searchedCoordinatesFeatures.features]
-            let newSearchedCoordinates = []
 
-            data["newlySearchedCoordinates"].forEach((coord, i) => {
-              newSearchedCoordinates.push(buildCoord(coord))
-            })
-
-            newSearchedCoordinates = newSearchedCoordinates.concat(prevSearchedCoords)
-            setSearchedCoordinatesFeatures((prevValue) => ({ ...prevValue, features: newSearchedCoordinates }));
-            console.log("getNextSearchCoord Complete")
-            resolve("ok")
-          }).catch((error) => reject(error))
-    }
-)
-    // let getNextSearchCoord = new Promise (() => {
-    //   console.log("getNextSearchCoord")
-    //     putPostData('POST', `/getNextSearch`,
-    //     {
-    //       "lastCenter": nextCenter.current,
-    //       "lastRadius": radius.current,
-    //       "circleCoordinates": circleCoordinates.current,
-    //       "searchID": searchID.current,
-    //       "checksum": checksum(checksumDataBundler())
-    //     }).then(data => {
-    //
-    //         if (data["checksumStatus"] == -1) {
-    //           console.log("!!!! checksum mismatch !!!!")
-    //           return
-    //         }
-    //         console.log("--------")
-    //         console.log("last center")
-    //         console.log(nextCenter.current)
-    //         console.log("")
-    //         console.log("next center")
-    //         console.log(data["center"])
-    //         console.log("--------")
-    //         nextCenter.current = data["center"]
-    //         searchedData.current = data["searched"]
-    //         unsearchedData.current = data["unsearched"]
-    //
-    //         let prevSearchedCoords = [...searchedCoordinatesFeatures.features]
-    //         let newSearchedCoordinates = []
-    //
-    //         data["newlySearchedCoordinates"].forEach((coord, i) => {
-    //           newSearchedCoordinates.push(buildCoordJSON(coord))
-    //         })
-    //
-    //         newSearchedCoordinates = newSearchedCoordinates.concat(prevSearchedCoords)
-    //         setSearchedCoordinatesFeatures((prevValue) => ({ ...prevValue, features: newSearchedCoordinates }));
-    //         console.log("getNextSearchCoord Complete")
-    //       })
-    // })
+//   let getNextSearchCoord = () => new Promise((resolve, reject) => {
+//       putPostData('POST', `/getNextSearch`,
+//       { "circleCoordinates": circleCoordinates.current,
+//         "searchID": searchID.current,
+//         "checksum": checksum(checksumDataBundler())
+//       }).then(data => {
+//           console.log(data)
+//           if (!data.ok) {
+//             console.log("rejected")
+//             reject(data)
+//           } else {
+//             console.log("getNextSearchCoord data update starting")
+//             nextCenter.current = data["center"]
+//             searchedData.current = data["searched"]
+//             unsearchedData.current = data["unsearched"]
+//             let prevSearchedCoords = [...searchedCoordinatesFeatures.features]
+//             // let newSearchedCoordinates = []
+//             data["newlySearchedCoordinates"].forEach((coord, i) => {
+//               prevSearchedCoords.push(buildCoord(coord))
+//             })
+//
+//             // newSearchedCoordinates = newSearchedCoordinates.concat(prevSearchedCoords)
+//             setSearchedCoordinatesFeatures((prevValue) => prevSearchedCoords);
+//             console.log("getNextSearchCoord Complete")
+//             console.log(data)
+//             resolve(data)
+//           }
+//         })
+//   }
+// )
+//
+//     let getNextSearchCoord = new Promise (() => {
+//       console.log("getNextSearchCoord")
+//         putPostData('POST', `/getNextSearch`,
+//         {
+//           "lastCenter": nextCenter.current,
+//           "lastRadius": radius.current,
+//           "circleCoordinates": circleCoordinates.current,
+//           "searchID": searchID.current,
+//           "checksum": checksum(checksumDataBundler())
+//         }).then(data => {
+//
+//             if (data["checksumStatus"] == -1) {
+//               console.log("!!!! checksum mismatch !!!!")
+//               return
+//             }
+//             console.log("--------")
+//             console.log("last center")
+//             console.log(nextCenter.current)
+//             console.log("")
+//             console.log("next center")
+//             console.log(data["center"])
+//             console.log("--------")
+//             nextCenter.current = data["center"]
+//             searchedData.current = data["searched"]
+//             unsearchedData.current = data["unsearched"]
+//
+//             let prevSearchedCoords = [...searchedCoordinatesFeatures.features]
+//             let newSearchedCoordinates = []
+//
+//             data["newlySearchedCoordinates"].forEach((coord, i) => {
+//               newSearchedCoordinates.push(buildCoordJSON(coord))
+//             })
+//
+//             newSearchedCoordinates = newSearchedCoordinates.concat(prevSearchedCoords)
+//             setSearchedCoordinatesFeatures((prevValue) => ({ ...prevValue, features: newSearchedCoordinates }));
+//             console.log("getNextSearchCoord Complete")
+//           })
+//     })
 
 
 
@@ -942,7 +1246,20 @@ const newF = {
     return result
   }
 
-  function search(end=false) {
+  function searchCheck() {
+    if (budget <= budgetUsed) {
+      window.alert("You set budget has been met.  Please increase your Budget setting if you would like to continue using the Google API.")
+      return
+    }
+    if (searchRunning) {
+      console.log("abort search")
+      return
+    }
+    search()
+  }
+
+
+  function search_old(end=false) {
     if (budget <= budgetUsed) {
       window.alert("You set budget has been met.  Please increase your Budget setting if you would like to continue using the Google API.")
       return
@@ -970,14 +1287,14 @@ const newF = {
         setSearchRunning((prev) => false)
         if (!end) {
           console.log("catch after checksum mismatch")
-          syncBackend().then(() => search(true))
+          syncBackend().then(() => searchCheck())
         }
       })
     }
   }
 
   async function syncBackend() {
-    await putPostData('POST', `/loadSearch`,
+    await axiosPutPostData('POST', `/loadSearch`,
       {
         "searched": searchedData.current,
         "unsearched": unsearchedData.current,
@@ -1215,6 +1532,19 @@ const newF = {
   }
 
 
+  async function updateGoogleApi() {
+    console.log('updateGoogleApi')
+    setSearchRunning((prev) => true)
+    try {
+      await removeGoogle()
+      await addGoogle()
+      console.log("done")
+    } catch (error){
+      console.log(error)
+    }
+    setSearchRunning((prev) => false)
+  }
+
   function resolutionInputColor() {
     if (!newSearch) {
       return '#cccccc'
@@ -1278,7 +1608,7 @@ const newF = {
             </div>
 
 
-            <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', width: '125px'}}>
+            <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1' }}>
               Choose an Entity Type to Search
 
               <div style={{ paddingTop: '10px', fontSize: '12px', display: 'flex', textAlign: 'center', justifyContent: 'center'}}>
@@ -1294,7 +1624,7 @@ const newF = {
             </div>
 
 
-            <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', width: '125px'}}>
+            <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
               Enter Google API Key
 
               <div style={{ paddingTop: '10px', fontSize: '12px', display: 'flex', textAlign: 'center', justifyContent: 'center'}}>
@@ -1303,15 +1633,24 @@ const newF = {
 
               <div style={{ flexGrow: '1'}}/>
 
+              <div style={{ flex: '1', display: 'flex', flexDirection: 'row', alignItems: 'flex-end'}}>
                 <input
                   value={apiKey}
                   onChange={(e) => onChangeAPIkeyInput(e)}
-                  style={{ height: '15px', paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}
+                  style={{ marginLeft: '5px', height: '15px', paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}
                   placeholder="Google API Key"
                   />
+
+                  <button
+                    onClick={() => updateGoogleApi()}
+                    style={{padding: '5px', margin: '5px', whiteSpace: 'nowrap'}}
+                    >
+                    Set Key
+                    </button>
+              </div>
             </div>
 
-            <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', width: '125px'}}>
+            <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
               Set Budget
 
               <div style={{ paddingTop: '10px', fontSize: '12px', display: 'flex', textAlign: 'center', justifyContent: 'center'}}>
@@ -1346,7 +1685,7 @@ const newF = {
             </div>
 
 
-            <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', width: '125px'}}>
+            <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
               Enter User Key
               <div style={{ fontSize: '12px', paddingTop: '10px'}}>
                   This key is anything you want, and is used to organize your search data.
@@ -1364,7 +1703,7 @@ const newF = {
 
 
 
-            <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', width: '125px'}}>
+            <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
               Enter Search Resolution
               <div style={{ fontSize: '12px', paddingTop: '10px'}}>
                   This is the spacing between search coordinates within the search region.
@@ -1410,7 +1749,7 @@ const newF = {
                     Build Search From File
                     </button>
                   <button
-                    onClick={() => search()}
+                    onClick={() => caller()}
                     style={{padding: '5px', margin: '5px', width: '150px'}}
                     >
                     Single Search
@@ -1485,7 +1824,7 @@ const newF = {
                     Build Search
                     </button>
                   <button
-                    onClick={() => search()}
+                    onClick={() => caller()}
                     style={{padding: '5px', margin: '5px', width: '150px'}}
                     >
                     Single Search
@@ -1564,6 +1903,7 @@ const newF = {
           "nextCenter": nextCenter.current,
           "searchID": searchID.current,
           "searchBorders": features
+          // "circleCoordinates": circleCoordinates.current
         }
     console.log("--- searchedAreas ----")
     console.log(searchedAreas)
@@ -1793,6 +2133,63 @@ const newF = {
               >
               print state
               </button>
+
+              <button
+                style={{height: '30px', width : '100px'}}
+                onClick={() => console.log(document)}
+                >
+                print google library
+                </button>
+
+                <button
+                  style={{height: '30px', width : '100px'}}
+                  onClick={() => {
+                    console.log(document.getElementsByTagName("script"))
+                    console.log(script.current)
+                  }}
+                  >
+
+                  get scripts
+                  </button>
+                  <button
+                    style={{height: '30px', width : '100px'}}
+                    onClick={() => removeGoogle()}
+                    >
+                    remove google
+                    </button>
+
+                  <button
+                    style={{height: '30px', width : '100px'}}
+                    onClick={() => console.log(window.google)}
+                    >
+                    window google
+                    </button>
+
+                <button
+                  style={{height: '30px', width : '100px'}}
+                  onClick={() => addGoogle()}
+                  >
+                  addGoogle
+                  </button>
+
+                <button
+                  style={{height: '30px', width : '100px'}}
+                  onClick={() => {
+                    let googleElement = document.getElementById("googleMaps")
+                    googleElement.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=geometry,places`
+                    console.log(googleElement)
+                    console.log(document.getElementById("googleMaps"))
+                }}
+                  >
+                  get scripts2
+                  </button>
+
+                  <button
+                    style={{height: '30px', width : '100px'}}
+                    onClick={() => document.body.removeChild(document.getElementById("googleMaps"))}
+                    >
+                    remove scripts
+                    </button>
 
             <button
               style={{height: '30px', width : '100px'}}
