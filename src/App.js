@@ -8,22 +8,19 @@ import {getFeatureStyle, getEditHandleStyle} from './style';
 import * as turf from '@turf/turf'
 import CurrencyInput from 'react-currency-input-field';
 import FilePicker from './components/FilePicker.js'
+import GoogleApiKeyLoader from './components/GoogleApiKeyLoader.js'
+import SpinnerButton from './components/SpinnerButton.js'
 import axios from 'axios'
-// import config from '../config'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import "react-map-gl-geocoder/dist/mapbox-gl-geocoder.css"
+import {updateGoogleApi} from "./helperFunctions/google_JS_API_Helpers"
+import {triggerAlertFor} from "./helperFunctions/arg_Checker"
+import {axiosPutPostData} from "./helperFunctions/axios_Helpers"
+import {buildSearch, nextSearch} from "./helperFunctions/server_API_Helpers"
 const CryptoJS = require("crypto-js");
 const placeTypes = require('./data/placeTypes.json');
 
 const TOKEN='pk.eyJ1IjoiZXNvbGJlcmc3NyIsImEiOiJja3l1ZmpqYWgwYzAxMnRxa3MxeHlvanVpIn0.co7_t1mXkXPRE8BOnOHJXQ'
-// payload = requests.get('https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=' + searchLat + ',' + searchLong + '&rankby=distance&type=' + type + '&key=' + apiKey).json()
-
-
-const geolocateStyle = {
-  float: 'left',
-  margin: '50px',
-  padding: '10px'
-};
 
 const searchedAreaStyle = {
   id: 'searchedAreaLayers',
@@ -35,124 +32,45 @@ const searchedAreaStyle = {
         }
   }
 
-    const searchedCoordinateStyle = {
-      id: 'searchedCoordinatesLayers',
-      type: 'fill',
-      source: 'searchedCoordinatesFeatures', // reference the data source
-      paint: {
-            'fill-color': '#ff0000', // red color fill
-            'fill-opacity': 1
-            }
-      }
+const searchedCoordinateStyle = {
+  id: 'searchedCoordinatesLayers',
+  type: 'fill',
+  source: 'searchedCoordinatesFeatures', // reference the data source
+  paint: {
+        'fill-color': '#ff0000', // red color fill
+        'fill-opacity': 1
+        }
+  }
 
-    const coordinateStyle = {
-      id: 'coordinateLayers',
-      type: 'line',
-      source: 'coordinatesFeatures', // reference the data source
-      paint: {
-          "line-color": "#000000",
-          "line-width": 1,
-            }
-      }
+const coordinateStyle = {
+  id: 'coordinateLayers',
+  type: 'line',
+  source: 'coordinatesFeatures', // reference the data source
+  paint: {
+      "line-color": "#000000",
+      "line-width": 1,
+        }
+  }
 
 
 const App = () => {
 
-  // let googleScript = undefined
-  let script = useRef(undefined);
   let service = useRef(undefined);
   const [apiKey, setApiKey] = useState('IzaSyBhJRgpD2FTMa8_q68645LQRb2qNVD6wlE')
 
+
+  window.gm_authFailure = function(error) {
+   alert('Google Maps API failed to load. Please check that your API key is correct and that the key is authorized for Google Maps JavaScript API');
+   updateGoogleApi(apiKey)
+}
+
   useEffect(() => {
     window.addEventListener('beforeunload', alertUser)
-    // window.addEventListener('unload', handleEndConcert)
     return () => {
       window.removeEventListener('beforeunload', alertUser)
-      // window.removeEventListener('unload', handleEndConcert)
     }
   }, [])
 
-  // useEffect(() => {
-  //   if (window.google) {
-  //     console.log(Object.keys(window.google))
-  //     delete window.google
-  //   }
-  //   console.log(!script.current)
-  //   if (!script.current) {
-  //         console.log("script not yet defined")
-  //         let s = document.createElement('script');
-  //         s.type = 'text/javascript';
-  //         s.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=places`;
-  //         s.id = 'googleMaps';
-  //         s.async = true;
-  //         s.defer = true;
-  //         s.key = apiKey
-  //         script.current = s
-  //         document.body.appendChild(s);
-  //         // document.body.appendChild(s);
-  //   } else {
-  //     // console.log(script.current)
-  //     // console.log(document.getElementsByTagName('script'))
-  //     // console.log(Object.is(script.current, document.getElementsByTagName('script')))
-  //     // script.current.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=places`
-  //     // console.log(script.current)
-  //     document.getElementById('googleMaps').src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=places&foo`
-  //     console.log(document.getElementById('googleMaps'))
-  //     console.log(document.getElementsByTagName('script'))
-  //     console.log(window.google)
-  //   }
-  // }, [apiKey])
-
-  async function removeGoogle() {
-    await delete window.google
-    let scripts = document.getElementsByTagName('script')
-    for await (const element of [...scripts]) {
-      if (element.src.includes('https://maps.googleapis.com')) {
-        element.parentNode.removeChild(element)
-      }
-    }
-    console.log("done removing google")
-  }
-
-
-  async function addGoogle() {
-    let s = document.createElement('script');
-    s.type = 'text/javascript';
-    s.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=places`;
-    s.id = 'googleMaps';
-    s.async = false;
-    s.defer = false;
-    let node = await document.head.appendChild(s);
-    console.log("done adding google")
-  }
-
-
-  // useEffect(() => {
-  //   // if (window.google) {
-  //   //   console.log(Object.keys(window.google))
-  //   //   delete window.google
-  //   // }
-  //   console.log(!script.current)
-  //         console.log("script not yet defined")
-  //         let s = document.createElement('script');
-  //         s.type = 'text/javascript';
-  //         s.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=places`;
-  //         s.id = 'googleMaps';
-  //         s.async = true;
-  //         s.defer = true;
-  //         s.key = apiKey
-  //         script.current = s
-  //         document.head.appendChild(s);
-  //         // document.body.appendChild(s);
-  //
-  // }, [])
-
-  // useEffect(() => {
-  //   var script = document.getElementById("googleMaps");
-  //   script.setAttribute("src",`https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=geometry,places&callback=initialize`);
-  //   // document.getElementsByTagName("head")[0].appendChild(script);
-  //   // document.body.appendChild(script);
-  // }, [apiKey])
 
   const alertUser = e => {
     e.preventDefault()
@@ -163,9 +81,7 @@ const App = () => {
   const googleScript = useRef(undefined)
   const googleData = useRef([]);
   const dataFile = useRef(undefined)
-  // const searchType = useRef(undefined);
   const searchID = useRef(undefined);
-  // const coordinateResolution = useRef(undefined)
 
   const editorRef = useRef(undefined);
   const containerRef = useRef(undefined);
@@ -186,7 +102,7 @@ const App = () => {
     transitionDuration: 100
   })
 
-  const [searchType, setSearchType] = useState("")
+  const [searchType, setSearchType] = useState("Select")
   const [userSearchKey, setUserSearchKey] = useState("");
   const [fileNameText, setFileNameText] = useState("");
   const [searchResolution, setSearchResolution] = useState(0.5)
@@ -198,7 +114,6 @@ const App = () => {
   const [budgetUsed, setBudgetUsed] = useState(0);
   const [mode, setMode] = useState(undefined);
   const [selectedFeatureIndex, setSelectedFeatureIndex] = useState(undefined);
-  // const [circleLayers, setCircleLayers] = useState([<Layer key={"-1"} {...unsearchedStyle} />])
   const [searchedAreas, setSearchedAreas] = useState(
     {
     'type': 'FeatureCollection',
@@ -218,147 +133,37 @@ const App = () => {
     }
   )
 
-  //  --- helper functions --
-  function googlePlacesCall(searchLat, searchLong) {
-    let apiKey = 'AIzaSyBhJRgpD2FTMa8_q68645LQRb2qNVD6wlE'
-    let searchType = 'meal_takeaway'
-    // import axios from 'axios'
 
-    let urlString = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${searchLong},${searchLat}&rankby=distance&type=${searchType}&key=${apiKey}`
-    axios.get(urlString)
-      .then(res => {
-        console.log(res)
-      })
+  async function singleSearch(circleCoordinates, searchID, checksum) {
+    console.log(unsearchedData.current)
+    let alertPresent = triggerAlertFor(
+                          [
+                            ['googleInit', []],
+                            ['polygons', [getPolygons()]],
+                            ['resolution', [searchResolution]],
+                            ['searchType', [searchType]],
+                            ['searchComplete', [unsearchedData.current.length]]
+                          ]
+                        )
+    if (alertPresent) {
+      return
+    }
+
+    let data = await nextSearch(circleCoordinates, searchID, checksum, searchType)
+    setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
+    addCoordinates(data["searchedData"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
+    if (data["nextCenter"] && data["radius"]) {
+      addCircle(data["nextCenter"], data["radius"])
+    }
+
+    searchedData.current = data["searchedData"]
+    unsearchedData.current = data["unsearchedData"]
+    nextCenter.current = data["nextCenter"]
+    googleData.current = [...googleData.current, ...data["googleData"]]
   }
 
-  // const googleScript = document.createElement('script');
-  //     googleScript.type = 'text/javascript';
-  //     googleScript.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=geometry,places`;
-  //     googleScript.id = 'googleMaps';
-  //     googleScript.async = true;
-  //     googleScript.defer = true;
-  //     document.body.appendChild(googleScript);
-  //     googleScript.addEventListener('load', e => {
-  //         this.onScriptLoad()
-  //     })
-
-
-  // function apiCaller() {
-  function callback(results, status) {
-        if (status == window.google.maps.places.PlacesServiceStatus.OK) {
-          let lastLat = results[results.length-1].geometry.location.lat()
-          let lastLon = results[results.length-1].geometry.location.lng()
-
-          let from = turf.point(nextCenter.current);
-          let to = turf.point([lastLon, lastLat]);
-          let options = {units: 'miles'};
-          let distance = turf.distance(from, to, options);
-          console.log("distance", distance)
-        }
-  }
-
-  function xxxx(results) {
-    let lastLat = results[results.length-1].geometry.location.lat()
-    let lastLon = results[results.length-1].geometry.location.lng()
-
-    let from = turf.point(nextCenter.current);
-    let to = turf.point([lastLon, lastLat]);
-    let options = {units: 'miles'};
-    let distance = turf.distance(from, to, options);
-    // console.log("callback done")
-    // await setTimeout(() => {
-    //   console.log("callback done");
-    // }, 2000);
-    // let j;
-    // for (let i = 0; i < 3000000000; i++) {
-    //   j = i
-    // }
-    // console.log("count done", j)
-    return distance
-  }
-
-  // function apiCaller4() {
-  //
-  //   function callback(results) {
-  //     let lastLat = results[results.length-1].geometry.location.lat()
-  //     let lastLon = results[results.length-1].geometry.location.lng()
-  //
-  //     let from = turf.point(nextCenter.current);
-  //     let to = turf.point([lastLon, lastLat]);
-  //     let options = {units: 'miles'};
-  //     let distance = turf.distance(from, to, options);
-  //     radius.current = distance
-  //     googleData.current = [...googleData.current, ...results]
-  //     console.log("distance set")
-  //     return distance
-  //   }
-  //
-  //   const service = new window.google.maps.places.PlacesService(document.createElement('div'));
-  //
-  //   try {
-  //     var request = {
-  //     location: new window.google.maps.LatLng(nextCenter.current[1],nextCenter.current[0]),
-  //     rankBy: window.google.maps.places.RankBy.DISTANCE,
-  //     type: searchType
-  //     };
-  //   } catch (error) {
-  //     console.log("api error")
-  //   }
-  //
-  //
-  //   return new Promise((resolve,reject)=>{
-  //
-  //     try {
-  //     service.nearbySearch(request,function(results,status){
-  //         if(status === window.google.maps.places.PlacesServiceStatus.OK)
-  //         {
-  //             resolve(callback(results));
-  //         }else
-  //         {
-  //             reject(status);
-  //         }
-  //     });
-  //   } catch (error) {
-  //     console.log('here')
-  //   }
-  // })
-  // }
   function apiCaller4() {
     console.log("caller called")
-    // let include = [
-    // 'west',
-    // 'compound_code',
-    // 'viewport',
-    // 'width',
-    // 'types',
-    // 'icon_background_color',
-    // 'place_id',
-    // // 'isOpen',
-    // 'east',
-    // 'opening_hours',
-    // 'name',
-    // 'reference',
-    // 'photos',
-    // 'height',
-    // 'south',
-    // 'getUrl',
-    // 'north',
-    // 'rating',
-    // 'lng',
-    // 'icon',
-    // 'html_attributions',
-    // 'geometry',
-    // 'location',
-    // 'scope',
-    // 'lat',
-    // 'vicinity',
-    // 'plus_code',
-    // 'user_ratings_total',
-    // 'global_code',
-    // 'icon_mask_base_uri',
-    // 'price_level',
-    // 'business_status',
-    // ]
 
     function callback(results) {
       let lastLat = results[results.length-1].geometry.location.lat()
@@ -401,179 +206,6 @@ const App = () => {
   })
 }
 
-  function apiCaller2() {
-
-    function callback(results, status) {
-        if (status == window.google.maps.places.PlacesServiceStatus.OK) {
-          let lastLat = results[results.length-1].geometry.location.lat()
-          let lastLon = results[results.length-1].geometry.location.lng()
-
-          let from = turf.point(nextCenter.current);
-          let to = turf.point([lastLon, lastLat]);
-          let options = {units: 'miles'};
-          let distance = turf.distance(from, to, options);
-          return distance
-        }
-    }
-
-      let include = [
-      'west',
-      'compound_code',
-      'viewport',
-      'width',
-      'types',
-      'icon_background_color',
-      'place_id',
-      // 'isOpen',
-      'east',
-      'opening_hours',
-      'name',
-      'reference',
-      'photos',
-      'height',
-      'south',
-      'getUrl',
-      'north',
-      'rating',
-      'lng',
-      'icon',
-      'html_attributions',
-      'geometry',
-      'location',
-      'scope',
-      'lat',
-      'vicinity',
-      'plus_code',
-      'user_ratings_total',
-      'global_code',
-      'icon_mask_base_uri',
-      'price_level',
-      'business_status',
-      ]
-      // if (service.current == undefined) {
-      // service.current = new window.google.maps.places.PlacesService(document.createElement('div'));
-      // }
-
-      const service = new window.google.maps.places.PlacesService(document.createElement('div'));
-
-
-      var request = {
-      location: new window.google.maps.LatLng(nextCenter.current[1],nextCenter.current[0]),
-      rankBy: window.google.maps.places.RankBy.DISTANCE,
-      type: searchType
-      };
-
-       service.nearbySearch(request, callback)
-  }
-
-
-
-
-  let apiCaller = () => new Promise((resolve) => {
-
-    let include = [
-    'west',
-    'compound_code',
-    'viewport',
-    'width',
-    'types',
-    'icon_background_color',
-    'place_id',
-    // 'isOpen',
-    'east',
-    'opening_hours',
-    'name',
-    'reference',
-    'photos',
-    'height',
-    'south',
-    'getUrl',
-    'north',
-    'rating',
-    'lng',
-    'icon',
-    'html_attributions',
-    'geometry',
-    'location',
-    'scope',
-    'lat',
-    'vicinity',
-    'plus_code',
-    'user_ratings_total',
-    'global_code',
-    'icon_mask_base_uri',
-    'price_level',
-    'business_status',
-    ]
-    if (service.current == undefined) {
-      service.current = new window.google.maps.places.PlacesService(document.createElement('div'));
-    }
-
-    var request = {
-    location: new window.google.maps.LatLng(nextCenter.current[1],nextCenter.current[0]),
-    rankBy: window.google.maps.places.RankBy.DISTANCE,
-    type: searchType
-    };
-
-    service.current.nearbySearch(request, callback);
-
-    function callback(results, status) {
-        if (status == window.google.maps.places.PlacesServiceStatus.OK) {
-
-          let lastLat = results[results.length-1].geometry.location.lat()
-          let lastLon = results[results.length-1].geometry.location.lng()
-
-          let from = turf.point(nextCenter.current);
-          let to = turf.point([lastLon, lastLat]);
-          let options = {units: 'miles'};
-          let distance = turf.distance(from, to, options);
-
-          radius.current = distance
-          googleData.current = googleData.current.concat(results)
-        }
-      }
-    })
-
-
-  function googleScriptExplorer() {
-    // let script = document.createElement('script');
-    //     script.type = 'text/javascript';
-    //     script.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=geometry,places`;
-    //     script.id = 'googleMaps';
-    //     // script.async = true;
-    //     // script.defer = true;
-    //     document.body.appendChild(script);
-
-    if (service.current == undefined) {
-      service.current = new window.google.maps.places.PlacesService(document.createElement('div'));
-    }
-
-    console.log(window.google)
-    console.log(service.current)
-
-    var request = {
-    location: new window.google.maps.LatLng(nextCenter.current[1],nextCenter.current[0]),
-    // radius: '500',
-    // types: ['store'],
-    rankBy: window.google.maps.places.RankBy.DISTANCE,
-    type: 'restaurant'
-    };
-
-    service.current.nearbySearch(request, callback);
-
-    function callback(results, status) {
-
-        if (status == window.google.maps.places.PlacesServiceStatus.OK) {
-          console.log(results)
-            // for (var i = 0; i < results.length; i++) {
-            //     console.log(results[i].name)
-            // }
-        }
-
-  }
-}
-
-
 
   function checksumDataBundler() {
     return {"searched": searchedData.current, "unsearched": unsearchedData.current}
@@ -586,123 +218,6 @@ const App = () => {
     return dataChecksum.toString()
   }
 
-  // const putPostData = (method, url = '', data = {}) => new Promise((resolve, reject) => {
-  //   const replacer = (key, value) => typeof value === 'undefined' ? null : value;
-  //
-  //   const response = fetch(url, {
-  //     method: method, // *GET, POST, PUT, DELETE, etc.
-  //     mode: 'cors', // no-cors, *cors, same-origin
-  //     cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-  //     credentials: 'same-origin', // include, *same-origin, omit
-  //     headers: {
-  //       'Content-Type': 'application/json'
-  //     },
-  //     redirect: 'follow', // manual, *follow, error
-  //     referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-  //     body: JSON.stringify(data, replacer) // body data type must match "Content-Type" header
-  //   }).then((response) => {
-  //     console.log(response.json())
-  //     if (response.ok) {
-  //       resolve(response)
-  //     } else {
-  //       reject()
-  //     }
-  //   });
-  // })
-
-
-  function search() {
-        setSearchRunning((prev) => true)
-
-        try {
-          console.log('1')
-          getNextSearchCoord()
-          console.log('2')
-          // await setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
-          // await apiCaller4().then(() => addCircle())
-
-        }
-        catch (error) {
-          setSearchRunning((prev) => false)
-          console.log(error)
-        }
-    }
-
-    async function axiosPutPostData(method, url = '', data = {}) {
-      console.log("data")
-      console.log(data)
-      const replacer = (key, value) => typeof value === 'undefined' ? null : value;
-      let axiosArgs = {
-        method: method,
-        url: url,
-        responseType: 'stream',
-        data: data
-      }
-      console.log("axios args")
-      console.log(axiosArgs)
-
-      let result = await axios(axiosArgs)
-      console.log('baz')
-      return result
-    }
-
-  function putPostData(method, url = '', data = {}) {
-    const replacer = (key, value) => typeof value === 'undefined' ? null : value;
-
-    fetch(url, {
-      method: method, // *GET, POST, PUT, DELETE, etc.
-      mode: 'cors', // no-cors, *cors, same-origin
-      cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-      credentials: 'same-origin', // include, *same-origin, omit
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      redirect: 'follow', // manual, *follow, error
-      referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-      body: JSON.stringify(data, replacer) // body data type must match "Content-Type" header
-    }).then(res => {
-      if(!res.ok) {
-        throw res
-       }
-      else {
-       return res.json();
-     }
-    })
-    .catch(err => {
-      console.log(err)
-       // return (err.text())
-       throw err
-    });
-  }
-
-  // async function putPostData(method, url = '', data = {}) {
-  //   const replacer = (key, value) => typeof value === 'undefined' ? null : value;
-  //
-  //   const response = await fetch(url, {
-  //     method: method, // *GET, POST, PUT, DELETE, etc.
-  //     mode: 'cors', // no-cors, *cors, same-origin
-  //     cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-  //     credentials: 'same-origin', // include, *same-origin, omit
-  //     headers: {
-  //       'Content-Type': 'application/json'
-  //     },
-  //     redirect: 'follow', // manual, *follow, error
-  //     referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-  //     body: JSON.stringify(data, replacer) // body data type must match "Content-Type" header
-  //   });
-  //   // return response.json(); // parses JSON response into native JavaScript objects
-  //
-  //   return new Promise((resolve, reject) => {
-  //     if (response.ok) {
-  //       resolve(response.json())
-  //     } else {
-  //       reject()
-  //     }
-  //   })
-  // }
-
-
-
   // --- region search ---
   function buildCircle(center, radius) {
     var options = {
@@ -711,9 +226,8 @@ const App = () => {
       options: {}
     };
     var radius = radius;
-    console.log("----- buildCircle ----")
+
     console.log(center)
-    console.log(typeof(center[0]))
     console.log(radius)
     var polygon = turf.circle(center, radius, options);
     circleCoordinates.current = polygon.geometry.coordinates[0]
@@ -732,122 +246,64 @@ const App = () => {
   }
 
 
-  function buildGeoJSON(coordinates) {
-    return {
-      'type': 'Feature',
-      'geometry': {
-        'type': 'Polygon',
-        'coordinates': coordinates
-        }
-    }
+  function searchDebounce (func) {
+      return function (...args) {
+          setSearchRunning((prev) => true)
+          try {
+            func.call(this, ...args)
+          } catch (error) {
+            console.log("failed")
+          }
+          setSearchRunning((prev) => false)
+      }
   }
 
-  // function buildGeoJSON(center, radius) {
-  //   let nextCircle = buildCircle(center, radius)
-  //   circleCoordinates.current = nextCircle.geometry.coordinates[0]
-  //   return {
-  //     'type': 'Feature',
-  //     'geometry': {
-  //       'type': 'Polygon',
-  //       'coordinates': nextCircle.geometry.coordinates
-  //       }
-  //   }
-  // }
-
-
-  async function setValue() {
-    if (searchRunning) {
-      console.log("abort search")
+  async function initializeSearch(polygons, searchResolution, searchType) {
+    console.log(searchType)
+    let alertPresent = triggerAlertFor(
+                          [
+                            ['googleInit', []],
+                            ['polygons', [getPolygons()]],
+                            ['resolution', [searchResolution]],
+                            ['searchType', [searchType]]
+                          ]
+                        )
+    if (alertPresent) {
       return
-    } else {
-        if (getPolygons().length == 0) {
-          window.alert('Please use the "Select Search Area" option to choose a search region before building your search.')
-          setSearchRunning((prev) => false)
-          return
-        }
-        if (searchResolution < 0.1 || !searchResolution) {
-          window.alert('Please enter a value for the "Search Resolution".  This is the distance in miles between each potential search coordinate that will be evaluated.')
-          setSearchRunning((prev) => false)
-          return
-        }
-        if (searchType == "Select") {
-          window.alert('Please select an "Entity Type" before building your search.  This is the type of Google Places Entity that the Places API will search for.')
-          setSearchRunning((prev) => false)
-          return
-        }
-        setSearchRunning((prev) => true)
-        let response = await axiosPutPostData('POST', `/setUserSearch`,
-          {
-            "searchRegions": getPolygons(),
-            "searchID": null,
-            "coordinateResolution": searchResolution
-          })
-            console.log(response["data"])
-            searchedData.current = response["data"]["searchedCoords"]
-            unsearchedData.current = response["data"]["unsearchedCoords"]
-            nextCenter.current = response["data"]["furthestNearest"]
-            searchID.current = response["data"]["searchID"]["lastRowID"]
-            let border = response["data"]["border"]
-            console.log(border)
-            addCoordinates(response["data"]["unsearchedCoords"], coordinatesFeatures, setCoordinatesFeatures)
-            addCoordinates(response["data"]["searchedCoords"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
-
-            await apiCaller4()
-            addCircle()
-        }
-    setSearchRunning((prev) => false)
-  }
-  // async function setValue() {
-  //   if (searchRunning) {
-  //     console.log("abort search")
-  //     return
-  //   } else {
-  //       if (getPolygons().length == 0) {
-  //         window.alert('Please use the "Select Search Area" option to choose a search region before building your search.')
-  //         return
-  //       }
-  //       if (searchResolution < 0.1 || !searchResolution) {
-  //         window.alert('Please enter a value for the "Search Resolution".  This is the distance in miles between each potential search coordinate that will be evaluated.')
-  //         return
-  //       }
-  //       if (searchType == "Select") {
-  //         window.alert('Please select an "Entity Type" before building your search.  This is the type of Google Places Entity that the Places API will search for.')
-  //         return
-  //       }
-  //       let response = await axiosPutPostData('POST', `/setUserSearch`,
-  //         {
-  //           "searchRegions": getPolygons(),
-  //           "searchID": null,
-  //           "coordinateResolution": searchResolution
-  //         })
-  //           console.log(response["data"])
-  //           searchedData.current = response["data"]["searchedCoords"]
-  //           unsearchedData.current = response["data"]["unsearchedCoords"]
-  //           nextCenter.current = response["data"]["furthestNearest"]
-  //           searchID.current = response["data"]["searchID"]["lastRowID"]
-  //           let border = response["data"]["border"]
-  //           console.log(border)
-  //           addCoordinates(response["data"]["unsearchedCoords"], coordinatesFeatures, setCoordinatesFeatures)
-  //           addCoordinates(response["data"]["searchedCoords"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
-  //
-  //           await apiCaller4()
-  //           // addCircle()
-  //       }
-  // }
-
-  function clearShapes() {
-    let features = editorRef.current.getFeatures()
-    for (let i=0; i < features.length; i++) {
-      editorRef.current.deleteFeatures(i)
     }
+
+    try {
+      let data = await buildSearch(polygons, searchResolution, searchType)
+      console.log('1')
+      addCoordinates(data["unsearchedData"], coordinatesFeatures, setCoordinatesFeatures)
+      console.log('2')
+      addCoordinates(data["searchedData"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
+      console.log('3')
+      addCircle(data["nextCenter"], data["radius"])
+      console.log(data)
+      searchedData.current = data["searchedData"]
+      unsearchedData.current = data["unsearchedData"]
+      nextCenter.current = data["nextCenter"]
+      searchID.current = data["searchID"]
+      googleData.current = [...googleData.current, ...data["googleData"]]
+
+    } catch(error) {
+      console.log("--- error ---")
+      if (error == 'ZERO_RESULTS') {
+        console.log('string match')
+      }
+      console.log(error)
+    }
+
   }
+
+
+  const debouncedInitializeSearch = searchDebounce(initializeSearch)
+  const debouncedSingleSearch = searchDebounce(singleSearch)
 
   function clearData() {
     let features = editorRef.current.getFeatures()
     editorRef.current.deleteFeatures([...Array(features.length).keys()])
-    // for (let i=0; i < features.length; i++) {
-    //   editorRef.current.deleteFeatures(i)
-    // }
 
     // ref reset
     googleData.current = []
@@ -887,95 +343,6 @@ const App = () => {
     )
   }
 
-//   const newFeature = {
-//     "type": "Feature",
-//     "properties": {},
-//     "geometry": {
-//         "type": "Polygon",
-//         "coordinates": [
-//             [
-//                 [
-//                     -71.16116969569079,
-//                     42.32778820561197
-//                 ],
-//                 [
-//                     -71.14994789273689,
-//                     42.312679640574856
-//                 ],
-//                 [
-//                     -71.14793801758066,
-//                     42.32989320948443
-//                 ],
-//                 [
-//                     -71.16116969569079,
-//                     42.32778820561197
-//                 ]
-//             ]
-//         ]
-//     }
-// }
-
-const newFeature = [
-    {
-        "type": "Feature",
-        "properties": {},
-        "geometry": {
-            "type": "Polygon",
-            "coordinates": [
-                [
-                    [
-                        -71.31318848831043,
-                        42.47951580398625
-                    ],
-                    [
-                        -71.49070717188904,
-                        42.15668684634079
-                    ],
-                    [
-                        -70.77343573418638,
-                        42.113992424205804
-                    ],
-                    [
-                        -70.49756210430102,
-                        42.46359066532927
-                    ],
-                    [
-                        -71.31318848831043,
-                        42.47951580398625
-                    ]
-                ]
-            ]
-        }
-    }
-]
-
-const newF = {
-    "type": "Polygon",
-    "coordinates": [
-        [
-            [
-                -74.87349421258035,
-                40.739230233727
-            ],
-            [
-                -74.70769365606867,
-                40.41633530050895
-            ],
-            [
-                -74.43561069153628,
-                40.774653499143234
-            ],
-            [
-                -74.87349421258035,
-                40.739230233727
-            ]
-        ]
-    ]
-}
-
-  function buildBorders() {
-
-  }
 
   function printState() {
     console.log("")
@@ -984,7 +351,6 @@ const newF = {
     console.log(Object.getOwnPropertyNames(CurrencyInput))
     console.log("editorRef.current")
     console.log(editorRef.current.getFeatures())
-    editorRef.current.addFeatures(newF)
     // console.log("after add")
     // console.log(editorRef.current.getFeatures())
     console.log("googleData")
@@ -1029,16 +395,7 @@ const newF = {
     try {
       setSearchRunning((prev) => true)
       console.log('1')
-      // gets google results and calculates the radius
-      // await apiCaller4()
-      // console.log('2')
-      // // creates the circle layer, and generates the circle border coordinates
-      // await addCircle()
-      // console.log('3')
-      // uses the circle border to determine which coordinates are now searched,
-      // and returns the next search coordinate.
       let response = await getNextSearchCoord()
-      // console.log(data)
         nextCenter.current = response["data"]["center"]
         searchedData.current = response["data"]["searched"]
         unsearchedData.current = response["data"]["unsearched"]
@@ -1054,12 +411,13 @@ const newF = {
         setSearchedCoordinatesFeatures((prevValue) => ({ ...prevValue, features: newSearchedCoordinates }));
 
 
-      console.log('4')
+      console.log('2')
       setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
-      console.log('5')
+      console.log('3')
       await apiCaller4()
-      // creates the circle layer, and generates the circle border coordinates
+      console.log('4')
       await addCircle()
+      console.log('5')
     } catch (error) {
       if (error.response.status == '409') {
         console.log('checksum error')
@@ -1089,117 +447,18 @@ const newF = {
       "searchID": searchID.current,
       "checksum": checksum(checksumDataBundler())
     })
-    // let request = await axiosPutPostData('GET', 'https://deelay.me/700/https://httpstat.us/200')
     console.log('fooBar')
     return request
     }
 
-  // let getNextSearchCoord = () => new Promise((resolve, reject) => {
-  //     let request = await putPostData('POST', `/getNextSearch`,
-  //     { "circleCoordinates": circleCoordinates.current,
-  //       "searchID": searchID.current,
-  //       "checksum": checksum(checksumDataBundler())
-  //     })
-  //     console.log(request)
-  //   })
-
-
-//   let getNextSearchCoord = () => new Promise((resolve, reject) => {
-//       putPostData('POST', `/getNextSearch`,
-//       { "circleCoordinates": circleCoordinates.current,
-//         "searchID": searchID.current,
-//         "checksum": checksum(checksumDataBundler())
-//       }).then(data => {
-//           console.log(data)
-//           if (!data.ok) {
-//             console.log("rejected")
-//             reject(data)
-//           } else {
-//             console.log("getNextSearchCoord data update starting")
-//             nextCenter.current = data["center"]
-//             searchedData.current = data["searched"]
-//             unsearchedData.current = data["unsearched"]
-//             let prevSearchedCoords = [...searchedCoordinatesFeatures.features]
-//             // let newSearchedCoordinates = []
-//             data["newlySearchedCoordinates"].forEach((coord, i) => {
-//               prevSearchedCoords.push(buildCoord(coord))
-//             })
-//
-//             // newSearchedCoordinates = newSearchedCoordinates.concat(prevSearchedCoords)
-//             setSearchedCoordinatesFeatures((prevValue) => prevSearchedCoords);
-//             console.log("getNextSearchCoord Complete")
-//             console.log(data)
-//             resolve(data)
-//           }
-//         })
-//   }
-// )
-//
-//     let getNextSearchCoord = new Promise (() => {
-//       console.log("getNextSearchCoord")
-//         putPostData('POST', `/getNextSearch`,
-//         {
-//           "lastCenter": nextCenter.current,
-//           "lastRadius": radius.current,
-//           "circleCoordinates": circleCoordinates.current,
-//           "searchID": searchID.current,
-//           "checksum": checksum(checksumDataBundler())
-//         }).then(data => {
-//
-//             if (data["checksumStatus"] == -1) {
-//               console.log("!!!! checksum mismatch !!!!")
-//               return
-//             }
-//             console.log("--------")
-//             console.log("last center")
-//             console.log(nextCenter.current)
-//             console.log("")
-//             console.log("next center")
-//             console.log(data["center"])
-//             console.log("--------")
-//             nextCenter.current = data["center"]
-//             searchedData.current = data["searched"]
-//             unsearchedData.current = data["unsearched"]
-//
-//             let prevSearchedCoords = [...searchedCoordinatesFeatures.features]
-//             let newSearchedCoordinates = []
-//
-//             data["newlySearchedCoordinates"].forEach((coord, i) => {
-//               newSearchedCoordinates.push(buildCoordJSON(coord))
-//             })
-//
-//             newSearchedCoordinates = newSearchedCoordinates.concat(prevSearchedCoords)
-//             setSearchedCoordinatesFeatures((prevValue) => ({ ...prevValue, features: newSearchedCoordinates }));
-//             console.log("getNextSearchCoord Complete")
-//           })
-//     })
-
-
-
-      function dummyGoogleCall(center) {
-        // let urlString = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${nextCenter.current[1]},${nextCenter.current[0]}&rankby=distance&type=${searchType}&key=${apiKey}`
-        // let responseData = ('https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=' + searchLat + ',' + searchLong + '&rankby=distance&type=' + type + '&key=' + apiKey).json()
-        // console.log(urlString)
-        // let responseData = fetch(urlString).then(data => {
-        //     console.log(data)
-        //   })
-        // console.log(responseData)
-        // let furthestLatLon = responseData[responseData.length-1]["geometry"]["location"]
-        //
-        // let calcedRadius = Math.hypot(furthestLatLon["lat"]-nextCenter.current[1], furthestLatLon["lng"]-nextCenter.current[0])
-
-        // radius.current = Math.random() * (3 - .5) + .5;
-      }
 
   function dummyGoogleCall(center) {
     return new Promise((resolve) => {
       radius.current = Math.random() * (3 - .5) + .5;
       resolve("ok")
     })
-    // radius.current = Math.random() * (3 - .5) + .5;
   }
 
-  // add a data polygon json object for each coordinate in list of coordinates passed.
   function addCoordinates(data, target, setTarget) {
     let features = [...target.features]
     let coordFeatures = []
@@ -1221,23 +480,12 @@ const newF = {
   }
 
 
-  function addCircle() {
-    console.log("addCircle")
-    console.log("nextCenter.current in addCircle")
-    console.log(nextCenter.current)
-    let circleJson = buildCircle(nextCenter.current, radius.current)
+  function addCircle(center, radius) {
+    let circleJson = buildCircle(center, radius)
     let newFeatures = [...searchedAreas.features]
     newFeatures.push(circleJson)
     setSearchedAreas((prevValue) => ({ ...prevValue, features: newFeatures }));
 
-  }
-
-  function callGoogleAPI() {
-    console.log('google api call')
-    // place call to google api
-    // add resutlts to googleData ref
-    // calculate radius
-    // return radius
   }
 
   function getPolygons() {
@@ -1246,52 +494,6 @@ const newF = {
     return result
   }
 
-  function searchCheck() {
-    if (budget <= budgetUsed) {
-      window.alert("You set budget has been met.  Please increase your Budget setting if you would like to continue using the Google API.")
-      return
-    }
-    if (searchRunning) {
-      console.log("abort search")
-      return
-    }
-    search()
-  }
-
-
-  function search_old(end=false) {
-    if (budget <= budgetUsed) {
-      window.alert("You set budget has been met.  Please increase your Budget setting if you would like to continue using the Google API.")
-      return
-    }
-    if (searchRunning) {
-      console.log("abort search")
-      return
-    } else {
-      setSearchRunning((prev) => true)
-      getNextSearchCoord().then(() => {
-        console.log('-------update budget------')
-        console.log(typeof(budgetUsed));
-        setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
-        if (unsearchedData.current.length == 0) {
-          console.log("search area complete")
-          setSearchRunning((prev) => false)
-          return
-        } else {
-          try {
-            apiCaller4().then(() => addCircle())
-          } catch {}
-          setSearchRunning((prev) => false)
-        }
-      }).catch(() => {
-        setSearchRunning((prev) => false)
-        if (!end) {
-          console.log("catch after checksum mismatch")
-          syncBackend().then(() => searchCheck())
-        }
-      })
-    }
-  }
 
   async function syncBackend() {
     await axiosPutPostData('POST', `/loadSearch`,
@@ -1308,7 +510,6 @@ const newF = {
     const handleFileRead = (e) => {
       const content = fileReader.result;
       dataFile.current = content
-      console.log(content)
     }
 
     const handleFileChosen = (file) => {
@@ -1320,25 +521,10 @@ const newF = {
         fileReader.readAsText(file);
       }
     }
-
     handleFileChosen(value.target.files[0])
   }
 
-  // googleData.current = dataFile.current["googleData"]
-  // searchType.current = dataFile.current["searchType"]
-  // searchID.current = dataFile.current["searchID"]
-  // coordinateResolution = dataFile.current["resolution"]
-  // searchedData = dataFile.current["searchedData"]
-  // unsearchedData = dataFile.current["unSearchedData"]
-  // nextCenter = dataFile.current["nextCenter"]
-  // userSearchKey = dataFile.current["userSearchKey"]
-  //
-  // "budget": budget,
-  // "budgetUsed": budgetUsed,
-
   function packageData() {
-    // let searchDataObject = {}
-    // searchDataObject[searchID.current]
     let searchDataObject = {
           "searchedData": searchedData.current,
           "unsearchedData": unsearchedData.current,
@@ -1393,7 +579,7 @@ const newF = {
     }
 
   const handleGeocoderViewportChange = viewport => {
-    const geocoderDefaultOverrides = { transitionDuration: 1000 };
+  const geocoderDefaultOverrides = { transitionDuration: 1000 };
 
     return setViewPort({
       ...viewport,
@@ -1402,21 +588,8 @@ const newF = {
   }
 
   const features = editorRef.current && editorRef.current.getFeatures();
-  const selectedFeature =
-    features && (features[selectedFeatureIndex] || features[features.length - 1]);
+  const selectedFeature = features && (features[selectedFeatureIndex] || features[features.length - 1]);
   const _onViewportChange = viewport => setViewPort({...viewport, transitionDuration: 0 })
-
-  function loadFeatures() {
-    editorRef.current.addFeatures(featureSaver.current)
-  }
-
-  function saveFeatures() {
-    featureSaver.current = features
-  }
-
-  function printFeatures() {
-    console.log(features)
-  }
 
   const downloadFile = ({ data, fileName, fileType }) => {
     // Create a blob with the data we want to download as a file
@@ -1436,17 +609,6 @@ const newF = {
   }
 
   function buildFromFile() {
-    // check if the loaded file exists, and that it has valid data fields.
-
-    // searchedData
-    // unsearchedData
-    // searchType
-    // budget
-    // budgetUsed
-    // resolution
-    // userSearchKey
-    // nextCenter
-    // searchID
     try {
       let data = JSON.parse(dataFile.current)
       console.log(data)
@@ -1477,24 +639,12 @@ const newF = {
       addCoordinates(searchedData.current, searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
       setSearchedAreas(data["searchedAreas"])
       setSearchResolution(data["resolution"])
-      // data["newlySearchedCoordinates"].forEach((coord, i) => {
-      //   newSearchedCoordinates.push(buildCoord(coord))
-      // })
-      // addCoordinates(unsearchedData.current, coordinatesFeatures, setCoordinatesFeatures)
-      // addCoordinates(searchedData.current, searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
-      // addCoordinates(searchedData.current, searchedAreas, setSearchedAreas)
 
     } catch(error){
       console.log(error)
       }
     }
 
-
-    // if (dataFile.current & "googleData" in dataFile.current) {
-    //   googleData = dataFile.current["googleData"]
-    // }
-    // console.log('sync server to file data')
-  // }
 
   function renderTypeOptions() {
     return placeTypes.map(type => <option key={type} value={type}>{type}</option>)
@@ -1522,27 +672,11 @@ const newF = {
           type="text"
           disabled={newSearch ? false : true}
           value={searchResolution ? searchResolution : 'Loaded from File'}
-          // defaultValue={searchResolution ? searchResolution : `Loaded from File ${searchResolution}`}
-          // readOnly={true}
           style={{ padding: '5px', margin: '5px', textAlign: 'center'}}
           placeholder="Prior Data File"
           />
       )
     }
-  }
-
-
-  async function updateGoogleApi() {
-    console.log('updateGoogleApi')
-    setSearchRunning((prev) => true)
-    try {
-      await removeGoogle()
-      await addGoogle()
-      console.log("done")
-    } catch (error){
-      console.log(error)
-    }
-    setSearchRunning((prev) => false)
   }
 
   function resolutionInputColor() {
@@ -1641,12 +775,14 @@ const newF = {
                   placeholder="Google API Key"
                   />
 
-                  <button
-                    onClick={() => updateGoogleApi()}
-                    style={{padding: '5px', margin: '5px', whiteSpace: 'nowrap'}}
+                  <SpinnerButton
+                    func={updateGoogleApi}
+                    funcArgs={[apiKey]}
+                    height='15px'
+                    width='47px'
                     >
                     Set Key
-                    </button>
+                    </SpinnerButton>
               </div>
             </div>
 
@@ -1749,7 +885,7 @@ const newF = {
                     Build Search From File
                     </button>
                   <button
-                    onClick={() => caller()}
+                    onClick={() => debouncedSingleSearch(circleCoordinates.current, searchID.current, checksum(checksumDataBundler()), searchType)}
                     style={{padding: '5px', margin: '5px', width: '150px'}}
                     >
                     Single Search
@@ -1818,13 +954,13 @@ const newF = {
 
             <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'}}>
                   <button
-                    onClick={() => setValue()}
+                    onClick={() => debouncedInitializeSearch(getPolygons(), searchResolution, searchType)}
                     style={{padding: '5px', margin: '5px', width: '150px'}}
                     >
                     Build Search
                     </button>
                   <button
-                    onClick={() => caller()}
+                    onClick={() => debouncedSingleSearch(circleCoordinates.current, searchID.current, checksum(checksumDataBundler()), searchType)}
                     style={{padding: '5px', margin: '5px', width: '150px'}}
                     >
                     Single Search
@@ -1907,16 +1043,7 @@ const newF = {
         }
     console.log("--- searchedAreas ----")
     console.log(searchedAreas)
-    // let searchDataObject = {
-    //     "searchID": searchID.current,
-    //     "searchedData": searchedData.current,
-    //     "unsearchedData": unsearchedData.current,
-    //     "googleData": googleData.current,
-    //     "searchType": searchType.current,
-    //     "budget": budget.current,
-    //     "budgetUsed": budgetUsed.current,
-    //     "userSearchKey": userSearchKey
-    //   }
+
     let include = [
     'west',
     'compound_code',
@@ -1957,54 +1084,7 @@ const newF = {
     ...Object.keys(searchDataObject)
     ]
 
-    // let include = [
-    // 'west',
-    // 'compound_code',
-    // 'viewport',
-    // 'width',
-    // 'types',
-    // 'icon_background_color',
-    // 'place_id',
-    // // 'isOpen',
-    // 'east',
-    // 'opening_hours',
-    // 'name',
-    // 'reference',
-    // 'photos',
-    // 'height',
-    // 'south',
-    // 'getUrl',
-    // 'north',
-    // 'rating',
-    // 'lng',
-    // 'icon',
-    // 'html_attributions',
-    // 'geometry',
-    // 'location',
-    // 'scope',
-    // 'lat',
-    // 'vicinity',
-    // 'plus_code',
-    // 'user_ratings_total',
-    // 'global_code',
-    // 'icon_mask_base_uri',
-    // 'price_level',
-    // 'business_status',
-    // "searchedData",
-    // "unsearchedData",
-    // "searchedAreas",
-    // "googleData",
-    // "searchType",
-    // "budget",
-    // "budgetUsed",
-    // "resolution",
-    // "userSearchKey",
-    // "nextCenter",
-    // "searchID",
-    // "searchBorders"
-    // ]
     let d = JSON.stringify(searchDataObject, include)
-    // console.log(d)
     downloadFile({
       data: JSON.stringify(searchDataObject, include),
       fileName: `${searchType}_${userSearchKey}_${datetime}.json`,
@@ -2012,82 +1092,17 @@ const newF = {
     })
   }
 
-
-
-
-  function jsonStringifyTest() {
-    let include = [
-    'west',
-    'compound_code',
-    'viewport',
-    'width',
-    'types',
-    'icon_background_color',
-    'place_id',
-    // 'isOpen',
-    'east',
-    'opening_hours',
-    'name',
-    'reference',
-    'photos',
-    'height',
-    'south',
-    'getUrl',
-    'north',
-    'rating',
-    'lng',
-    'icon',
-    'html_attributions',
-    'geometry',
-    'location',
-    'scope',
-    'lat',
-    'vicinity',
-    'plus_code',
-    'user_ratings_total',
-    'global_code',
-    'icon_mask_base_uri',
-    'price_level',
-    'business_status',
-    ]
-
-    for (const d of googleData.current.slice(20)) {
-      console.log(d["name"])
-    }
-    let j = JSON.stringify(googleData.current, include)
-    // console.log(j)
+  function testtest() {
+    console.log('test')
   }
 
-  function renderToolTile() {
+  function renderToolTitle() {
     if (newSearch) {
       return 'New Search'
     }
     return 'Existing Search'
   }
 
-  // <script async
-  //   src={`https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`}
-  //   id='googleImport'
-  //   >
-  // </script>
-
-
-  const drawTools = (
-    <div className="mapboxgl-ctrl-top-left">
-      <div className="mapboxgl-ctrl-group mapboxgl-ctrl">
-        <button
-          className="mapbox-gl-draw_ctrl-draw-btn mapbox-gl-draw_polygon"
-          title="Polygon tool (p)"
-          onClick={() => setMode(new DrawPolygonMode())}
-        />
-        <button
-          className="mapbox-gl-draw_ctrl-draw-btn mapbox-gl-draw_trash"
-          title="Delete"
-          onClick={onDelete}
-        />
-      </div>
-    </div>
-  );
 
   return (
       <div style={{ height: '100vh', flex: '1'}}>
@@ -2099,14 +1114,6 @@ const newF = {
 
             }}>
 
-
-
-            <button
-              style={{height: '30px', width : '100px'}}
-              onClick={() => search()}
-              >
-              search
-              </button>
             <button
               style={{height: '30px', width : '100px'}}
               onClick={() => addCircle()}
@@ -2115,7 +1122,7 @@ const newF = {
               </button>
             <button
               style={{height: '30px', width : '100px'}}
-              onClick={() => setValue()}
+              onClick={() => debouncedInitializeSearch(getPolygons(), searchResolution, searchType)}
               >
               Set value
               </button>
@@ -2143,19 +1150,48 @@ const newF = {
 
                 <button
                   style={{height: '30px', width : '100px'}}
+                  onClick={() => updateGoogleApi()}
+                  >
+                  updateGoogleApi
+                  </button>
+
+              <button
+                style={{height: '30px', width : '100px'}}
+                onClick={() => console.log(this)}
+                >
+                local scope
+                </button>
+
+                <button
+                  style={{height: '30px', width : '100px'}}
                   onClick={() => {
                     console.log(document.getElementsByTagName("script"))
-                    console.log(script.current)
                   }}
                   >
 
                   get scripts
                   </button>
+
                   <button
                     style={{height: '30px', width : '100px'}}
-                    onClick={() => removeGoogle()}
+                    onClick={() => syncBackend()}
                     >
-                    remove google
+
+                    sync backent
+                    </button>
+
+                  <button
+                    style={{height: '30px',  width : '100px'}}
+                    onClick={() => triggerAlertFor(
+                      // ["polygon"],
+                      // [[getPolygons()]]
+                      [
+                        ["polygon", [getPolygons()] ]
+                      ]
+                    )}
+                    >
+
+                    triggerAlertFor
                     </button>
 
                   <button
@@ -2165,12 +1201,7 @@ const newF = {
                     window google
                     </button>
 
-                <button
-                  style={{height: '30px', width : '100px'}}
-                  onClick={() => addGoogle()}
-                  >
-                  addGoogle
-                  </button>
+
 
                 <button
                   style={{height: '30px', width : '100px'}}
@@ -2212,13 +1243,6 @@ const newF = {
               checksum
               </button>
 
-              <button
-                style={{height: '30px', width : '100px'}}
-                onClick={() => jsonStringifyTest()}
-                >
-                jsonStringifyTest
-                </button>
-
             <button
               style={{height: '30px', width : '100px'}}
               onClick={() => {addCoordinates(circleCoordinates.current)}}
@@ -2234,28 +1258,13 @@ const newF = {
               </button>
             <button
               style={{height: '30px', width : '100px'}}
-              onClick={() =>  buildBorders()}
+              onClick={() =>  console.log("not implemented")}
               >
               build borders
               </button>
-              <button
-                style={{height: '30px', width : '100px'}}
-                onClick={() =>  printFeatures()}
-                >
-                print features
-                </button>
-                <button
-                  style={{height: '30px', width : '100px'}}
-                  onClick={() =>  saveFeatures()}
-                  >
-                  save features
-                  </button>
-                  <button
-                    style={{height: '30px', width : '100px'}}
-                    onClick={() =>  loadFeatures()}
-                    >
-                    load features
-                    </button>
+
+
+
               <button
                 style={{height: '30px', width : '100px'}}
                 onClick={() => apiCaller4().then((data) => console.log(data))}
@@ -2268,7 +1277,7 @@ const newF = {
           {commonSettings()}
 
           <div style={{padding: '10px', display: 'flex', justifyContent: 'center'}}>
-          {renderToolTile()}
+          {renderToolTitle()}
           </div>
         {newSearchTools()}
         {loadSearchTools()}

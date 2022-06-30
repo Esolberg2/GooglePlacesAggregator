@@ -3,28 +3,7 @@ import React, { useRef, useState } from "react";
 
 const FilePicker = React.forwardRef((props, ref) => {
   const inputRef = useRef();
-  // const [fileNameText, setFileNameText] = useState("");
   let fileReader;
-
-  // const handleFileRead = (e) => {
-  //   const content = fileReader.result;
-  //   ref.current = content
-  //   console.log(content)
-  // }
-  //
-  // const handleFileChosen = (file) => {
-  //   setFileNameText(file["name"])
-  //   console.log(file["name"])
-  //   fileReader = new FileReader();
-  //   fileReader.onloadend = handleFileRead;
-  //   if (file) {
-  //     fileReader.readAsText(file);
-  //   }
-
-    // const [file] = e.target.files;
-    // ref.current = e.target.files
-    // console.log(file);
-  // };
 
   return (
     <div style={{display: 'flex', flexDirection: 'column'}}>
