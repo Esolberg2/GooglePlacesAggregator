@@ -170,13 +170,9 @@ def set_user_search():
 @app.route('/getNextSearch', methods=['POST'])
 def get_next_search():
     args = request.json
-    print("---args---")
-    print(args)
     searchID = args["searchID"]
-    print("---searchID", searchID)
-    print(redis_get(searchID))
-    print("+++")
-    print(checksum(redis_get(searchID)))
+    print(args["circleCoordinates"])
+
 
     try:
         searchID = args["searchID"]
@@ -195,35 +191,33 @@ def get_next_search():
     except:
         return custom_error(500, "Internal data error.")
 
-    print("")
-    print("---- data ---")
-    print(data)
 
     unsearchedPoints = MultiPoint(data["unsearched"])
     circle_border = Polygon(args["circleCoordinates"])
     newlySearchedCoordinates = []
 
-    unsearched = []
+    unsearched_new = []
     for p in unsearchedPoints:
         if not circle_border.contains(p):
-            unsearched.append(p.__geo_interface__["coordinates"])
+            unsearched_new.append(p.__geo_interface__["coordinates"])
         else:
             newlySearchedCoordinates.append(p.__geo_interface__["coordinates"])
-    # print(args["circleCoordinates"])
-    circleCoordinates = args["circleCoordinates"] if args["circleCoordinates"] else []
-    searched = list(data["searched"]) + circleCoordinates
 
-    unsearched_new = unsearched
-    searched_new = searched
-    s = searched_new
-    us = unsearched_new
+    circleCoordinates = args["circleCoordinates"] if args["circleCoordinates"] else []
+    searched_new = list(data["searched"]) + circleCoordinates
+
+    print(" ")
+    print(" ")
+    print("unsearched_new")
+    print(unsearched_new)
+
 
     # start = time.process_time()
     # knn = FaissKNeighbors()
-    # knn.fit(s, us)
-    # furthestNearest = knn.predict(us)
+    # knn.fit(searched_new, unsearched_new)
+    # furthestNearest = knn.predict(unsearched_new)
 
-    furthestNearest = knn(s, us)
+    furthestNearest = knn(searched_new, unsearched_new)
 
     redis_save(searchID, searched_new, unsearched_new)
     return {
