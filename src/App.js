@@ -54,7 +54,6 @@ const coordinateStyle = {
 
 
 const App = () => {
-
   let service = useRef(undefined);
   const [apiKey, setApiKey] = useState('IzaSyBhJRgpD2FTMa8_q68645LQRb2qNVD6wlE')
 
@@ -62,17 +61,24 @@ const App = () => {
   window.gm_authFailure = function(error) {
    alert('Google Maps API failed to load. Please check that your API key is correct and that the key is authorized for Google Maps JavaScript API');
    updateGoogleApi(apiKey)
-}
+  }
 
   useEffect(() => {
-    window.addEventListener('beforeunload', alertUser)
+    window.addEventListener('beforeunload', saveBeforeLeaving)
     return () => {
-      window.removeEventListener('beforeunload', alertUser)
+      window.removeEventListener('beforeunload', saveBeforeLeaving)
     }
   }, [])
 
+  function usePrevious(value) {
+    const ref = useRef();
+    useEffect(() => {
+      ref.current = value;
+    }, [value]);
+    return ref.current;
+  }
 
-  const alertUser = e => {
+  const saveBeforeLeaving = e => {
     e.preventDefault()
     e.returnValue = ''
   }
@@ -106,7 +112,11 @@ const App = () => {
   const [userSearchKey, setUserSearchKey] = useState("");
   const [fileNameText, setFileNameText] = useState("");
   const [searchResolution, setSearchResolution] = useState(0.5)
+
   const [searchRunning, setSearchRunning] = useState(false)
+  const [callType, setCallType] = useState('')
+  const prevCallType = usePrevious(callType);
+
   const [newSearch, setNewSearch] = useState(true)
   const [bulkSearchCount, setBulkSearchCount] = useState(false)
   const [searchResultLayer, setSearchResultLayer ] = useState(undefined)
@@ -133,78 +143,22 @@ const App = () => {
     }
   )
 
-
-  async function singleSearch(circleCoordinates, searchID, checksum) {
-    console.log(unsearchedData.current)
-    let alertPresent = triggerAlertFor(
-                          [
-                            ['googleInit', []],
-                            ['polygons', [getPolygons()]],
-                            ['resolution', [searchResolution]],
-                            ['searchType', [searchType]],
-                            ['searchComplete', [unsearchedData.current.length]]
-                          ]
-                        )
-    if (alertPresent) {
-      return
+  useEffect(() => {
+    const validCalls = {
+      'initializeSearch': initializeSearch,
+      'singleSearch': singleSearch
     }
-
-    let data = await nextSearch(circleCoordinates, searchID, checksum, searchType)
-    setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
-    addCoordinates(data["searchedData"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
-    if (data["nextCenter"] && data["radius"]) {
-      addCircle(data["nextCenter"], data["radius"])
+    if (Object.keys(validCalls).includes(callType) && !searchRunning) {
+      validCalls[callType]().then(() => {
+        setCallType('')
+        setSearchRunning(false)
+      }).catch(() => {
+        setCallType('')
+        setSearchRunning(false)
+      })
     }
-
-    searchedData.current = data["searchedData"]
-    unsearchedData.current = data["unsearchedData"]
-    nextCenter.current = data["nextCenter"]
-    googleData.current = [...googleData.current, ...data["googleData"]]
-  }
-
-  function apiCaller4() {
-    console.log("caller called")
-
-    function callback(results) {
-      let lastLat = results[results.length-1].geometry.location.lat()
-      let lastLon = results[results.length-1].geometry.location.lng()
-
-      let from = turf.point(nextCenter.current);
-      let to = turf.point([lastLon, lastLat]);
-      let options = {units: 'miles'};
-      let distance = turf.distance(from, to, options);
-      radius.current = distance
-      googleData.current = [...googleData.current, ...results]
-      console.log("distance set")
-      return distance
-    }
-
-    const service = new window.google.maps.places.PlacesService(document.createElement('div'));
-
-    try {
-      var request = {
-      location: new window.google.maps.LatLng(nextCenter.current[1],nextCenter.current[0]),
-      rankBy: window.google.maps.places.RankBy.DISTANCE,
-      type: searchType
-      };
-    } catch (error) {
-      console.log("api error")
-    }
-
-
-    return new Promise((resolve,reject)=>{
-
-      service.nearbySearch(request,function(results,status){
-          if(status === window.google.maps.places.PlacesServiceStatus.OK)
-          {
-              resolve(callback(results));
-          }else
-          {
-              reject(status);
-          }
-      });
-  })
-}
+    console.log("aborted")
+  }, [callType])
 
 
   function checksumDataBundler() {
@@ -218,7 +172,6 @@ const App = () => {
     return dataChecksum.toString()
   }
 
-  // --- region search ---
   function buildCircle(center, radius) {
     var options = {
       steps: 20,
@@ -226,9 +179,6 @@ const App = () => {
       options: {}
     };
     var radius = radius;
-
-    console.log(center)
-    console.log(radius)
     var polygon = turf.circle(center, radius, options);
     circleCoordinates.current = polygon.geometry.coordinates[0]
     return polygon
@@ -246,19 +196,49 @@ const App = () => {
   }
 
 
-  function searchDebounce (func) {
-      return function (...args) {
-          setSearchRunning((prev) => true)
-          try {
-            func.call(this, ...args)
-          } catch (error) {
-            console.log("failed")
-          }
-          setSearchRunning((prev) => false)
+  async function singleSearch() {
+    // same
+    let alertPresent = triggerAlertFor(
+                          [
+                            ['googleInit', []],
+                            ['polygons', [getPolygons()]],
+                            ['resolution', [searchResolution]],
+                            ['searchType', [searchType]],
+                            ['searchComplete', [unsearchedData.current.length]] // different
+                          ]
+                        )
+    if (alertPresent) {
+      return
+    }
+
+    try {
+        // different
+        let data = await nextSearch(circleCoordinates.current, searchID.current, checksum(checksumDataBundler()), searchType)
+        // same
+        setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
+        addCoordinates(data["searchedData"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
+        if (data["nextCenter"] && data["radius"]) {
+          addCircle(data["nextCenter"], data["radius"])
+        }
+        searchedData.current = data["searchedData"]
+        unsearchedData.current = data["unsearchedData"]
+        nextCenter.current = data["nextCenter"]
+        googleData.current = [...googleData.current, ...data["googleData"]]
+      // same
+    } catch(error) {
+      console.log("--- error ---")
+      if (error == 'ZERO_RESULTS') {
+        console.log('string match')
       }
+      console.log(error)
+    }
   }
 
-  async function initializeSearch(polygons, searchResolution, searchType) {
+
+
+  async function initializeSearch() {
+    let polygons = getPolygons()
+
     console.log(searchType)
     let alertPresent = triggerAlertFor(
                           [
@@ -273,20 +253,22 @@ const App = () => {
     }
 
     try {
+      // different
       let data = await buildSearch(polygons, searchResolution, searchType)
-      console.log('1')
-      addCoordinates(data["unsearchedData"], coordinatesFeatures, setCoordinatesFeatures)
-      console.log('2')
+      // same
+      setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
       addCoordinates(data["searchedData"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
-      console.log('3')
-      addCircle(data["nextCenter"], data["radius"])
-      console.log(data)
+      if (data["nextCenter"] && data["radius"]) {
+        addCircle(data["nextCenter"], data["radius"])
+      }
       searchedData.current = data["searchedData"]
       unsearchedData.current = data["unsearchedData"]
       nextCenter.current = data["nextCenter"]
-      searchID.current = data["searchID"]
       googleData.current = [...googleData.current, ...data["googleData"]]
-
+      // different
+      searchID.current = data["searchID"]
+      addCoordinates(data["unsearchedData"], coordinatesFeatures, setCoordinatesFeatures)
+      // same
     } catch(error) {
       console.log("--- error ---")
       if (error == 'ZERO_RESULTS') {
@@ -296,10 +278,6 @@ const App = () => {
     }
 
   }
-
-
-  const debouncedInitializeSearch = searchDebounce(initializeSearch)
-  const debouncedSingleSearch = searchDebounce(singleSearch)
 
   function clearData() {
     let features = editorRef.current.getFeatures()
@@ -387,70 +365,6 @@ const App = () => {
     console.log(apiKey)
   }
 
-  async function caller() {
-    if (searchRunning) {
-      console.log("abort")
-      return
-    }
-    try {
-      setSearchRunning((prev) => true)
-      console.log('1')
-      let response = await getNextSearchCoord()
-        nextCenter.current = response["data"]["center"]
-        searchedData.current = response["data"]["searched"]
-        unsearchedData.current = response["data"]["unsearched"]
-
-        let prevSearchedCoords = [...searchedCoordinatesFeatures.features]
-        let newSearchedCoordinates = []
-
-        response["data"]["newlySearchedCoordinates"].forEach((coord, i) => {
-          newSearchedCoordinates.push(buildCoordJSON(coord))
-        })
-
-        newSearchedCoordinates = newSearchedCoordinates.concat(prevSearchedCoords)
-        setSearchedCoordinatesFeatures((prevValue) => ({ ...prevValue, features: newSearchedCoordinates }));
-
-
-      console.log('2')
-      setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
-      console.log('3')
-      await apiCaller4()
-      console.log('4')
-      await addCircle()
-      console.log('5')
-    } catch (error) {
-      if (error.response.status == '409') {
-        console.log('checksum error')
-        try {
-          await syncBackend()
-          console.log("sync successful")
-        } catch (error) {
-          console.log("sync failed")
-        }
-      } else {
-        console.log(error)
-      }
-    }
-    setSearchRunning((prev) => false)
-  }
-
-
-
-
-  async function getNextSearchCoord() {
-    console.log({ "circleCoordinates": circleCoordinates.current,
-      "searchID": searchID.current,
-      "checksum": checksum(checksumDataBundler())
-    })
-    let request = await axiosPutPostData('POST', `/getNextSearch`,
-    { "circleCoordinates": circleCoordinates.current,
-      "searchID": searchID.current,
-      "checksum": checksum(checksumDataBundler())
-    })
-    console.log('fooBar')
-    return request
-    }
-
 
   function dummyGoogleCall(center) {
     return new Promise((resolve) => {
@@ -524,23 +438,6 @@ const App = () => {
     handleFileChosen(value.target.files[0])
   }
 
-  function packageData() {
-    let searchDataObject = {
-          "searchedData": searchedData.current,
-          "unsearchedData": unsearchedData.current,
-          "googleData": googleData.current,
-          "searchType": searchType,
-          "budget": budget,
-          "budgetUsed": budgetUsed,
-          "resolution": searchResolution,
-          "userSearchKey": userSearchKey,
-          "nextCenter": nextCenter.current,
-          "searchID": searchID.current
-        }
-        return searchDataObject
-  }
-  // --- Map ---
-
   const onSelect = useCallback(options => {
     setSelectedFeatureIndex(options && options.selectedFeatureIndex);
   }, []);
@@ -592,10 +489,7 @@ const App = () => {
   const _onViewportChange = viewport => setViewPort({...viewport, transitionDuration: 0 })
 
   const downloadFile = ({ data, fileName, fileType }) => {
-    // Create a blob with the data we want to download as a file
     const blob = new Blob([data], { type: fileType })
-    // Create an anchor element and dispatch a click event on it
-    // to trigger a download
     const a = document.createElement('a')
     a.download = fileName
     a.href = window.URL.createObjectURL(blob)
@@ -710,156 +604,135 @@ const App = () => {
   function commonSettings() {
     return (
         <div style={{flex: '1', display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
+          <div style={{paddingRight: '20px', justifyContent: 'flex-end', display: 'flex', flexDirection: 'column', width: '250px'}}>
+            <button
+              onClick={() => {
+                if (!newSearch) {
+                  selectNewSearch(true)
+                }}}
+              style={{padding: '5px', margin: '5px', backgroundColor: newSearch ? '#cccccc' : undefined }}
+              >
+              New Search
+              </button>
 
+            <button
+              onClick={() => {
+                if (newSearch) {
+                  selectNewSearch(false)
+                }}}
+              style={{padding: '5px', margin: '5px', backgroundColor: newSearch ? undefined : '#cccccc'}}
+              >
+              Load Prior Search
+              </button>
 
-            <div style={{paddingRight: '20px', justifyContent: 'flex-end', display: 'flex', flexDirection: 'column', width: '250px'}}>
-                <button
-                  onClick={() => {
-                    if (!newSearch) {
-                      selectNewSearch(true)
-                    }
-                  }}
-                  style={{padding: '5px', margin: '5px', backgroundColor: newSearch ? '#cccccc' : undefined }}
-                  >
-                  New Search
-                </button>
-                <button
-                  onClick={() => {
-                    if (newSearch) {
-                      selectNewSearch(false)
-                    }
-                  }}
-                  style={{padding: '5px', margin: '5px', backgroundColor: newSearch ? undefined : '#cccccc'}}
-                  >
-                  Load Prior Search
-                </button>
-                <button
-                  onClick={(e) => exportToJson(e)}
-                  style={{padding: '5px', margin: '5px'}}
-                  >
-                  Download Data
-                  </button>
+            <button
+              onClick={(e) => exportToJson(e)}
+              style={{padding: '5px', margin: '5px'}}
+              >
+              Download Data
+              </button>
+          </div>
+
+          <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1' }}>
+            Choose an Entity Type to Search
+            <div style={{ paddingTop: '10px', fontSize: '12px', display: 'flex', textAlign: 'center', justifyContent: 'center'}}>
+              These types are dictated by Google, and are limited
+              to one type per search.
             </div>
+            <div style={{ flexGrow: '1'}}/>
+            <select disabled={newSearch ? false : true} value={searchType} onChange={handleSelectChange} id="typeSelect" style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}>
+              {renderTypeOptions()}
+            </select>
+          </div>
 
-
-            <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1' }}>
-              Choose an Entity Type to Search
-
-              <div style={{ paddingTop: '10px', fontSize: '12px', display: 'flex', textAlign: 'center', justifyContent: 'center'}}>
-                These types are dictated by Google, and are limited
-                to one type per search.
-              </div>
-
-              <div style={{ flexGrow: '1'}}/>
-
-              <select disabled={newSearch ? false : true} value={searchType} onChange={handleSelectChange} id="typeSelect" style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}>
-                {renderTypeOptions()}
-              </select>
+          <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
+            Enter Google API Key
+            <div style={{ paddingTop: '10px', fontSize: '12px', display: 'flex', textAlign: 'center', justifyContent: 'center'}}>
+              The Key will not be saved and is only used to call the google places API directly.
             </div>
+            <div style={{ flexGrow: '1'}}/>
+            <div style={{ flex: '1', display: 'flex', flexDirection: 'row', alignItems: 'flex-end'}}>
+              <input
+                value={apiKey}
+                onChange={(e) => onChangeAPIkeyInput(e)}
+                style={{ marginLeft: '5px', height: '15px', paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}
+                placeholder="Google API Key"
+                />
 
-
-            <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
-              Enter Google API Key
-
-              <div style={{ paddingTop: '10px', fontSize: '12px', display: 'flex', textAlign: 'center', justifyContent: 'center'}}>
-                The Key will not be saved and is only used to call the google places API directly.
-              </div>
-
-              <div style={{ flexGrow: '1'}}/>
-
-              <div style={{ flex: '1', display: 'flex', flexDirection: 'row', alignItems: 'flex-end'}}>
-                <input
-                  value={apiKey}
-                  onChange={(e) => onChangeAPIkeyInput(e)}
-                  style={{ marginLeft: '5px', height: '15px', paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}
-                  placeholder="Google API Key"
-                  />
-
-                  <SpinnerButton
-                    func={updateGoogleApi}
-                    funcArgs={[apiKey]}
-                    height='15px'
-                    width='47px'
-                    >
-                    Set Key
-                    </SpinnerButton>
-              </div>
+                <SpinnerButton
+                  func={updateGoogleApi}
+                  funcArgs={[apiKey]}
+                  height='15px'
+                  width='47px'
+                  >
+                  Set Key
+                  </SpinnerButton>
             </div>
+          </div>
 
-            <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
-              Set Budget
-
-              <div style={{ paddingTop: '10px', fontSize: '12px', display: 'flex', textAlign: 'center', justifyContent: 'center'}}>
-                Enter -1 for unlimited budget: use this option with care.
-              </div>
-                  <CurrencyInput
-                    prefix="$"
-                    id="input-example"
-                    name="input-name"
-                    placeholder="Enter a max budget"
-                    defaultValue={budget}
-                    value={budget}
-                    decimalsLimit={2}
-                    onValueChange={(value) => handleBudgetChange(value)}
-                    style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', height: '15px'}}
-                    />
-
-              <div style={{ flexGrow: '1'}}/>
+          <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
+            Set Budget
+            <div style={{ paddingTop: '10px', fontSize: '12px', display: 'flex', textAlign: 'center', justifyContent: 'center'}}>
+              Enter -1 for unlimited budget: use this option with care.
+            </div>
+              <CurrencyInput
+                prefix="$"
+                id="input-example"
+                name="input-name"
+                placeholder="Enter a max budget"
+                defaultValue={budget}
+                value={budget}
+                decimalsLimit={2}
+                onValueChange={(value) => handleBudgetChange(value)}
+                style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', height: '15px'}}
+                />
+            <div style={{ flexGrow: '1'}}/>
               Budget Used
+              <CurrencyInput
+                prefix="$"
+                id="input-example"
+                name="input-name"
+                placeholder="Enter a max budget"
+                value={budgetUsed}
+                disabled={true}
+                decimalsLimit={4}
+                style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', height: '15px'}}
+                />
+          </div>
 
-                  <CurrencyInput
-                    prefix="$"
-                    id="input-example"
-                    name="input-name"
-                    placeholder="Enter a max budget"
-                    value={budgetUsed}
-                    disabled={true}
-                    decimalsLimit={4}
-                    style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', height: '15px'}}
-                    />
-
+          <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
+            Enter User Key
+            <div style={{ fontSize: '12px', paddingTop: '10px'}}>
+              This key is anything you want, and is used to organize your search data.
             </div>
+            <div style={{ flexGrow: '1'}}/>
+            <input
+              value={userSearchKey}
+              onChange={(e) => onChangeUserKey(e)}
+              style={{ paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}
+              placeholder="Custom User Key"
+              />
+          </div>
 
-
-            <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
-              Enter User Key
-              <div style={{ fontSize: '12px', paddingTop: '10px'}}>
-                  This key is anything you want, and is used to organize your search data.
-              </div>
-
-              <div style={{ flexGrow: '1'}}/>
-
-                <input
-                  value={userSearchKey}
-                  onChange={(e) => onChangeUserKey(e)}
-                  style={{ paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}
-                  placeholder="Custom User Key"
-                  />
+          <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
+            Enter Search Resolution
+            <div style={{ fontSize: '12px', paddingTop: '10px'}}>
+              This is the spacing between search coordinates within the search region.
+              The minimum resolution is 0.1 miles.
             </div>
-
-
-
-            <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
-              Enter Search Resolution
-              <div style={{ fontSize: '12px', paddingTop: '10px'}}>
-                  This is the spacing between search coordinates within the search region.
-                  The minimum resolution is 0.1 miles.
-              </div>
-
-              <div style={{ flexGrow: '1'}}/>
-
-              {renderSearchResolution()}
-            </div>
-
+            <div style={{ flexGrow: '1'}}/>
+            {renderSearchResolution()}
+          </div>
 
         </div>
-    )
-  }
+      )
+    }
 
   function loadSearchTools() {
     if (!newSearch) {
       return (
         <div style={{flex: '1', flexDirection: 'row'}}>
+
           <div
             style={
               {padding: '10px',
@@ -868,8 +741,8 @@ const App = () => {
               flexDirection: 'row',
               justifyContent: 'flex-star',
               alignItems: 'flex-end'
-              }
-            }>
+              }}
+            >
 
             <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'}}>
               <FilePicker
@@ -877,29 +750,30 @@ const App = () => {
                 filename={fileNameText}
                 />
             </div>
-            <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'}}>
-                  <button
-                    onClick={() => buildFromFile()}
-                    style={{padding: '5px', margin: '5px', width: '150px'}}
-                    >
-                    Build Search From File
-                    </button>
-                  <button
-                    onClick={() => debouncedSingleSearch(circleCoordinates.current, searchID.current, checksum(checksumDataBundler()), searchType)}
-                    style={{padding: '5px', margin: '5px', width: '150px'}}
-                    >
-                    Single Search
-                    </button>
 
+            <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'}}>
+              <button
+                onClick={() => buildFromFile()}
+                style={{padding: '5px', margin: '5px', width: '150px'}}
+                >
+                Build Search From File
+                </button>
+
+              <button
+                onClick={() => setCallType('singleSearch')}
+                style={{padding: '5px', margin: '5px', width: '150px'}}
+                >
+                Single Search
+                </button>
             </div>
 
             <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'}}>
-            <button
-              onClick={() => console.log(bulkSearchCount)}
-              style={{padding: '5px', margin: '5px', width: '150px'}}
-              >
-              Bulk Search
-              </button>
+              <button
+                onClick={() => console.log(bulkSearchCount)}
+                style={{padding: '5px', margin: '5px', width: '150px'}}
+                >
+                Bulk Search
+                </button>
               <input
                 type="number"
                 value={bulkSearchCount}
@@ -908,12 +782,8 @@ const App = () => {
                 onChange={(e) => onChangeBulkQtyInput(e)} style={{ padding: '5px', margin: '5px', textAlign: 'center'}}
                 placeholder="Bulk Search Qty"
                 />
-
             </div>
-
           </div>
-
-
         </div>
       )
     }
@@ -932,17 +802,17 @@ const App = () => {
               flexDirection: 'row',
               justifyContent: 'flex-star',
               alignItems: 'flex-end'
-              }
-            }>
+              }}
+            >
 
             <div style={{display: 'flex', flexDirection: 'column'}}>
-
-                <button
-                  onClick={() => setMode(new DrawPolygonMode())}
-                  style={{padding: '5px', margin: '5px', width: '150px'}}
+              <button
+                onClick={() => setMode(new DrawPolygonMode())}
+                style={{padding: '5px', margin: '5px', width: '150px'}}
                 >
                 Select Search Area
                 </button>
+
                 <button
                   title="Delete"
                   onClick={onDelete}
@@ -953,42 +823,40 @@ const App = () => {
             </div>
 
             <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'}}>
-                  <button
-                    onClick={() => debouncedInitializeSearch(getPolygons(), searchResolution, searchType)}
-                    style={{padding: '5px', margin: '5px', width: '150px'}}
-                    >
-                    Build Search
-                    </button>
-                  <button
-                    onClick={() => debouncedSingleSearch(circleCoordinates.current, searchID.current, checksum(checksumDataBundler()), searchType)}
-                    style={{padding: '5px', margin: '5px', width: '150px'}}
-                    >
-                    Single Search
-                    </button>
+              <button
+                onClick={() => initializeSearch()}
+                style={{padding: '5px', margin: '5px', width: '150px'}}
+                >
+                Build Search
+                </button>
 
+              <button
+                onClick={() => setCallType('singleSearch')}
+                style={{padding: '5px', margin: '5px', width: '150px'}}
+                >
+                Single Search
+                </button>
             </div>
+
             <div style={{display: 'flex', flexDirection: 'column'}}>
-                <button
-                  onClick={() => console.log(bulkSearchCount)}
-                  style={{padding: '5px', margin: '5px', width: '150px'}}
-                  >
-                  Bulk Search
-                  </button>
-                  <input
-                    type="number"
-                    value={bulkSearchCount}
-                    min="0"
-                    onKeyDown={ (evt) => ['e', '.', '-'].includes(evt.key) && evt.preventDefault() }
-                    onChange={(e) => onChangeBulkQtyInput(e)}
-                    style={{ padding: '5px', margin: '5px', textAlign: 'center'}}
-                    placeholder="Bulk Search Qty"
-                    />
+              <button
+                onClick={() => console.log(bulkSearchCount)}
+                style={{padding: '5px', margin: '5px', width: '150px'}}
+                >
+                Bulk Search
+                </button>
+
+                <input
+                  type="number"
+                  value={bulkSearchCount}
+                  min="0"
+                  onKeyDown={ (evt) => ['e', '.', '-'].includes(evt.key) && evt.preventDefault() }
+                  onChange={(e) => onChangeBulkQtyInput(e)}
+                  style={{ padding: '5px', margin: '5px', textAlign: 'center'}}
+                  placeholder="Bulk Search Qty"
+                  />
             </div>
-
-
           </div>
-
-
         </div>
       )
     }
@@ -1020,11 +888,9 @@ const App = () => {
     setNewSearch((prev) => val)
     }
 
-
   const exportToJson = e => {
     e.preventDefault()
     let datetime = new Date().toLocaleString();
-    // const replacer = (key, value) => typeof value === 'undefined' ? null : value;
 
     let searchDataObject = {
           "searchedData": searchedData.current,
@@ -1039,10 +905,7 @@ const App = () => {
           "nextCenter": nextCenter.current,
           "searchID": searchID.current,
           "searchBorders": features
-          // "circleCoordinates": circleCoordinates.current
         }
-    console.log("--- searchedAreas ----")
-    console.log(searchedAreas)
 
     let include = [
     'west',
@@ -1092,14 +955,11 @@ const App = () => {
     })
   }
 
-  function testtest() {
-    console.log('test')
-  }
 
   function renderToolTitle() {
     if (newSearch) {
       return 'New Search'
-    }
+      }
     return 'Existing Search'
   }
 
@@ -1111,29 +971,7 @@ const App = () => {
           display: 'flex',
           flexWrap: 'wrap',
           justifyContent: 'space-between'
-
-            }}>
-
-            <button
-              style={{height: '30px', width : '100px'}}
-              onClick={() => addCircle()}
-              >
-              addCircle
-              </button>
-            <button
-              style={{height: '30px', width : '100px'}}
-              onClick={() => debouncedInitializeSearch(getPolygons(), searchResolution, searchType)}
-              >
-              Set value
-              </button>
-
-            <button
-              style={{height: '30px', width : '100px'}}
-              onClick={() => getNextSearchCoord()}
-              >
-              getNextSearchCoord
-              </button>
-
+          }}>
             <button
               style={{height: '30px', width : '100px'}}
               onClick={() => printState()}
@@ -1141,86 +979,12 @@ const App = () => {
               print state
               </button>
 
-              <button
-                style={{height: '30px', width : '100px'}}
-                onClick={() => console.log(document)}
-                >
-                print google library
-                </button>
-
-                <button
-                  style={{height: '30px', width : '100px'}}
-                  onClick={() => updateGoogleApi()}
-                  >
-                  updateGoogleApi
-                  </button>
-
-              <button
-                style={{height: '30px', width : '100px'}}
-                onClick={() => console.log(this)}
-                >
-                local scope
-                </button>
-
-                <button
-                  style={{height: '30px', width : '100px'}}
-                  onClick={() => {
-                    console.log(document.getElementsByTagName("script"))
-                  }}
-                  >
-
-                  get scripts
-                  </button>
-
-                  <button
-                    style={{height: '30px', width : '100px'}}
-                    onClick={() => syncBackend()}
-                    >
-
-                    sync backent
-                    </button>
-
-                  <button
-                    style={{height: '30px',  width : '100px'}}
-                    onClick={() => triggerAlertFor(
-                      // ["polygon"],
-                      // [[getPolygons()]]
-                      [
-                        ["polygon", [getPolygons()] ]
-                      ]
-                    )}
-                    >
-
-                    triggerAlertFor
-                    </button>
-
-                  <button
-                    style={{height: '30px', width : '100px'}}
-                    onClick={() => console.log(window.google)}
-                    >
-                    window google
-                    </button>
-
-
-
-                <button
-                  style={{height: '30px', width : '100px'}}
-                  onClick={() => {
-                    let googleElement = document.getElementById("googleMaps")
-                    googleElement.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=geometry,places`
-                    console.log(googleElement)
-                    console.log(document.getElementById("googleMaps"))
-                }}
-                  >
-                  get scripts2
-                  </button>
-
-                  <button
-                    style={{height: '30px', width : '100px'}}
-                    onClick={() => document.body.removeChild(document.getElementById("googleMaps"))}
-                    >
-                    remove scripts
-                    </button>
+            <button
+              style={{height: '30px', width : '100px'}}
+              onClick={() => syncBackend()}
+              >
+              sync backent
+              </button>
 
             <button
               style={{height: '30px', width : '100px'}}
@@ -1231,102 +995,64 @@ const App = () => {
 
             <button
               style={{height: '30px', width : '100px'}}
-              onClick={() => {addCoordinates(unsearchedData.current, coordinatesFeatures, setCoordinatesFeatures)}}
-              >
-              build coordinates
-              </button>
-
-            <button
-              style={{height: '30px', width : '100px'}}
               onClick={() => checksum(checksumDataBundler())}
               >
               checksum
               </button>
 
-            <button
-              style={{height: '30px', width : '100px'}}
-              onClick={() => {addCoordinates(circleCoordinates.current)}}
-              >
-              build next searhced coords
-              </button>
-
-            <button
-              style={{height: '30px', width : '100px'}}
-              onClick={() => {addCoordinates(searchedData.current, searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)}}
-              >
-              build searhced coordinates
-              </button>
-            <button
-              style={{height: '30px', width : '100px'}}
-              onClick={() =>  console.log("not implemented")}
-              >
-              build borders
-              </button>
-
-
-
-              <button
-                style={{height: '30px', width : '100px'}}
-                onClick={() => apiCaller4().then((data) => console.log(data))}
-                >
-                apiCaller
-                </button>
-          </div>
-          <div style={{ height: '50px'}}/>
-
+        </div>
+        <div style={{ height: '50px'}}/>
           {commonSettings()}
-
-          <div style={{padding: '10px', display: 'flex', justifyContent: 'center'}}>
+        <div style={{padding: '10px', display: 'flex', justifyContent: 'center'}}>
           {renderToolTitle()}
-          </div>
-        {newSearchTools()}
-        {loadSearchTools()}
+        </div>
+          {newSearchTools()}
+          {loadSearchTools()}
 
-
-
-      <MapGL
-        ref={mapRef}
-        {...viewport}
-        width="100%"
-        height="100%"
-        mapboxApiAccessToken={TOKEN}
-        mapStyle="mapbox://styles/mapbox/streets-v11"
-        onViewportChange={_onViewportChange}
-       >
-
-       <Geocoder
-          mapRef={mapRef}
-          onResult={handleOnResult}
-          onViewportChange={handleGeocoderViewportChange}
+        <MapGL
+          ref={mapRef}
+          {...viewport}
+          width="100%"
+          height="100%"
           mapboxApiAccessToken={TOKEN}
-          position='top-left'
-          />
-      <Source id="coordinateLayer" type="geojson" data={coordinatesFeatures}>
-        <Layer key={"1"} {...coordinateStyle} />
-      </Source>
+          mapStyle="mapbox://styles/mapbox/streets-v11"
+          onViewportChange={_onViewportChange}
+          >
 
-      <Source id="searchedAreaLayer" type="geojson" data={searchedAreas}>
-        <Layer key={"2"} {...searchedAreaStyle} />
-      </Source>
+         <Geocoder
+            mapRef={mapRef}
+            onResult={handleOnResult}
+            onViewportChange={handleGeocoderViewportChange}
+            mapboxApiAccessToken={TOKEN}
+            position='top-left'
+            />
 
-      <Source id="searchedCoordinateLayer" type="geojson" data={searchedCoordinatesFeatures}>
-        <Layer key={"3"} {...searchedCoordinateStyle} />
-      </Source>
+          <Source id="coordinateLayer" type="geojson" data={coordinatesFeatures}>
+            <Layer key={"1"} {...coordinateStyle} />
+          </Source>
+
+          <Source id="searchedAreaLayer" type="geojson" data={searchedAreas}>
+            <Layer key={"2"} {...searchedAreaStyle} />
+          </Source>
+
+          <Source id="searchedCoordinateLayer" type="geojson" data={searchedCoordinatesFeatures}>
+            <Layer key={"3"} {...searchedCoordinateStyle} />
+          </Source>
 
           <Editor
-          ref={editorRef}
-          style={{width: '100%', height: '100%'}}
-          clickRadius={12}
-          mode={mode}
-          onSelect={onSelect}
-          onUpdate={onUpdate}
-          editHandleShape={'circle'}
-          featureStyle={getFeatureStyle}
-          editHandleStyle={getEditHandleStyle}
-        />
+            ref={editorRef}
+            style={{width: '100%', height: '100%'}}
+            clickRadius={12}
+            mode={mode}
+            onSelect={onSelect}
+            onUpdate={onUpdate}
+            editHandleShape={'circle'}
+            featureStyle={getFeatureStyle}
+            editHandleStyle={getEditHandleStyle}
+            />
         </MapGL>
       </div>
      )
     }
 
-    export default App;
+export default App;
