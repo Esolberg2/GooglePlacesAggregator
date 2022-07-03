@@ -6,6 +6,7 @@ import {Editor, DrawPolygonMode, EditingMode} from 'react-map-gl-draw';
 import ControlPanel from './control-panel';
 import {getFeatureStyle, getEditHandleStyle} from './style';
 import * as turf from '@turf/turf'
+import { ToggleSlider }  from "react-toggle-slider";
 import CurrencyInput from 'react-currency-input-field';
 import FilePicker from './components/FilePicker.js'
 import GoogleApiKeyLoader from './components/GoogleApiKeyLoader.js'
@@ -56,10 +57,37 @@ const coordinateStyle = {
 const App = () => {
   let service = useRef(undefined);
   const [apiKey, setApiKey] = useState('IzaSyBhJRgpD2FTMa8_q68645LQRb2qNVD6wlE')
+  const [apiKeyStale, setApiKeyStale] = useState(false)
 
+  useEffect(() => {
+    if (!apiKeyStale) {
+      setApiKeyStale(true)
+    }
+  }, [apiKey])
 
   window.gm_authFailure = function(error) {
-   alert('Google Maps API failed to load. Please check that your API key is correct and that the key is authorized for Google Maps JavaScript API');
+   // alert('Google Maps API failed to load. Please check that your API key is correct' +
+   //  ' and that the key is authorized for Google\'s "Maps JavaScript API" and "Places API".' +
+   //  ' This can be done from the Google Cloud Console.' +
+   //  '\n \n' +
+   //  'Instructions for creating Google API keys and enabling the required APIs' +
+   //  ' can be found at the below URL:\n \n' +
+   //  'https://developers.google.com/maps/documentation/javascript/get-api-key'
+   //  );
+   let selection = window.confirm(
+    'Google Maps API failed to load. Please check that your API key is correct' +
+    ' and that the key is authorized for Google\'s "Maps JavaScript API" and "Places API".' +
+    ' This can be done from the Google Cloud Console.' +
+    '\n \n' +
+    'Click "OK" to be taken to the instruction page for creating Google API keys and enabling the required APIs' +
+    ' at the below URL:\n \n' +
+    'https://developers.google.com/maps/documentation/javascript/get-api-key'
+   )
+   if (selection) {
+     window.open('https://developers.google.com/maps/documentation/javascript/get-api-key', '_blank', 'noopener,noreferrer');
+   } else {
+     console.log("stay on page")
+   }
    updateGoogleApi(apiKey)
   }
 
@@ -87,6 +115,7 @@ const App = () => {
   const googleScript = useRef(undefined)
   const googleData = useRef([]);
   const dataFile = useRef(undefined)
+  const filePickerRef = useRef()
   const searchID = useRef(undefined);
 
   const editorRef = useRef(undefined);
@@ -95,6 +124,7 @@ const App = () => {
   const searchedData = useRef(undefined);
   const unsearchedData = useRef(undefined);
   const nextCenter = useRef(undefined);
+  const searchCentroid = useRef(undefined);
   const radius = useRef(undefined);
   const circleCoordinates = useRef(undefined);
 
@@ -108,21 +138,27 @@ const App = () => {
     transitionDuration: 100
   })
 
+  // signals
   const [searchType, setSearchType] = useState("Select")
+
+  // flags
+  const [searchBuilt, setSearchBuilt] = useState(false)
+  const [testMode, setTestMode] = useState(true)
+  const [searchRunning, setSearchRunning] = useState(false)
+  const [newSearch, setNewSearch] = useState(true)
+  const [mode, setMode] = useState(undefined);
+
+  // data
   const [userSearchKey, setUserSearchKey] = useState("");
   const [fileNameText, setFileNameText] = useState("");
   const [searchResolution, setSearchResolution] = useState(0.5)
-
-  const [searchRunning, setSearchRunning] = useState(false)
   const [callType, setCallType] = useState('')
   const prevCallType = usePrevious(callType);
-
-  const [newSearch, setNewSearch] = useState(true)
   const [bulkSearchCount, setBulkSearchCount] = useState(false)
   const [searchResultLayer, setSearchResultLayer ] = useState(undefined)
   const [budget, setBudget] = useState(0)
   const [budgetUsed, setBudgetUsed] = useState(0);
-  const [mode, setMode] = useState(undefined);
+
   const [selectedFeatureIndex, setSelectedFeatureIndex] = useState(undefined);
   const [searchedAreas, setSearchedAreas] = useState(
     {
@@ -148,16 +184,25 @@ const App = () => {
       'initializeSearch': initializeSearch,
       'singleSearch': singleSearch
     }
+    console.log("triggered", callType)
+
     if (Object.keys(validCalls).includes(callType) && !searchRunning) {
+
       validCalls[callType]().then(() => {
-        setCallType('')
-        setSearchRunning(false)
-      }).catch(() => {
-        setCallType('')
-        setSearchRunning(false)
-      })
+        console.log("call succeeded")
+        }).catch((error) => {
+          console.log("call failed")
+          console.log(error)
+        }).finally(() => {
+          setCallType('')
+          setSearchRunning(false)
+        })
+    } else {
+      console.log("aborted")
     }
-    console.log("aborted")
+    console.log("")
+    console.log(Object.keys(validCalls).includes(callType))
+    console.log(!searchRunning)
   }, [callType])
 
 
@@ -195,28 +240,73 @@ const App = () => {
     return polygon
   }
 
+  async function bulkSearch() {
+
+    let alertArgs = [
+
+      ['searchInit', [unsearchedData]],
+      ['polygons', [getPolygons()]],
+      ['resolution', [searchResolution]],
+      ['searchType', [searchType]],
+      ['budgetExceeded', [budget, budgetUsed]],
+      ['searchInit', [unsearchedData]],
+      ['searchComplete', [unsearchedData]] // different
+    ]
+
+  if (!testMode) {
+    alertArgs = [['googleInit', []], ...alertArgs]
+  }
+
+    if (!bulkSearchCount) {
+      alert("Please specify the Qty of  searches to run in bulk.")
+    } else {
+
+      if (confirmBulkSearch(bulkSearchCount, bulkSearchCount * .032)) {
+        for (let i=0; i < bulkSearchCount; i++) {
+
+          if (triggerAlertFor(alertArgs)) {
+            return
+          } else {
+            await singleSearch()
+          }
+
+        }
+      }
+      alert("Bulk Search complete.")
+    }
+  }
 
   async function singleSearch() {
+    console.log("singleSearch run")
+
+    let alertArgs = [
+      ['searchInit', [unsearchedData]],
+      ['polygons', [getPolygons()]],
+      ['resolution', [searchResolution]],
+      ['searchType', [searchType]],
+      ['budgetExceeded', [budget, budgetUsed]],
+      ['searchComplete', [unsearchedData]]
+    ]
+
+  if (!testMode) {
+    alertArgs = [['googleInit', []], ...alertArgs]
+  }
+
     // same
-    let alertPresent = triggerAlertFor(
-                          [
-                            ['googleInit', []],
-                            ['polygons', [getPolygons()]],
-                            ['resolution', [searchResolution]],
-                            ['searchType', [searchType]],
-                            ['searchComplete', [unsearchedData.current.length]] // different
-                          ]
-                        )
+    let alertPresent = triggerAlertFor(alertArgs)
+
     if (alertPresent) {
+      console.log("single search aborted due to rule fail")
       return
     }
 
+    console.log("no single search alter triggered")
     try {
         // different
-        let data = await nextSearch(circleCoordinates.current, searchID.current, checksum(checksumDataBundler()), searchType)
+        let data = await nextSearch(circleCoordinates.current, searchID.current, checksum(checksumDataBundler()), searchType, testMode)
         // same
         setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
-        addCoordinates(data["searchedData"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
+        // addCoordinates(data["searchedData"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
         if (data["nextCenter"] && data["radius"]) {
           addCircle(data["nextCenter"], data["radius"])
         }
@@ -224,6 +314,7 @@ const App = () => {
         unsearchedData.current = data["unsearchedData"]
         nextCenter.current = data["nextCenter"]
         googleData.current = [...googleData.current, ...data["googleData"]]
+        console.log("try done")
       // same
     } catch(error) {
       console.log("--- error ---")
@@ -231,6 +322,16 @@ const App = () => {
         console.log('string match')
       }
       console.log(error)
+      // if effor code 409, sync backend
+      if (error.response.status) {
+        try {
+          console.log("syncing")
+          await syncBackend()
+          singleSearch()
+        } catch {
+          console.log("failed to sync")
+        }
+      }
     }
   }
 
@@ -239,22 +340,28 @@ const App = () => {
   async function initializeSearch() {
     let polygons = getPolygons()
 
+    let alertArgs = [
+      ['polygons', [getPolygons()]],
+      ['resolution', [searchResolution]],
+      ['searchType', [searchType]],
+      ['budgetExceeded', [budget, budgetUsed]],
+      // ['searchInit', [unsearchedData]],
+      ['searchComplete', [unsearchedData]]
+    ]
+
+  if (!testMode) {
+    alertArgs = [['googleInit', []], ...alertArgs]
+  }
+
     console.log(searchType)
-    let alertPresent = triggerAlertFor(
-                          [
-                            ['googleInit', []],
-                            ['polygons', [getPolygons()]],
-                            ['resolution', [searchResolution]],
-                            ['searchType', [searchType]]
-                          ]
-                        )
+    let alertPresent = triggerAlertFor(alertArgs)
     if (alertPresent) {
       return
     }
 
     try {
       // different
-      let data = await buildSearch(polygons, searchResolution, searchType)
+      let data = await buildSearch(polygons, searchResolution, searchType, testMode)
       // same
       setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
       addCoordinates(data["searchedData"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
@@ -264,6 +371,9 @@ const App = () => {
       searchedData.current = data["searchedData"]
       unsearchedData.current = data["unsearchedData"]
       nextCenter.current = data["nextCenter"]
+      searchCentroid.current = data["nextCenter"]
+      console.log(data["googleData"])
+
       googleData.current = [...googleData.current, ...data["googleData"]]
       // different
       searchID.current = data["searchID"]
@@ -295,6 +405,7 @@ const App = () => {
     circleCoordinates.current = undefined
 
     // state reset
+    setSearchBuilt(false)
     setSearchRunning(false)
     setSearchResultLayer(undefined);
     setSearchResolution(undefined);
@@ -323,6 +434,12 @@ const App = () => {
 
 
   function printState() {
+    console.log("dataFile")
+    console.log(dataFile.current)
+    console.log("apiKeyStale")
+    console.log(apiKeyStale)
+    console.log(document)
+    console.log(window.google)
     console.log("")
     console.log("")
     console.log("")
@@ -394,12 +511,20 @@ const App = () => {
   }
 
 
+  // function addCircle(center, radius) {
+  //   let circleJson = buildCircle(center, radius)
+  //   let newFeatures = [...searchedAreas.features]
+  //   newFeatures.push(circleJson)
+  //   setSearchedAreas((prevValue) => ({ ...prevValue, features: newFeatures }));
+  // }
+
   function addCircle(center, radius) {
     let circleJson = buildCircle(center, radius)
-    let newFeatures = [...searchedAreas.features]
-    newFeatures.push(circleJson)
-    setSearchedAreas((prevValue) => ({ ...prevValue, features: newFeatures }));
-
+    // let newFeatures = [...searchedAreas.features]
+    // newFeatures.push(circleJson)
+    // setSearchedAreas((prevValue) => ({ ...prevValue, features: newFeatures }));
+    setSearchedAreas((prevValue) => ({ ...prevValue, features: [...prevValue["features"], circleJson]}))
+    // {...test, "features": [...test["features"], {"obj": 3}]}
   }
 
   function getPolygons() {
@@ -439,6 +564,7 @@ const App = () => {
   }
 
   const onSelect = useCallback(options => {
+    console.log("onSelect")
     setSelectedFeatureIndex(options && options.selectedFeatureIndex);
   }, []);
 
@@ -449,6 +575,7 @@ const App = () => {
   }, [selectedFeatureIndex]);
 
   const onUpdate = useCallback(({editType}) => {
+    console.log('onUpdate')
     if (editType === 'addFeature') {
       setMode(new EditingMode());
     }
@@ -456,33 +583,62 @@ const App = () => {
 
 
   const handleOnResult = event => {
-    setSearchResultLayer( new GeoJsonLayer({
-        id: "search-result",
-        data: event.result.geometry,
-        getFillColor: [255, 0, 0, 128],
-        getRadius: 1000,
-        pointRadiusMinPixels: 10,
-        pointRadiusMaxPixels: 10
-      })
-    )
+    console.log("handleOnResult")
+    // mapRef.current._toggle()
+    // setSearchResultLayer( new GeoJsonLayer({
+    //     id: "search-result",
+    //     data: event.result.geometry,
+    //     getFillColor: [255, 0, 0, 128],
+    //     getRadius: 1000,
+    //     pointRadiusMinPixels: 10,
+    //     pointRadiusMaxPixels: 10
+    //   })
+    // )
   }
 
   function handleBudgetChange(value) {
-    if (value < -1) {
+    let cleanValue = isNaN(value) ? 0 : parseFloat(value)
+    if (cleanValue < -1) {
         setBudget(-1)
       } else {
-        setBudget(value)
-      }
+        setBudget(value)}
     }
 
-  const handleGeocoderViewportChange = viewport => {
-  const geocoderDefaultOverrides = { transitionDuration: 1000 };
 
-    return setViewPort({
-      ...viewport,
-      ...geocoderDefaultOverrides
-    });
-  }
+  // const handleGeocoderViewportChange = viewport => {
+  //   console.log("handleGeocoderViewportChange")
+  //   const geocoderDefaultOverrides = { transitionDuration: 1000 };
+  //
+  //     return setViewPort({
+  //       ...viewport,
+  //       ...geocoderDefaultOverrides
+  //     });
+  // }
+
+  // const [viewport, setViewPort] = useState({
+  //   latitude: 37.7577,
+  //   longitude: -122.4376,
+  //   zoom: 8
+  // });
+
+  const handleViewportChange = useCallback(
+    (newViewport) => setViewPort(newViewport),
+    []
+  );
+
+  const handleGeocoderViewportChange = useCallback(
+    (newViewport) => {
+      console.log("XXXXXX")
+      console.log(newViewport)
+      const geocoderDefaultOverrides = { transitionDuration: 1000 };
+
+      return handleViewportChange({
+        ...newViewport,
+        ...geocoderDefaultOverrides
+      });
+    },
+    [handleViewportChange]
+  );
 
   const features = editorRef.current && editorRef.current.getFeatures();
   const selectedFeature = features && (features[selectedFeatureIndex] || features[features.length - 1]);
@@ -511,9 +667,12 @@ const App = () => {
       setSearchType(data["searchType"])
       console.log("searchType")
       searchID.current = data["searchID"]
+      searchCentroid.current = data["searchCentroid"]
       console.log("searchID")
       // setSearchResolution.current = data["resolution"]
       // console.log("resolution")
+      console.log("circleCoordinates")
+      circleCoordinates.current = data["circleCoordinates"]
       searchedData.current = data["searchedData"]
       console.log("searchedData")
       unsearchedData.current = data["unsearchedData"]
@@ -533,6 +692,9 @@ const App = () => {
       addCoordinates(searchedData.current, searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
       setSearchedAreas(data["searchedAreas"])
       setSearchResolution(data["resolution"])
+      // hereherehere
+      findOrigin(...data["searchCentroid"])
+      setSearchBuilt(true)
 
     } catch(error){
       console.log(error)
@@ -554,6 +716,7 @@ const App = () => {
           defaultValue={searchResolution}
           value={searchResolution}
           decimalsLimit={2}
+          key={searchResolution}
           onKeyDown = {(evt) => ['e', '-'].includes(evt.key) && evt.preventDefault() }
           onValueChange={(value) => setSearchResolution(value)}
           style={{backgroundColor: resolutionInputColor(), paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', height: '15px'}}
@@ -578,7 +741,7 @@ const App = () => {
       return '#cccccc'
     } else {
       if (searchResolution < 0.1) {
-        return 'red'
+        return '#fde0e0'
       } else {
         return undefined
       }
@@ -631,10 +794,68 @@ const App = () => {
               >
               Download Data
               </button>
+
+              <button
+                onClick={(e) => existingDataWarning(e)}
+                style={{padding: '5px', margin: '5px'}}
+                >
+                Clear Search
+                </button>
+
+                <div style={{paddingTop: '10px', display: 'flex', flex: '1', flexDirection: 'column', alignItems:'center'}}>
+                  <div style={{fontWeight: 'bold', fontSize: '14px'}}>
+                    Test Without Google Key
+                  </div>
+                  <div style={{ padding: '5px', paddingTop: '5px', alignItems: 'center', justifyContent: 'space-around', flex: '1', display: 'flex', flexDirection: 'row'}}>
+                  <ToggleSlider
+                    style={{ display: 'flex', flex: '1'}}
+                    onToggle={() => setTestMode((prev) => !prev)}
+                    active={testMode}
+                    />
+
+                    <div style={{paddingLeft: '10px', minWidth: '125px', paddingTop: '5px', fontSize: '12px', whiteSpace: 'wrap'}}>
+                      This setting will replace Google API calls with a dummy call, and produce dummy data.
+                    </div>
+                  </div>
+            </div>
+          </div>
+
+          <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
+            <div style={{fontWeight: 'bold'}}>
+            Enter Google API Key
+            </div>
+            <div style={{ paddingTop: '10px', fontSize: '12px', display: 'flex', textAlign: 'center', justifyContent: 'center'}}>
+              The Key will not be saved and is only used to call the google places API directly.
+            </div>
+
+            <div style={{ flex: '1', display: 'flex', flexDirection: 'row', alignItems: 'flex-end'}}>
+              <input
+                value={apiKey}
+                onChange={(e) => onChangeAPIkeyInput(e)}
+                style={{ marginLeft: '5px', height: '15px', paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}
+                placeholder="Google API Key"
+                disabled={testMode}
+                />
+
+                <SpinnerButton
+                  func={updateGoogleApi}
+                  funcArgs={[apiKey]}
+                  height='15px'
+                  width='47px'
+                  onClick={() => setApiKeyStale(false)}
+                  buttonStyle={{backgroundColor: apiKeyStale ? '#fde0e0' : 'none'}}
+                  buttonKey={apiKeyStale}
+                  disabled={testMode}
+                  >
+                  {apiKeyStale ? 'Set Key' : 'Key Set'}
+                  </SpinnerButton>
+            </div>
           </div>
 
           <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1' }}>
-            Choose an Entity Type to Search
+            <div style={{fontWeight: 'bold'}}>
+            Select Search Entity Type
+            </div>
             <div style={{ paddingTop: '10px', fontSize: '12px', display: 'flex', textAlign: 'center', justifyContent: 'center'}}>
               These types are dictated by Google, and are limited
               to one type per search.
@@ -645,33 +866,12 @@ const App = () => {
             </select>
           </div>
 
-          <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
-            Enter Google API Key
-            <div style={{ paddingTop: '10px', fontSize: '12px', display: 'flex', textAlign: 'center', justifyContent: 'center'}}>
-              The Key will not be saved and is only used to call the google places API directly.
-            </div>
-            <div style={{ flexGrow: '1'}}/>
-            <div style={{ flex: '1', display: 'flex', flexDirection: 'row', alignItems: 'flex-end'}}>
-              <input
-                value={apiKey}
-                onChange={(e) => onChangeAPIkeyInput(e)}
-                style={{ marginLeft: '5px', height: '15px', paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}
-                placeholder="Google API Key"
-                />
 
-                <SpinnerButton
-                  func={updateGoogleApi}
-                  funcArgs={[apiKey]}
-                  height='15px'
-                  width='47px'
-                  >
-                  Set Key
-                  </SpinnerButton>
-            </div>
-          </div>
 
           <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
+            <div style={{fontWeight: 'bold'}}>
             Set Budget
+            </div>
             <div style={{ paddingTop: '10px', fontSize: '12px', display: 'flex', textAlign: 'center', justifyContent: 'center'}}>
               Enter -1 for unlimited budget: use this option with care.
             </div>
@@ -684,10 +884,12 @@ const App = () => {
                 value={budget}
                 decimalsLimit={2}
                 onValueChange={(value) => handleBudgetChange(value)}
-                style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', height: '15px'}}
+                style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '20px', marginBottom: '5px', height: '15px'}}
                 />
-            <div style={{ flexGrow: '1'}}/>
+            <div style={{fontWeight: 'bold', flexGrow: '1'}}/>
+              <div style={{fontWeight: 'bold'}}>
               Budget Used
+              </div>
               <CurrencyInput
                 prefix="$"
                 id="input-example"
@@ -701,7 +903,9 @@ const App = () => {
           </div>
 
           <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
+            <div style={{fontWeight: 'bold'}}>
             Enter User Key
+            </div>
             <div style={{ fontSize: '12px', paddingTop: '10px'}}>
               This key is anything you want, and is used to organize your search data.
             </div>
@@ -715,7 +919,9 @@ const App = () => {
           </div>
 
           <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
+            <div style={{fontWeight: 'bold'}}>
             Enter Search Resolution
+            </div>
             <div style={{ fontSize: '12px', paddingTop: '10px'}}>
               This is the spacing between search coordinates within the search region.
               The minimum resolution is 0.1 miles.
@@ -737,7 +943,6 @@ const App = () => {
             style={
               {padding: '10px',
               display: 'flex',
-              backgroundColor: 'green',
               flexDirection: 'row',
               justifyContent: 'flex-star',
               alignItems: 'flex-end'
@@ -748,6 +953,7 @@ const App = () => {
               <FilePicker
                 onChange={e => loadFile(e)}
                 filename={fileNameText}
+                disabled={searchBuilt}
                 />
             </div>
 
@@ -755,6 +961,7 @@ const App = () => {
               <button
                 onClick={() => buildFromFile()}
                 style={{padding: '5px', margin: '5px', width: '150px'}}
+                disabled={searchBuilt}
                 >
                 Build Search From File
                 </button>
@@ -769,7 +976,7 @@ const App = () => {
 
             <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'}}>
               <button
-                onClick={() => console.log(bulkSearchCount)}
+                onClick={() => bulkSearch()}
                 style={{padding: '5px', margin: '5px', width: '150px'}}
                 >
                 Bulk Search
@@ -798,7 +1005,6 @@ const App = () => {
             style={
               {padding: '10px',
               display: 'flex',
-              backgroundColor: 'green',
               flexDirection: 'row',
               justifyContent: 'flex-star',
               alignItems: 'flex-end'
@@ -809,6 +1015,7 @@ const App = () => {
               <button
                 onClick={() => setMode(new DrawPolygonMode())}
                 style={{padding: '5px', margin: '5px', width: '150px'}}
+                disabled={searchBuilt}
                 >
                 Select Search Area
                 </button>
@@ -826,6 +1033,7 @@ const App = () => {
               <button
                 onClick={() => initializeSearch()}
                 style={{padding: '5px', margin: '5px', width: '150px'}}
+                disabled={unsearchedData.current != undefined}
                 >
                 Build Search
                 </button>
@@ -840,7 +1048,7 @@ const App = () => {
 
             <div style={{display: 'flex', flexDirection: 'column'}}>
               <button
-                onClick={() => console.log(bulkSearchCount)}
+                onClick={() => bulkSearch()}
                 style={{padding: '5px', margin: '5px', width: '150px'}}
                 >
                 Bulk Search
@@ -864,12 +1072,24 @@ const App = () => {
   }
 
 
-  function existingDataWarning(callback) {
-    if (editorRef.current.getFeatures().length > 0 || googleData.current.length == 0 || searchedData.current || unsearchedData.current) {
+  function existingDataWarning() {
+    console.log("")
+    console.log(editorRef.current.getFeatures().length)
+    console.log(editorRef.current.getFeatures())
+    console.log("")
+    console.log(googleData.current.length == 0)
+    console.log("")
+    console.log(searchedData.current)
+    console.log("")
+    console.log(unsearchedData.current)
+    console.log("")
+    console.log("")
+
+    if (editorRef.current.getFeatures().length > 0 || googleData.current.length != 0 || searchedData.current || unsearchedData.current) {
       let selection = window.confirm(
         "WARNING: Data is present from an in progress search session." +
         " If you continue, this data will be lost.  Please use the 'Download Data'"+
-        " option if you wish to keep this information."
+        " option if you wish to keep your current data."
       )
       if (selection) {
         clearData()
@@ -881,6 +1101,26 @@ const App = () => {
     return true
   }
 
+  function confirmBulkSearch(searchQty, totalCost) {
+      let selection = window.confirm(
+        `WARNING: Please confirm you execute ${searchQty} calls to the Google Places Api.` +
+        ` for a projected total cost of $${totalCost}.`
+      )
+      if (selection) {
+        return true
+      } else {
+        return false
+      }
+  }
+
+  function findOrigin(long, lat) {
+      setViewPort({
+        ...viewport,
+        latitude: lat,
+        longitude: long,
+        zoom: 8
+      });
+  }
 
   function selectNewSearch(val) {
     console.log(searchResolution)
@@ -904,7 +1144,9 @@ const App = () => {
           "userSearchKey": userSearchKey,
           "nextCenter": nextCenter.current,
           "searchID": searchID.current,
-          "searchBorders": features
+          "searchBorders": features,
+          "circleCoordinates": circleCoordinates.current,
+          "searchCentroid": searchCentroid.current
         }
 
     let include = [
@@ -966,91 +1208,82 @@ const App = () => {
 
   return (
       <div style={{ height: '100vh', flex: '1'}}>
+      <button
+        onClick={() => {
+          // editorRef.current.setCenter(-71.12155505022261,42.36482408472057)
+          console.log(editorRef)
+          console.log(mapRef.current.getMap())
+        }}
+        style={{padding: '5px', margin: '5px', width: '150px'}}
+        >
+        handleGeocoderViewportChange
+        </button>
 
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'space-between'
-          }}>
-            <button
-              style={{height: '30px', width : '100px'}}
-              onClick={() => printState()}
-              >
-              print state
-              </button>
+        <button
+          onClick={() => printState()}
+          style={{padding: '5px', margin: '5px', width: '150px'}}
+          >
+          printState
+          </button>
 
-            <button
-              style={{height: '30px', width : '100px'}}
-              onClick={() => syncBackend()}
-              >
-              sync backent
-              </button>
-
-            <button
-              style={{height: '30px', width : '100px'}}
-              onClick={() => {dummyGoogleCall(); console.log(radius.current)}}
-              >
-              dummy google call
-              </button>
-
-            <button
-              style={{height: '30px', width : '100px'}}
-              onClick={() => checksum(checksumDataBundler())}
-              >
-              checksum
-              </button>
-
-        </div>
         <div style={{ height: '50px'}}/>
           {commonSettings()}
-        <div style={{padding: '10px', display: 'flex', justifyContent: 'center'}}>
-          {renderToolTitle()}
-        </div>
-          {newSearchTools()}
-          {loadSearchTools()}
 
-        <MapGL
-          ref={mapRef}
-          {...viewport}
-          width="100%"
-          height="100%"
-          mapboxApiAccessToken={TOKEN}
-          mapStyle="mapbox://styles/mapbox/streets-v11"
-          onViewportChange={_onViewportChange}
-          >
 
-         <Geocoder
-            mapRef={mapRef}
-            onResult={handleOnResult}
-            onViewportChange={handleGeocoderViewportChange}
+        <div style={{display: 'flex', height: '100%', flexDirection: 'column'}}>
+          <div style={{height: '100%'}}>
+          <MapGL
+            ref={mapRef}
+            {...viewport}
+            width="100%"
+            height="100%"
             mapboxApiAccessToken={TOKEN}
-            position='top-left'
-            />
+            mapStyle="mapbox://styles/mapbox/streets-v11"
+            onViewportChange={_onViewportChange}
+            >
 
-          <Source id="coordinateLayer" type="geojson" data={coordinatesFeatures}>
-            <Layer key={"1"} {...coordinateStyle} />
-          </Source>
+           <Geocoder
+              mapRef={mapRef}
+              onViewportChange={handleGeocoderViewportChange}
+              mapboxApiAccessToken={TOKEN}
+              position='top-right'
+              />
 
-          <Source id="searchedAreaLayer" type="geojson" data={searchedAreas}>
-            <Layer key={"2"} {...searchedAreaStyle} />
-          </Source>
+            <Source id="coordinateLayer" type="geojson" data={coordinatesFeatures}>
+              <Layer key={"1"} {...coordinateStyle} />
+            </Source>
 
-          <Source id="searchedCoordinateLayer" type="geojson" data={searchedCoordinatesFeatures}>
-            <Layer key={"3"} {...searchedCoordinateStyle} />
-          </Source>
+            <Source id="searchedAreaLayer" type="geojson" data={searchedAreas}>
+              <Layer key={"2"} {...searchedAreaStyle} />
+            </Source>
 
-          <Editor
-            ref={editorRef}
-            style={{width: '100%', height: '100%'}}
-            clickRadius={12}
-            mode={mode}
-            onSelect={onSelect}
-            onUpdate={onUpdate}
-            editHandleShape={'circle'}
-            featureStyle={getFeatureStyle}
-            editHandleStyle={getEditHandleStyle}
-            />
-        </MapGL>
+            <Source id="searchedCoordinateLayer" type="geojson" data={searchedCoordinatesFeatures}>
+              <Layer key={"3"} {...searchedCoordinateStyle} />
+            </Source>
+
+            <Editor
+              ref={editorRef}
+              style={{width: '100%', height: '100%'}}
+              clickRadius={12}
+              mode={mode}
+              onSelect={onSelect}
+              onUpdate={onUpdate}
+              editHandleShape={'circle'}
+              featureStyle={getFeatureStyle}
+              editHandleStyle={getEditHandleStyle}
+              />
+          </MapGL>
+          </div>
+
+          <div style={{backdropFilter: 'blur(20px)', borderBottomRightRadius: '10px', position: 'absolute', alingSelf: 'flex-start'}}>
+            <div style={{fontWeight: 'bold', paddingTop: '10px', display: 'flex', justifyContent: 'center'}}>
+              {renderToolTitle()}
+            </div>
+            {newSearchTools()}
+            {loadSearchTools()}
+          </div>
+
+        </div>
       </div>
      )
     }

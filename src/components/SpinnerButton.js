@@ -19,6 +19,7 @@ const SpinnerButton = (props) => {
   const func = props.func
   const funcArgs = props.funcArgs
 
+  const [inputUpdated, setInputUpdated] = useState(false)
 
   function funcWrapper(func) {
     return async function(...args) {
@@ -29,13 +30,20 @@ const SpinnerButton = (props) => {
     }
   }
 
+  // function onClickWrapper() {
+  //   props.onClick()
+  //   setLoading(true)
+  // }
 
   useEffect(() => {
-
     const wrappedFunction = funcWrapper(func)
-
     wrappedFunction(...funcArgs)
-
+    // console.log("setting apiStale to false")
+    // props.onClick()
+    if (!spinner) {
+      console.log("setting apiStale to false")
+      props.onClick()
+    }
   }, [spinner])
 
 
@@ -44,6 +52,7 @@ const SpinnerButton = (props) => {
       setSpinner(true)
     } else {
       setSpinner(false)
+      // props.onClick()
     }
   }, [loading])
 
@@ -57,12 +66,14 @@ const SpinnerButton = (props) => {
   }
 
   return (
-    <div>
+    <div style={{}}>
       <button
+        key={props.buttonKey}
         onClick={() => setLoading(true)}
         style={{...{padding: '5px', margin: '5px', whiteSpace: 'nowrap'}, ...buttonStyle}}
+        disabled={props.disabled}
         >
-        <div style={{...{width: width, height: loading ? '0px' : height, visibility: loading ? 'hidden' : 'visible'}, ...textStyle}}>
+        <div key={props.textKey} style={{...{width: width, height: loading ? '0px' : height, visibility: loading ? 'hidden' : 'visible'}, ...textStyle}}>
         {children}
         </div>
         <TailSpin

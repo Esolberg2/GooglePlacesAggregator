@@ -8,7 +8,6 @@ export async function axiosPutPostData(method, url = '', data = {}) {
   let axiosArgs = {
     method: method,
     url: url,
-    responseType: 'stream',
     data: data
   }
   console.log("axios args")
