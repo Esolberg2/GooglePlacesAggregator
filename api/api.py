@@ -97,6 +97,7 @@ def load_search():
     print("running loadSearch")
     args = request.json
     try:
+        assert all(key in args for key in ["searchID", "searched", "unsearched"])
         redis_save(args["searchID"], args["searched"], args["unsearched"])
         return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
     except:

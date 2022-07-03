@@ -4,12 +4,14 @@ import React, { useRef, useState } from "react";
 const FilePicker = React.forwardRef((props, ref) => {
   const inputRef = useRef();
   let fileReader;
-
+  console.log("ref check")
+  console.log(ref)
   return (
     <div style={{display: 'flex', flexDirection: 'column'}}>
       <button
       onClick={() => inputRef.current.click()}
       style={{padding: '5px', margin: '5px', width: '150px'}}
+      disabled={props.disabled}
       >
         Select File
       </button>
