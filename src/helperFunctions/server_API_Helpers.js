@@ -204,7 +204,7 @@ async function getNextSearchCoord(circleCoordinates, searchID, checksum) {
   function dummyGoogleCall(center) {
     console.log('running dummy call')
     return new Promise((resolve) => {
-      let radius = Math.random() * (3 - .1) + .1;
+      let radius = Math.random() * (1.5 - .1) + .1;
       let dummyResult = {
         "radius": radius,
         "googleData": [
