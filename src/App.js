@@ -56,7 +56,7 @@ const coordinateStyle = {
 
 const App = () => {
   let service = useRef(undefined);
-  const [apiKey, setApiKey] = useState('IzaSyBhJRgpD2FTMa8_q68645LQRb2qNVD6wlE')
+  const [apiKey, setApiKey] = useState('')
   const [apiKeyStale, setApiKeyStale] = useState(false)
 
   useEffect(() => {
@@ -345,7 +345,6 @@ const App = () => {
       ['resolution', [searchResolution]],
       ['searchType', [searchType]],
       ['budgetExceeded', [budget, budgetUsed]],
-      // ['searchInit', [unsearchedData]],
       ['searchComplete', [unsearchedData]]
     ]
 
@@ -386,7 +385,6 @@ const App = () => {
       }
       console.log(error)
     }
-
   }
 
   function clearData() {
@@ -692,7 +690,6 @@ const App = () => {
       addCoordinates(searchedData.current, searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
       setSearchedAreas(data["searchedAreas"])
       setSearchResolution(data["resolution"])
-      // hereherehere
       findOrigin(...data["searchCentroid"])
       setSearchBuilt(true)
 
@@ -716,7 +713,6 @@ const App = () => {
           defaultValue={searchResolution}
           value={searchResolution}
           decimalsLimit={2}
-          key={searchResolution}
           onKeyDown = {(evt) => ['e', '-'].includes(evt.key) && evt.preventDefault() }
           onValueChange={(value) => setSearchResolution(value)}
           style={{backgroundColor: resolutionInputColor(), paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', height: '15px'}}
@@ -861,7 +857,7 @@ const App = () => {
               to one type per search.
             </div>
             <div style={{ flexGrow: '1'}}/>
-            <select disabled={newSearch ? false : true} value={searchType} onChange={handleSelectChange} id="typeSelect" style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}>
+            <select key={searchType} disabled={newSearch ? false : true} value={searchType} onChange={handleSelectChange} id="typeSelect" style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}>
               {renderTypeOptions()}
             </select>
           </div>
