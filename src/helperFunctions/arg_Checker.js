@@ -10,6 +10,8 @@ export function triggerAlertFor(funcs) {
     "searchComplete": searchCompleteError,
     "searchInit": noSearchInitializedError,
     "budgetExceeded": budgetExceededError,
+    "fileLoaded": fileLoadedError,
+    "fileError": fileError,
   }
 
   let difference = funcs.filter(func => !Object.keys(funcMap).includes(func[0]));
@@ -28,9 +30,52 @@ export function triggerAlertFor(funcs) {
   }
 }
 
+function fileError(dataFile) {
+  let dataFileJson = JSON.parse(dataFile.current)
+  let requiredKeys = [
+    "googleData",
+    "searchType",
+    "searchID",
+    "searchCentroid",
+    "circleCoordinates",
+    "searchedData",
+    "unsearchedData",
+    "nextCenter",
+    "userSearchKey",
+    "budgetUsed",
+    "budget",
+    "searchBorders",
+    "searchedAreas",
+    "resolution"
+  ]
+
+  for (let i=0; i < requiredKeys.length; i++) {
+    if (!Object.keys(dataFileJson).includes(requiredKeys[i])) {
+      console.log(requiredKeys[i])
+      window.alert('Your selected file is missing required fields.  Please select a valid file to load.')
+      return true
+    }
+    return false
+  }
+
+
+
+}
+
+function fileLoadedError(dataFile) {
+  if (!dataFile.current) {
+    window.alert('Please select a file to load prior to building your search.')
+    return true
+  }
+  return false
+}
+
 function budgetExceededError(budgetSet, budgetUsed) {
   console.log(budgetUsed, budgetSet)
-  if (budgetUsed >= budgetSet) {
+  if (budgetSet == -1) {
+    return false
+  }
+  if (budgetUsed >= budgetSet || !budgetSet) {
     window.alert('You have exhausted your set budget. To run additional searches or build a new search, please increase your budget setting.')
     return true
   }
