@@ -125,15 +125,13 @@ def get_next_search():
 
     try:
         searchID = args["searchID"]
+        print("searchID")
+        print(searchID)
         clientChecksum = args["checksum"]
-        print("")
-        print("clientChecksum")
-        print(clientChecksum)
+
         data = redis_get(searchID)
         serverChecksum = checksum(data)
-        print("")
-        print("serverChecksum")
-        print(serverChecksum)
+
         if serverChecksum != clientChecksum:
             # return {"checksumStatus": -1}
             return custom_error(409, "Server data out of sync with client, please refresh data.")
@@ -154,11 +152,6 @@ def get_next_search():
 
     circleCoordinates = args["circleCoordinates"] if args["circleCoordinates"] else []
     searched_new = list(data["searched"]) + circleCoordinates
-
-    print(" ")
-    print(" ")
-    print("unsearched_new")
-    print(unsearched_new)
 
 
     # start = time.process_time()
