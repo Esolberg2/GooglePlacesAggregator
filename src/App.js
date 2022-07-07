@@ -3,13 +3,11 @@ import MapGL, {GeolocateControl, Source, Layer } from 'react-map-gl'
 import DeckGL, { GeoJsonLayer } from "deck.gl";
 import Geocoder from "react-map-gl-geocoder";
 import {Editor, DrawPolygonMode, EditingMode} from 'react-map-gl-draw';
-import ControlPanel from './control-panel';
 import {getFeatureStyle, getEditHandleStyle} from './style';
 import * as turf from '@turf/turf'
 import { ToggleSlider }  from "react-toggle-slider";
 import CurrencyInput from 'react-currency-input-field';
 import FilePicker from './components/FilePicker.js'
-import GoogleApiKeyLoader from './components/GoogleApiKeyLoader.js'
 import SpinnerButton from './components/SpinnerButton.js'
 import axios from 'axios'
 import 'mapbox-gl/dist/mapbox-gl.css'
@@ -111,6 +109,7 @@ const App = () => {
     e.returnValue = ''
   }
 
+
   const featureSaver = useRef(undefined)
   const googleScript = useRef(undefined)
   const googleData = useRef([]);
@@ -118,6 +117,7 @@ const App = () => {
   const filePickerRef = useRef()
   const searchID = useRef(undefined);
 
+  const resolutionRef = useRef()
   const editorRef = useRef(undefined);
   const containerRef = useRef(undefined);
   const mapRef = useRef();
@@ -406,7 +406,8 @@ const App = () => {
     setSearchBuilt(false)
     setSearchRunning(false)
     setSearchResultLayer(undefined);
-    setSearchResolution(undefined);
+    setSearchResolution('');
+    // resolutionRef.current.value = ''
     setSelectedFeatureIndex(undefined);
     setSearchedAreas(
       {
@@ -656,6 +657,10 @@ const App = () => {
     a.remove()
   }
 
+  function handleResolutionChange(value) {
+    setSearchResolution(value)
+  }
+
   function buildFromFile() {
     // console.log(JSON.parse(dataFile.current)["googleData"])
 
@@ -724,7 +729,8 @@ const App = () => {
           id="input-example"
           name="input-name"
           placeholder="Search Resolution"
-          defaultValue={searchResolution}
+          // defaultValue={searchResolution}
+          // ref={resolutionRef}
           value={searchResolution}
           decimalsLimit={2}
           onKeyDown = {(evt) => ['e', '-'].includes(evt.key) && evt.preventDefault() }
@@ -1083,17 +1089,6 @@ const App = () => {
 
 
   function existingDataWarning() {
-    console.log("")
-    console.log(editorRef.current.getFeatures().length)
-    console.log(editorRef.current.getFeatures())
-    console.log("")
-    console.log(googleData.current.length == 0)
-    console.log("")
-    console.log(searchedData.current)
-    console.log("")
-    console.log(unsearchedData.current)
-    console.log("")
-    console.log("")
 
     if (editorRef.current.getFeatures().length > 0 || googleData.current.length != 0 || searchedData.current || unsearchedData.current) {
       let selection = window.confirm(
@@ -1219,23 +1214,11 @@ const App = () => {
   return (
       <div style={{ height: '100vh', flex: '1'}}>
       <button
-        onClick={() => {
-          // editorRef.current.setCenter(-71.12155505022261,42.36482408472057)
-          console.log(editorRef)
-          console.log(mapRef.current.getMap())
-        }}
-        style={{padding: '5px', margin: '5px', width: '150px'}}
+        onClick={() => console.log(searchResolution)}
+        style={{padding: '5px', margin: '5px', backgroundColor: newSearch ? '#cccccc' : undefined }}
         >
-        handleGeocoderViewportChange
+        print resolution
         </button>
-
-        <button
-          onClick={() => printState()}
-          style={{padding: '5px', margin: '5px', width: '150px'}}
-          >
-          printState
-          </button>
-
         <div style={{ height: '50px'}}/>
           {commonSettings()}
 

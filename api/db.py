@@ -1,6 +1,6 @@
 import sqlite3
 
-def query(sql, args):
+def query(sql, args=[]):
     conn = sqlite3.connect('searches.sqlite')
     curs = conn.cursor()
     try:
@@ -12,16 +12,18 @@ def query(sql, args):
         return {"returned": [], "lastRowID": -1}
 
 
-q = '''create table searchIDs (
-id integer PRIMARY KEY,
+q = '''CREATE TABLE IF NOT EXISTS searchIDs (
+id integer PRIMARY KEY
 )'''
-
+# #
 q2 = '''select * from searchIDs'''
-
+# #
 q3 = '''insert into searchIDs values(NULL)'''
-
-q4 = '''drop table searchIDs '''
-
-q5 = '''insert into searchIDs values(?)'''
-
-print(query(q5,[7]))
+# #
+# # q4 = '''drop table searchIDs '''
+# #
+# q5 = '''insert into searchIDs values(?)'''
+#
+query(q,[])
+# query(q3)
+# print(query(q2))
