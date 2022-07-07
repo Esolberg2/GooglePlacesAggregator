@@ -533,7 +533,7 @@ const App = () => {
 
 
   async function syncBackend() {
-    await axiosPutPostData('POST', `/loadSearch`,
+    await axiosPutPostData('PUT', `/loadSearch`,
       {
         "searched": searchedData.current,
         "unsearched": unsearchedData.current,
@@ -657,6 +657,20 @@ const App = () => {
   }
 
   function buildFromFile() {
+    // console.log(JSON.parse(dataFile.current)["googleData"])
+
+    let alertArgs = [
+      ['fileLoaded', [dataFile]],
+      ['fileError', [dataFile]]
+    ]
+
+    // same
+    let alertPresent = triggerAlertFor(alertArgs)
+
+    if (alertPresent) {
+      return
+    }
+
     try {
       let data = JSON.parse(dataFile.current)
       console.log(data)
@@ -687,7 +701,7 @@ const App = () => {
       console.log("budget")
       editorRef.current.addFeatures(data["searchBorders"])
       addCoordinates(unsearchedData.current, coordinatesFeatures, setCoordinatesFeatures)
-      addCoordinates(searchedData.current, searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
+      // addCoordinates(searchedData.current, searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
       setSearchedAreas(data["searchedAreas"])
       setSearchResolution(data["resolution"])
       findOrigin(...data["searchCentroid"])

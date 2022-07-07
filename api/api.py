@@ -28,57 +28,17 @@ import shapely.speedups
 shapely.speedups.enable()
 
 r = redis.Redis(host= 'localhost',port= '6379')
-#
-# redis.set('mykey', 'Hello from Python!')
-# value = redis.get('mykey')
-# print(value)
-#
-# redis.zadd('vehicles', {'car' : 0})
-# redis.zadd('vehicles', {'bike' : 0})
-# vehicles = redis.zrange('vehicles', 0, -1)
-# print(vehicles)
-# 'AIzaSyBhJRgpD2FTMa8_q68645LQRb2qNVD6wlE'
-
 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'mysecret'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///searches.sqlite3'
-# app.config['SESSION_TYPE'] = "sqlalchemy"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
-# app.config['SESSION_SQLALCHEMY'] = db
-
-# sess = Session(app)
-
-# db.create_all()
-# RESOLUTION = 1
-# LAT_CONVERSION = 69
-# LON_CONVERSION = 54.6
-# LATSTEP = 1/(LAT_CONVERSION/RESOLUTION)
-# LONSTEP = 1/(LON_CONVERSION/RESOLUTION)
-
 
 def custom_error(status_code, message):
     return make_response(jsonify({"message": message}), status_code)
-
-set_user_search_parser = reqparse.RequestParser()
-set_user_search_parser.add_argument('searchRegions')
-set_user_search_parser.add_argument('searchKey')
-
-get_user_search_parser = reqparse.RequestParser()
-
-def abort_if_key_NOT_exists(searchKey):
-    if session.get(searchKey) is None:
-        return custom_error(400, "the specified search name does not yet exist")
-    return False
-
-def abort_if_key_exists(searchKey):
-    if session.get(searchKey) is not None:
-        return custom_error(400, "a search with this name already exists")
-    return False
-
 
 def checksum(obj):
     JSON = js2py.eval_js('JSON')
@@ -92,7 +52,7 @@ def checksum(obj):
 # loads an existing search from a user file.
 # might be useable to add regions to existing search by modifying the
 # user data file to include a new set of points.
-@app.route('/loadSearch', methods=['POST'])
+@app.route('/loadSearch', methods=['PUT'])
 def load_search():
     print("running loadSearch")
     args = request.json
@@ -122,20 +82,10 @@ def redis_get(searchID):
 
 
 # only used for brand new searches
-@app.route('/setUserSearch', methods=['POST'])
+@app.route('/searchSession', methods=['POST'])
 def set_user_search():
-    print("running setUserSearch")
     args = request.json
-    print(args)
     searchRegions = args["searchRegions"]
-    print("")
-    print("")
-    print(args["searchRegions"])
-    print("")
-    print("")
-    print(args["searchID"])
-    print("")
-    print("")
 
     # returns shapely geometries
     output = makeGrid(searchRegions, float(args["coordinateResolution"]))
@@ -156,7 +106,6 @@ def set_user_search():
     searchID = query('''insert into searchIDs values(Null)''', [])
     assert redis_save(searchID["lastRowID"], s, us)
 
-    print("-- searchID", searchID)
 
     return {
         "searchedCoords": s,
@@ -168,11 +117,10 @@ def set_user_search():
 
 
 # used for each google api call.
-@app.route('/getNextSearch', methods=['POST'])
+@app.route('/searchSession', methods=['PUT'])
 def get_next_search():
     args = request.json
     searchID = args["searchID"]
-    print(args["circleCoordinates"])
 
 
     try:
@@ -229,16 +177,30 @@ def get_next_search():
     }
 
 
+# set_user_search_parser = reqparse.RequestParser()
+# set_user_search_parser.add_argument('searchRegions')
+# set_user_search_parser.add_argument('searchKey')
+# get_user_search_parser = reqparse.RequestParser()
 
+# def abort_if_key_NOT_exists(searchKey):
+#     if session.get(searchKey) is None:
+#         return custom_error(400, "the specified search name does not yet exist")
+#     return False
+#
+# def abort_if_key_exists(searchKey):
+#     if session.get(searchKey) is not None:
+#         return custom_error(400, "a search with this name already exists")
+#     return False
 
-@app.route('/getUserSearch/<string:searchKey>', methods=['GET'])
-def get_user_search(searchKey):
-    args = get_user_search_parser.parse_args()
-    if "searchKey" not in args:
-        return custom_error(400, "searchKey is a required input")
-
-    error = abort_if_key_NOT_exists(searchKey)
-    if error:
-        return error
-
-    return {"true": True}
+#
+# @app.route('/getUserSearch/<string:searchKey>', methods=['GET'])
+# def get_user_search(searchKey):
+#     args = get_user_search_parser.parse_args()
+#     if "searchKey" not in args:
+#         return custom_error(400, "searchKey is a required input")
+#
+#     error = abort_if_key_NOT_exists(searchKey)
+#     if error:
+#         return error
+#
+#     return {"true": True}
