@@ -6,7 +6,6 @@ import json
 from db import query
 import time
 import math
-import numpy as np
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 from shapely.geometry.multipolygon import MultiPolygon
@@ -14,10 +13,6 @@ from shapely.ops import unary_union
 from shapely.ops import polygonize
 from shapely.geometry import MultiPoint, mapping, shape, asShape
 from coordinateFunctions import makeGrid, knn
-from fiassKnn import FaissKNeighbors
-# from sessionDataManager import initData, getSearchedCoords, getUnsearchedCoords, saveDataToFile
-import matplotlib.pyplot as plt
-import geopandas as gpd
 import time
 import redis
 import pickle
@@ -42,7 +37,6 @@ def custom_error(status_code, message):
 
 def checksum(obj):
     JSON = js2py.eval_js('JSON')
-    # msg = JSON.stringify(dictionary["1"]["searched"]);
     msg = JSON.stringify(obj);
     msg = msg.encode(encoding='utf-8')
     hash = hashlib.md5(msg)
@@ -52,7 +46,7 @@ def checksum(obj):
 # loads an existing search from a user file.
 # might be useable to add regions to existing search by modifying the
 # user data file to include a new set of points.
-@app.route('/loadSearch', methods=['PUT'])
+@app.route('/api/loadSearch', methods=['PUT'])
 def load_search():
     print("running loadSearch")
     args = request.json
@@ -82,7 +76,7 @@ def redis_get(searchID):
 
 
 # only used for brand new searches
-@app.route('/searchSession', methods=['POST'])
+@app.route('/api/searchSession', methods=['POST'])
 def set_user_search():
     args = request.json
     searchRegions = args["searchRegions"]
@@ -92,11 +86,6 @@ def set_user_search():
 
     s = output["searchedCoords"].__geo_interface__["coordinates"]
     us = output["unsearchedCoords"].__geo_interface__["coordinates"]
-
-    # Fiass KNN
-    # knn = FaissKNeighbors()
-    # knn.fit(s, us)
-    # furthestNearest = knn.predict(us)
 
     # sklearn KNN
     furthestNearest = knn(s, us)
@@ -117,7 +106,7 @@ def set_user_search():
 
 
 # used for each google api call.
-@app.route('/searchSession', methods=['PUT'])
+@app.route('/api/searchSession', methods=['PUT'])
 def get_next_search():
     args = request.json
     searchID = args["searchID"]
@@ -133,7 +122,6 @@ def get_next_search():
         serverChecksum = checksum(data)
 
         if serverChecksum != clientChecksum:
-            # return {"checksumStatus": -1}
             return custom_error(409, "Server data out of sync with client, please refresh data.")
     except:
         return custom_error(500, "Internal data error.")
@@ -153,12 +141,6 @@ def get_next_search():
     circleCoordinates = args["circleCoordinates"] if args["circleCoordinates"] else []
     searched_new = list(data["searched"]) + circleCoordinates
 
-
-    # start = time.process_time()
-    # knn = FaissKNeighbors()
-    # knn.fit(searched_new, unsearched_new)
-    # furthestNearest = knn.predict(unsearched_new)
-
     furthestNearest = knn(searched_new, unsearched_new)
 
     redis_save(searchID, searched_new, unsearched_new)
@@ -169,31 +151,6 @@ def get_next_search():
         "newlySearchedCoordinates": newlySearchedCoordinates
     }
 
-
-# set_user_search_parser = reqparse.RequestParser()
-# set_user_search_parser.add_argument('searchRegions')
-# set_user_search_parser.add_argument('searchKey')
-# get_user_search_parser = reqparse.RequestParser()
-
-# def abort_if_key_NOT_exists(searchKey):
-#     if session.get(searchKey) is None:
-#         return custom_error(400, "the specified search name does not yet exist")
-#     return False
-#
-# def abort_if_key_exists(searchKey):
-#     if session.get(searchKey) is not None:
-#         return custom_error(400, "a search with this name already exists")
-#     return False
-
-#
-# @app.route('/getUserSearch/<string:searchKey>', methods=['GET'])
-# def get_user_search(searchKey):
-#     args = get_user_search_parser.parse_args()
-#     if "searchKey" not in args:
-#         return custom_error(400, "searchKey is a required input")
-#
-#     error = abort_if_key_NOT_exists(searchKey)
-#     if error:
-#         return error
-#
-#     return {"true": True}
+@app.route('/api/test', methods=['GET'])
+def test_api():
+    return {"time": time.time()}
