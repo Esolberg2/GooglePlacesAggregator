@@ -534,7 +534,7 @@ const App = () => {
 
 
   async function syncBackend() {
-    await axiosPutPostData('PUT', `/loadSearch`,
+    await axiosPutPostData('PUT', `/api/loadSearch`,
       {
         "searched": searchedData.current,
         "unsearched": unsearchedData.current,

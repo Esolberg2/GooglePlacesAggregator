@@ -71,7 +71,7 @@ export async function nextSearch(circleCoordinates, searchID, checksum, searchTy
 // step 1
 export async function buildSearch(polygons, searchResolution, searchType, testMode) {
       // get coordinate data
-      let response = await axiosPutPostData('POST', `/searchSession`,
+      let response = await axiosPutPostData('POST', `/api/searchSession`,
         {
           "searchRegions": polygons,
           "searchID": null,
@@ -192,7 +192,7 @@ const nearbySearch = (callback, service, request) => new Promise((resolve,reject
 
 
 async function getNextSearchCoord(circleCoordinates, searchID, checksum) {
-  let request = await axiosPutPostData('PUT', `/searchSession`,
+  let request = await axiosPutPostData('PUT', `/api/searchSession`,
   { "circleCoordinates": circleCoordinates,
     "searchID": searchID,
     "checksum": checksum
