@@ -20,9 +20,12 @@ import bz2
 import js2py
 import hashlib
 import shapely.speedups
+import os
 shapely.speedups.enable()
 
+# r = redis.Redis(host= 'redis',port= '6379')
 r = redis.Redis(host= 'localhost',port= '6379')
+
 
 
 app = Flask(__name__)
@@ -93,9 +96,10 @@ def set_user_search():
     # add error if searchID is found.  Seting a search should always be net new.
     assert not args["searchID"]
     searchID = query('''insert into searchIDs values(Null)''', [])
+    print("------------    got this far --------------")
     assert redis_save(searchID["lastRowID"], s, us)
-
-
+    print("------------    redis worked ---------------")
+    print("searchID", searchID)
     return {
         "searchedCoords": s,
         "unsearchedCoords": us,
@@ -153,4 +157,21 @@ def get_next_search():
 
 @app.route('/api/test', methods=['GET'])
 def test_api():
-    return {"time": time.time()}
+    # return {"time": time.time()}
+    root = os.listdir()
+
+    paths = ['../', './app', './dbVol', './app/dbVol']
+    out = []
+    for path in paths:
+        try:
+            out.append(os.listdir(path))
+        except:
+            out.append("failed")
+
+    return {
+    "root": root,
+    "parent": out[0],
+    "app": out[1],
+    "dbVol": out[2],
+    "app/dbVol": out[3]
+    }
