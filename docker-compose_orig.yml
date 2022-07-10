@@ -2,17 +2,23 @@ services:
   api:
     build:
       context: .
-    image: esolberg1/client_aggregator_api
+      dockerfile: Dockerfile.api
+    image: react-flask-app-api
     volumes:
       - dbVol:/dbVol
+    restart: always
   client:
     build:
       context: .
-    image: esolberg1/client_aggregator_app
+      dockerfile: Dockerfile.client
+    image: react-flask-app-client
     ports:
       - "3000:80"
+    restart: always
   redis:
     image: "redis:alpine"
     command: redis-server --maxmemory 500000000 --maxmemory-policy allkeys-lru
+    restart: always
+
 volumes:
   dbVol:

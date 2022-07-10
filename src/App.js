@@ -407,7 +407,6 @@ const App = () => {
     setSearchRunning(false)
     setSearchResultLayer(undefined);
     setSearchResolution('');
-    // resolutionRef.current.value = ''
     setSelectedFeatureIndex(undefined);
     setSearchedAreas(
       {
@@ -1213,12 +1212,6 @@ const App = () => {
 
   return (
       <div style={{ height: '100vh', flex: '1'}}>
-      <button
-        onClick={() => console.log(searchResolution)}
-        style={{padding: '5px', margin: '5px', backgroundColor: newSearch ? '#cccccc' : undefined }}
-        >
-        print resolution
-        </button>
         <div style={{ height: '50px'}}/>
           {commonSettings()}
 
