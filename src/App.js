@@ -63,6 +63,7 @@ const App = () => {
     }
   }, [apiKey])
 
+
   window.gm_authFailure = function(error) {
    // alert('Google Maps API failed to load. Please check that your API key is correct' +
    //  ' and that the key is authorized for Google\'s "Maps JavaScript API" and "Places API".' +
@@ -172,7 +173,7 @@ const App = () => {
     'features': []
     }
   )
-  const [coordinatesFeatures, setCoordinatesFeatures] = useState(
+  const [coordinatesFeatures, setCoordinatesFeatures, getCoordinatesFeatures] = useState(
     {
     'type': 'FeatureCollection',
     'features': []
@@ -184,14 +185,11 @@ const App = () => {
       'initializeSearch': initializeSearch,
       'singleSearch': singleSearch
     }
-    console.log("triggered", callType)
 
     if (Object.keys(validCalls).includes(callType) && !searchRunning) {
 
       validCalls[callType]().then(() => {
-        console.log("call succeeded")
         }).catch((error) => {
-          console.log("call failed")
           console.log(error)
         }).finally(() => {
           setCallType('')
@@ -200,9 +198,6 @@ const App = () => {
     } else {
       console.log("aborted")
     }
-    console.log("")
-    console.log(Object.keys(validCalls).includes(callType))
-    console.log(!searchRunning)
   }, [callType])
 
 
@@ -213,7 +208,6 @@ const App = () => {
   function checksum(obj) {
     let data =  JSON.stringify(obj)
     var dataChecksum = CryptoJS.MD5(data);
-    console.log(dataChecksum.toString())
     return dataChecksum.toString()
   }
 
@@ -235,7 +229,7 @@ const App = () => {
       units: 'miles',
       options: {}
     };
-    var radius = .01;
+    var radius = .035;
     var polygon = turf.circle(center, radius, options);
     return polygon
   }
@@ -277,7 +271,6 @@ const App = () => {
   }
 
   async function singleSearch() {
-    console.log("singleSearch run")
 
     let alertArgs = [
       ['searchInit', [unsearchedData]],
@@ -300,12 +293,14 @@ const App = () => {
       return
     }
 
-    console.log("no single search alter triggered")
     try {
         // different
         let data = await nextSearch(circleCoordinates.current, searchID.current, checksum(checksumDataBundler()), searchType, testMode)
         // same
         setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
+        addCoordinates([data["nextCenter"]], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
+        updateCoordinates(data["unsearchedData"], coordinatesFeatures, setCoordinatesFeatures)
+        console.log(coordinatesFeatures)
         // addCoordinates(data["searchedData"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
         if (data["nextCenter"] && data["radius"]) {
           addCircle(data["nextCenter"], data["radius"])
@@ -314,12 +309,9 @@ const App = () => {
         unsearchedData.current = data["unsearchedData"]
         nextCenter.current = data["nextCenter"]
         googleData.current = [...googleData.current, ...data["googleData"]]
-        console.log("try done")
       // same
     } catch(error) {
-      console.log("--- error ---")
       if (error == 'ZERO_RESULTS') {
-        console.log('string match')
       }
       console.log(error)
       // if effor code 409, sync backend
@@ -352,7 +344,6 @@ const App = () => {
     alertArgs = [['googleInit', []], ...alertArgs]
   }
 
-    console.log(searchType)
     let alertPresent = triggerAlertFor(alertArgs)
     if (alertPresent) {
       return
@@ -364,6 +355,9 @@ const App = () => {
       // same
       setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
       addCoordinates(data["searchedData"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
+      addCoordinates([data["nextCenter"]], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
+      updateCoordinates(data["unsearchedData"], coordinatesFeatures, setCoordinatesFeatures)
+      // setSearchedCoordinatesFeatures((prev) => ...prev, features: data["unsearchedData"])
       if (data["nextCenter"] && data["radius"]) {
         addCircle(data["nextCenter"], data["radius"])
       }
@@ -371,17 +365,14 @@ const App = () => {
       unsearchedData.current = data["unsearchedData"]
       nextCenter.current = data["nextCenter"]
       searchCentroid.current = data["nextCenter"]
-      console.log(data["googleData"])
 
       googleData.current = [...googleData.current, ...data["googleData"]]
       // different
       searchID.current = data["searchID"]
-      addCoordinates(data["unsearchedData"], coordinatesFeatures, setCoordinatesFeatures)
+      // addCoordinates(data["unsearchedData"], coordinatesFeatures, setCoordinatesFeatures)
       // same
     } catch(error) {
-      console.log("--- error ---")
       if (error == 'ZERO_RESULTS') {
-        console.log('string match')
       }
       console.log(error)
     }
@@ -431,56 +422,6 @@ const App = () => {
   }
 
 
-  function printState() {
-    console.log("dataFile")
-    console.log(dataFile.current)
-    console.log("apiKeyStale")
-    console.log(apiKeyStale)
-    console.log(document)
-    console.log(window.google)
-    console.log("")
-    console.log("")
-    console.log("")
-    console.log(Object.getOwnPropertyNames(CurrencyInput))
-    console.log("editorRef.current")
-    console.log(editorRef.current.getFeatures())
-    // console.log("after add")
-    // console.log(editorRef.current.getFeatures())
-    console.log("googleData")
-    console.log(googleData.current)
-    // console.log("editorRef.current")
-    // console.log(editorRef.current)
-    // console.log(editorRef.current.getFeatures())
-    console.log("searchedData")
-    console.log(searchedData.current)
-    console.log("unsearchedData")
-    console.log(unsearchedData.current)
-    console.log("nextCenter")
-    console.log(nextCenter)
-    console.log("radius")
-    console.log(radius)
-    console.log("circleCoordinates")
-    console.log(circleCoordinates)
-    console.log("searchID")
-    console.log(searchID.current)
-    console.log("search type")
-    console.log(searchType)
-    console.log("resolution")
-    console.log(searchResolution)
-    console.log("searchedAreas")
-    console.log(searchedAreas)
-
-    console.log("searchResultLayer")
-    console.log(searchResultLayer)
-    console.log("searchedCoordinatesFeatures")
-    console.log(searchedCoordinatesFeatures)
-    console.log("coordinatesFeatures")
-    console.log(coordinatesFeatures)
-    console.log("apiKey")
-    console.log(apiKey)
-  }
-
-
   function dummyGoogleCall(center) {
     return new Promise((resolve) => {
       radius.current = Math.random() * (3 - .5) + .5;
@@ -490,6 +431,29 @@ const App = () => {
 
   function addCoordinates(data, target, setTarget) {
     let features = [...target.features]
+    console.log(features)
+    let coordFeatures = []
+    data.forEach((coord, i) => {
+      coordFeatures.push(buildCoord(coord))
+    })
+    features = features.concat(coordFeatures)
+    setTarget((prevValue) => ({ ...prevValue, features: features }));
+  }
+
+  function updateCoordinates(data, target, setTarget) {
+    // let features = [...target.features]
+    // console.log(features)
+    let coordFeatures = []
+    data.forEach((coord, i) => {
+      coordFeatures.push(buildCoord(coord))
+    })
+    // features = features.concat(coordFeatures)
+    setTarget((prevValue) => ({ ...prevValue, features: coordFeatures }));
+  }
+
+  function removeCoordinates(data, target, setTarget) {
+    let features = [...target.features]
+    console.log(features)
     let coordFeatures = []
     data.forEach((coord, i) => {
       coordFeatures.push(buildCoord(coord))
@@ -509,20 +473,9 @@ const App = () => {
   }
 
 
-  // function addCircle(center, radius) {
-  //   let circleJson = buildCircle(center, radius)
-  //   let newFeatures = [...searchedAreas.features]
-  //   newFeatures.push(circleJson)
-  //   setSearchedAreas((prevValue) => ({ ...prevValue, features: newFeatures }));
-  // }
-
   function addCircle(center, radius) {
     let circleJson = buildCircle(center, radius)
-    // let newFeatures = [...searchedAreas.features]
-    // newFeatures.push(circleJson)
-    // setSearchedAreas((prevValue) => ({ ...prevValue, features: newFeatures }));
     setSearchedAreas((prevValue) => ({ ...prevValue, features: [...prevValue["features"], circleJson]}))
-    // {...test, "features": [...test["features"], {"obj": 3}]}
   }
 
   function getPolygons() {
@@ -551,7 +504,6 @@ const App = () => {
 
     const handleFileChosen = (file) => {
       setFileNameText(file["name"])
-      console.log(file["name"])
       fileReader = new FileReader();
       fileReader.onloadend = handleFileRead;
       if (file) {
@@ -562,7 +514,6 @@ const App = () => {
   }
 
   const onSelect = useCallback(options => {
-    console.log("onSelect")
     setSelectedFeatureIndex(options && options.selectedFeatureIndex);
   }, []);
 
@@ -573,26 +524,11 @@ const App = () => {
   }, [selectedFeatureIndex]);
 
   const onUpdate = useCallback(({editType}) => {
-    console.log('onUpdate')
     if (editType === 'addFeature') {
       setMode(new EditingMode());
     }
   }, []);
 
-
-  const handleOnResult = event => {
-    console.log("handleOnResult")
-    // mapRef.current._toggle()
-    // setSearchResultLayer( new GeoJsonLayer({
-    //     id: "search-result",
-    //     data: event.result.geometry,
-    //     getFillColor: [255, 0, 0, 128],
-    //     getRadius: 1000,
-    //     pointRadiusMinPixels: 10,
-    //     pointRadiusMaxPixels: 10
-    //   })
-    // )
-  }
 
   function handleBudgetChange(value) {
     let cleanValue = isNaN(value) ? 0 : parseFloat(value)
@@ -603,22 +539,6 @@ const App = () => {
     }
 
 
-  // const handleGeocoderViewportChange = viewport => {
-  //   console.log("handleGeocoderViewportChange")
-  //   const geocoderDefaultOverrides = { transitionDuration: 1000 };
-  //
-  //     return setViewPort({
-  //       ...viewport,
-  //       ...geocoderDefaultOverrides
-  //     });
-  // }
-
-  // const [viewport, setViewPort] = useState({
-  //   latitude: 37.7577,
-  //   longitude: -122.4376,
-  //   zoom: 8
-  // });
-
   const handleViewportChange = useCallback(
     (newViewport) => setViewPort(newViewport),
     []
@@ -626,8 +546,6 @@ const App = () => {
 
   const handleGeocoderViewportChange = useCallback(
     (newViewport) => {
-      console.log("XXXXXX")
-      console.log(newViewport)
       const geocoderDefaultOverrides = { transitionDuration: 1000 };
 
       return handleViewportChange({
@@ -661,7 +579,6 @@ const App = () => {
   }
 
   function buildFromFile() {
-    // console.log(JSON.parse(dataFile.current)["googleData"])
 
     let alertArgs = [
       ['fileLoaded', [dataFile]],
@@ -677,32 +594,18 @@ const App = () => {
 
     try {
       let data = JSON.parse(dataFile.current)
-      console.log(data)
       googleData.current = data["googleData"]
-      console.log("googleData")
       setSearchType(data["searchType"])
-      console.log("searchType")
       searchID.current = data["searchID"]
       searchCentroid.current = data["searchCentroid"]
-      console.log("searchID")
-      // setSearchResolution.current = data["resolution"]
-      // console.log("resolution")
-      console.log("circleCoordinates")
       circleCoordinates.current = data["circleCoordinates"]
       searchedData.current = data["searchedData"]
-      console.log("searchedData")
       unsearchedData.current = data["unsearchedData"]
-      console.log("unsearchedData")
       nextCenter.current = data["nextCenter"]
-      console.log("nextCenter")
-      console.log(data["nextCenter"])
       setUserSearchKey(data["userSearchKey"])
-      console.log("userSearchKey")
 
       setBudgetUsed(data["budgetUsed"])
-      console.log("budgetUsed")
       setBudget(data["budget"])
-      console.log("budget")
       editorRef.current.addFeatures(data["searchBorders"])
       addCoordinates(unsearchedData.current, coordinatesFeatures, setCoordinatesFeatures)
       // addCoordinates(searchedData.current, searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
@@ -728,8 +631,6 @@ const App = () => {
           id="input-example"
           name="input-name"
           placeholder="Search Resolution"
-          // defaultValue={searchResolution}
-          // ref={resolutionRef}
           value={searchResolution}
           decimalsLimit={2}
           onKeyDown = {(evt) => ['e', '-'].includes(evt.key) && evt.preventDefault() }
@@ -1127,7 +1028,6 @@ const App = () => {
   }
 
   function selectNewSearch(val) {
-    console.log(searchResolution)
     if (existingDataWarning())
     setNewSearch((prev) => val)
     }
@@ -1161,7 +1061,6 @@ const App = () => {
     'types',
     'icon_background_color',
     'place_id',
-    // 'isOpen',
     'east',
     'opening_hours',
     'name',
