@@ -14,7 +14,7 @@ export async function axiosPutPostData(method, url = '', data = {}) {
   console.log(axiosArgs)
 
   let result = await axios(axiosArgs)
-  console.log('baz')
-  console.log(result)
+  // console.log('baz')
+  // console.log(result)
   return result
 }
