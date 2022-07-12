@@ -20,17 +20,6 @@ async function addGoogle(apiKey) {
   console.log("done adding google")
 }
 
-
-// export async function updateGoogleApi(apiKey) {
-//   console.log('updateGoogleApi')
-//   try {
-//     await removeGoogle()
-//     await addGoogle(apiKey)
-//     return true
-//   } catch (error){
-//     return false
-//   }
-// }
 function timeout(ms) {
   return new Promise((resovle) => {
     setTimeout(resovle, ms);
@@ -50,14 +39,3 @@ export async function updateGoogleApi(apiKey) {
     return false
   }
 }
-
-// export async function updateGoogleApi(apiKey) {
-//   console.log('updateGoogleApi')
-//   try {
-//     await removeGoogle()
-//     await addGoogle(apiKey)
-//     return true
-//   } catch (error){
-//     return false
-//   }
-// }

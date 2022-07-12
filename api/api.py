@@ -12,7 +12,7 @@ from shapely.geometry.multipolygon import MultiPolygon
 from shapely.ops import unary_union
 from shapely.ops import polygonize
 from shapely.geometry import MultiPoint, mapping, shape, asShape
-from coordinateFunctions import makeGrid, knn
+from coordinateFunctions import makeGrid, knn, cleanPolygons
 import time
 import redis
 import pickle
@@ -154,6 +154,61 @@ def get_next_search():
         "searched": searched_new,
         "newlySearchedCoordinates": newlySearchedCoordinates
     }
+
+
+@app.route('/api/mergePolygons', methods=['PUT'])
+def merge_polygons():
+    args = request.json
+    searchRegions = args["searchRegions"]
+    searchedAreas = args["searchedAreas"]
+
+    searchedAreasPoly = [Polygon(poly) for poly in searchedAreas]
+    searchRegionsPoly = [Polygon(poly) for poly in searchRegions]
+    areasPlusRegions = searchedAreasPoly + searchRegionsPoly
+
+    minSearchArea = min(searchedAreasPoly, key=lambda p: p.area)
+
+    searchedAreasMultiPoly = MultiPolygon(searchedAreasPoly)
+    searchRegionsMultiPoly = MultiPolygon(searchRegionsPoly)
+    areasPlusRegionsMultiPoly = MultiPolygon(areasPlusRegions)
+
+    searchRegionsFootprint = cleanPolygons(searchRegionsMultiPoly)
+    projectedNaiveSearchCost = (searchRegionsFootprint.area / minSearchArea.area) * 2.6 * 0.032
+    
+    #1
+    totalSearchedAreas = searchedAreasMultiPoly
+
+    #2
+    totalSearchedAreasFootprint = cleanPolygons(searchedAreasMultiPoly)
+
+    #3
+    duplicateSearchArea = totalSearchedAreas.area - totalSearchedAreasFootprint.area
+
+    #4
+    areasPlusRegionsMultiPolyFootprint = cleanPolygons(areasPlusRegionsMultiPoly)
+
+    #5
+    totalSearchRegionFootprint = cleanPolygons(searchRegionsMultiPoly)
+
+    #6
+    footprintOfSearchAreaOverage = areasPlusRegionsMultiPolyFootprint.area - totalSearchRegionFootprint.area
+    #
+
+    totalMiss = duplicateSearchArea + footprintOfSearchAreaOverage
+    totalHit = totalSearchedAreas.area - totalMiss
+    efficiency = totalHit / totalSearchedAreas.area
+
+    projectedSearchCost = (totalSearchRegionFootprint.area / (totalHit / len(searchedAreas))) * 0.032
+
+    return {
+        "efficiency": efficiency,
+        "projectedNaiveSearchCost": projectedNaiveSearchCost,
+        "projectedSearchCost": projectedSearchCost,
+        "areaPerHit": totalHit / len(searchedAreas),
+        "totalSearchedAreasFootprint": totalSearchRegionFootprint.area,
+        "projectedSavings": projectedNaiveSearchCost - projectedSearchCost
+        }
+
 
 @app.route('/api/test', methods=['GET'])
 def test_api():

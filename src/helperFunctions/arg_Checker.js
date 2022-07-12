@@ -12,6 +12,7 @@ export function triggerAlertFor(funcs) {
     "budgetExceeded": budgetExceededError,
     "fileLoaded": fileLoadedError,
     "fileError": fileError,
+    "searchComplete2": searchCompleteError2,
   }
 
   let difference = funcs.filter(func => !Object.keys(funcMap).includes(func[0]));
@@ -126,6 +127,14 @@ function searchTypeError(searchType) {
 
 function searchCompleteError(unsearchedCoords) {
   if (unsearchedCoords.current && unsearchedCoords.current.length == 0) {
+    window.alert('All coordinate points for your defined region have been searched. If any areas in your search region are unsearched, you may need to repeat the search with a lower Search Resolution value.')
+    return true
+  }
+  return false
+}
+
+function searchCompleteError2(searchComplete) {
+  if (searchComplete.current) {
     window.alert('All coordinate points for your defined region have been searched. If any areas in your search region are unsearched, you may need to repeat the search with a lower Search Resolution value.')
     return true
   }

@@ -111,12 +111,14 @@ const App = () => {
   }
 
 
+
   const featureSaver = useRef(undefined)
   const googleScript = useRef(undefined)
   const googleData = useRef([]);
   const dataFile = useRef(undefined)
   const filePickerRef = useRef()
   const searchID = useRef(undefined);
+  const searchComplete = useRef(false)
 
   const resolutionRef = useRef()
   const editorRef = useRef(undefined);
@@ -126,7 +128,7 @@ const App = () => {
   const unsearchedData = useRef(undefined);
   const nextCenter = useRef(undefined);
   const searchCentroid = useRef(undefined);
-  const radius = useRef(undefined);
+  const nextRadius = useRef(undefined);
   const circleCoordinates = useRef(undefined);
 
 
@@ -140,7 +142,7 @@ const App = () => {
   })
 
   // signals
-  const [searchType, setSearchType] = useState("Select")
+  const [searchType, setSearchType] = useState("accounting")
 
   // flags
   const [searchBuilt, setSearchBuilt] = useState(false)
@@ -150,6 +152,7 @@ const App = () => {
   const [mode, setMode] = useState(undefined);
 
   // data
+  const [totalSearchedArea, setTotalSearchedArea] = useState(0);
   const [userSearchKey, setUserSearchKey] = useState("");
   const [fileNameText, setFileNameText] = useState("");
   const [searchResolution, setSearchResolution] = useState(0.5)
@@ -157,8 +160,11 @@ const App = () => {
   const prevCallType = usePrevious(callType);
   const [bulkSearchCount, setBulkSearchCount] = useState(false)
   const [searchResultLayer, setSearchResultLayer ] = useState(undefined)
-  const [budget, setBudget] = useState(0)
+  const [budget, setBudget] = useState(1)
   const [budgetUsed, setBudgetUsed] = useState(0);
+  const [efficiency, setEfficiency] = useState(0)
+  const [projectedSavings, setProjectedSavings] = useState(0)
+  const [projectedSearchCost, setProjectedSearchCost] = useState(0)
 
   const [selectedFeatureIndex, setSelectedFeatureIndex] = useState(undefined);
   const [searchedAreas, setSearchedAreas] = useState(
@@ -167,6 +173,56 @@ const App = () => {
     'features': []
     }
   )
+
+  useEffect(() => {
+    calcSearchEfficiency()
+  }, [searchedAreas])
+
+
+  function calcCoverage() {
+    let coordinates =  searchedAreas.features.map(feature => feature.geometry.coordinates[0])
+
+    console.log(coordinates)
+    let features = {
+      "type": "Features",
+      "coordinates": coordinates
+    }
+    // let unioned = turf.union.apply(features)
+    // let unioned = turf.union(...coordinates)
+    console.log(searchedAreas)
+    console.log(getPolygons())
+    // console.log(unioned)
+  }
+
+  function setMergedPoly(coordinates) {
+    let newPoly = {
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [coordinates]
+            }
+        }
+
+    ]
+    }
+    setSearchedAreas(newPoly)
+  }
+
+  // function getPoly(geoJSON) {
+  //   let coordinates =  searchedAreas.features.map(feature => feature.geometry.coordinates)
+  //
+  //   return geoJSON.type=='Polygon' ? turf.polygon(coordinates) : turf.multiPolygon(coordinates);
+  // }
+  //
+  // let result = listaMappe.map(a => getPoly(JSON.parse(a.geoJSON)));
+  //
+  // var union = turf.union.apply(result);
+
+
   const [searchedCoordinatesFeatures, setSearchedCoordinatesFeatures] = useState(
     {
     'type': 'FeatureCollection',
@@ -220,6 +276,7 @@ const App = () => {
     var radius = radius;
     var polygon = turf.circle(center, radius, options);
     circleCoordinates.current = polygon.geometry.coordinates[0]
+
     return polygon
   }
 
@@ -271,6 +328,16 @@ const App = () => {
   }
 
   async function singleSearch() {
+    console.log("")
+    console.log("")
+    console.log("")
+    console.log("")
+
+    console.log(unsearchedData.current)
+    console.log(searchComplete.current)
+    // if (unsearchedData.current.length == 0) {
+    //   searchComplete.current = true
+    // }
 
     let alertArgs = [
       ['searchInit', [unsearchedData]],
@@ -278,7 +345,8 @@ const App = () => {
       ['resolution', [searchResolution]],
       ['searchType', [searchType]],
       ['budgetExceeded', [budget, budgetUsed]],
-      ['searchComplete', [unsearchedData]]
+      // ['searchComplete', [unsearchedData]]
+      ['searchComplete2', [searchComplete]]
     ]
 
   if (!testMode) {
@@ -295,26 +363,38 @@ const App = () => {
 
     try {
         // different
-        let data = await nextSearch(circleCoordinates.current, searchID.current, checksum(checksumDataBundler()), searchType, testMode)
+        let data = await nextSearch(nextCenter.current, searchID.current, checksum(checksumDataBundler()), searchType, testMode)
         // same
         setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
-        addCoordinates([data["nextCenter"]], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
         updateCoordinates(data["unsearchedData"], coordinatesFeatures, setCoordinatesFeatures)
         console.log(coordinatesFeatures)
         // addCoordinates(data["searchedData"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
-        if (data["nextCenter"] && data["radius"]) {
-          addCircle(data["nextCenter"], data["radius"])
+        nextRadius.current = data["radius"]
+
+        if (data["unsearchedData"].length == 0) {
+          searchComplete.current = true
         }
+
+        if (data["nextCenter"]) {
+          addCoordinates([data["nextCenter"]], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
+        }
+        console.log(unsearchedData.current)
+        if (nextCenter.current) {
+          addCircle(nextCenter.current, nextRadius.current)
+        }
+        setTotalSearchedArea((prev) => prev + (3.14 * (nextRadius.current**2)))
         searchedData.current = data["searchedData"]
         unsearchedData.current = data["unsearchedData"]
         nextCenter.current = data["nextCenter"]
         googleData.current = [...googleData.current, ...data["googleData"]]
+        // calcSearchEfficiency()
       // same
     } catch(error) {
       if (error == 'ZERO_RESULTS') {
       }
       console.log(error)
       // if effor code 409, sync backend
+      throw(error)
       if (error.response.status) {
         try {
           console.log("syncing")
@@ -353,27 +433,22 @@ const App = () => {
       // different
       let data = await buildSearch(polygons, searchResolution, searchType, testMode)
       // same
-      setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
+      // setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
       addCoordinates(data["searchedData"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
       addCoordinates([data["nextCenter"]], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
       updateCoordinates(data["unsearchedData"], coordinatesFeatures, setCoordinatesFeatures)
       // setSearchedCoordinatesFeatures((prev) => ...prev, features: data["unsearchedData"])
-      if (data["nextCenter"] && data["radius"]) {
-        addCircle(data["nextCenter"], data["radius"])
-      }
+
       searchedData.current = data["searchedData"]
       unsearchedData.current = data["unsearchedData"]
       nextCenter.current = data["nextCenter"]
       searchCentroid.current = data["nextCenter"]
 
-      googleData.current = [...googleData.current, ...data["googleData"]]
       // different
       searchID.current = data["searchID"]
       // addCoordinates(data["unsearchedData"], coordinatesFeatures, setCoordinatesFeatures)
       // same
     } catch(error) {
-      if (error == 'ZERO_RESULTS') {
-      }
       console.log(error)
     }
   }
@@ -390,10 +465,12 @@ const App = () => {
     unsearchedData.current = undefined
     circleCoordinates.current = undefined
     nextCenter.current = undefined
-    radius.current = undefined
+    nextRadius.current = undefined
     circleCoordinates.current = undefined
+    searchComplete.current = false
 
     // state reset
+    setTotalSearchedArea(0)
     setSearchBuilt(false)
     setSearchRunning(false)
     setSearchResultLayer(undefined);
@@ -422,23 +499,26 @@ const App = () => {
   }
 
 
-  function dummyGoogleCall(center) {
-    return new Promise((resolve) => {
-      radius.current = Math.random() * (3 - .5) + .5;
-      resolve("ok")
-    })
+  function addCoordinates(data, target, setTarget) {
+    if (data) {
+      console.log("true")
+      console.log(typeof data)
+      console.log(isNaN(data))
+      console.log(data)
+    }
+    if (data) {
+      let features = [...target.features]
+      console.log(features)
+      let coordFeatures = []
+      data.forEach((coord, i) => {
+        console.log(coord)
+        coordFeatures.push(buildCoord(coord))
+      })
+      features = features.concat(coordFeatures)
+      setTarget((prevValue) => ({ ...prevValue, features: features }));
+    }
   }
 
-  function addCoordinates(data, target, setTarget) {
-    let features = [...target.features]
-    console.log(features)
-    let coordFeatures = []
-    data.forEach((coord, i) => {
-      coordFeatures.push(buildCoord(coord))
-    })
-    features = features.concat(coordFeatures)
-    setTarget((prevValue) => ({ ...prevValue, features: features }));
-  }
 
   function updateCoordinates(data, target, setTarget) {
     // let features = [...target.features]
@@ -492,6 +572,31 @@ const App = () => {
         "unsearched": unsearchedData.current,
         "searchID": searchID.current,
       })
+      }
+
+  async function cleanPolygons() {
+    let response = await axiosPutPostData('PUT', `/api/mergePolygons`,
+      {
+        "polygons": getPolygons(),
+      })
+      return response["data"]["efficiency"]
+      }
+
+  async function calcSearchEfficiency() {
+    let coordinates =  searchedAreas.features.map(feature => feature.geometry.coordinates[0])
+
+    let response = await axiosPutPostData('PUT', `/api/mergePolygons`,
+      {
+        "searchedAreas": coordinates,
+        "searchRegions": getPolygons(),
+      })
+      // return response["data"]
+      let data = response["data"]
+
+      setEfficiency(data["efficiency"])
+      setProjectedSavings(data["projectedSavings"])
+      setProjectedSearchCost(data["projectedSearchCost"])
+      return data
       }
 
   function loadFile(value) {
@@ -1111,6 +1216,71 @@ const App = () => {
 
   return (
       <div style={{ height: '100vh', flex: '1'}}>
+      <div style={{ padding: '10px', justifyContent: 'center', display: 'flex'}}> Search Statistics </div>
+      <div style={{ justifyContent: 'center', backgroundColor: 'blue', display: 'flex', flexDirection: 'row'}}>
+
+        <div style={{justifyContent: 'space-between', width: '250px', display: 'flex', flexDirection: 'column'}} >
+          <div style={{textAlign: 'center'}}>Search Efficiency</div>
+            <input
+              type="text"
+              disabled={true}
+              value={efficiency}
+              style={{ padding: '5px', margin: '5px', textAlign: 'center'}}
+              placeholder="Search Efficiency"
+              />
+          </div>
+
+          <div style={{justifyContent: 'space-between', width: '250px', display: 'flex', flexDirection: 'column'}} >
+            <div style={{textAlign: 'center'}}>Projected Search Cost</div>
+              <input
+                type="text"
+                disabled={true}
+                value={projectedSearchCost}
+                style={{ padding: '5px', margin: '5px', textAlign: 'center'}}
+                placeholder="Projected Search Cost"
+                />
+          </div>
+
+          <div style={{justifyContent: 'space-between', width: '250px', display: 'flex', flexDirection: 'column'}} >
+            <div style={{textAlign: 'center'}}>Projected Savings vs Naive Search</div>
+              <input
+                type="text"
+                disabled={true}
+                value={projectedSavings}
+                style={{ padding: '5px', margin: '5px', textAlign: 'center'}}
+                placeholder="Projected Savings"
+                />
+          </div>
+        </div>
+      <button
+        onClick={() => calcCoverage()}
+        style={{padding: '5px', margin: '5px', width: '150px'}}
+        >
+        calcCoverage
+        </button>
+
+        <button
+          onClick={() => setMergedPoly()}
+          style={{padding: '5px', margin: '5px', width: '150px'}}
+          >
+          setMergedPoly
+          </button>
+
+          <button
+            onClick={() => console.log(cleanPolygons())}
+            style={{padding: '5px', margin: '5px', width: '150px'}}
+            >
+            polygon
+            </button>
+
+            <button
+              onClick={() => calcSearchEfficiency().then((result) => console.log(result))}
+              style={{padding: '5px', margin: '5px', width: '150px'}}
+              >
+              efficiency
+              </button>
+
+
         <div style={{ height: '50px'}}/>
           {commonSettings()}
 
