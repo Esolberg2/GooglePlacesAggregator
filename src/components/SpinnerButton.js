@@ -38,10 +38,7 @@ const SpinnerButton = (props) => {
   useEffect(() => {
     const wrappedFunction = funcWrapper(func)
     wrappedFunction(...funcArgs)
-    // console.log("setting apiStale to false")
-    // props.onClick()
     if (!spinner) {
-      console.log("setting apiStale to false")
       props.onClick()
     }
   }, [spinner])

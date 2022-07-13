@@ -7,23 +7,17 @@ export async function nextSearch(currentCenter, searchID, checksum, searchType, 
   try {
     var radius_and_googleData = testMode ? await dummyGoogleCall() : await nearbySearchWrapper(currentCenter, searchType)
   } catch {
-    console.log('zero_results_dummy')
     var radius_and_googleData = {"radius": 1, "googleData": zero_results_dummy(...currentCenter)}
   }
 
   // get perimeter coordinates from effective radius of google call search.
-  console.log('radius_and_googleData["radius"]')
-  console.log(radius_and_googleData)
   let circleJson = buildCirclePerimeter(currentCenter, radius_and_googleData["radius"])
-  console.log("here --------")
-  console.log(circleJson)
   // attempt to calculate the next coordinate to search base on last search.
   try {
     let response = await getNextSearchCoord(circleJson, searchID, checksum)
 
       // build return data depending on if unsearchedData.lenght == 0, indication search has been completed.
       let unsearchedData = response["data"]["unsearched"]
-      console.log(unsearchedData)
       return {
           "searchedData": response["data"]["searched"],
           "unsearchedData": unsearchedData,
@@ -47,19 +41,10 @@ export async function buildSearch(polygons, searchResolution, searchType, testMo
           "searchID": null,
           "coordinateResolution": searchResolution
         })
-
-        console.log(response)
-
           let searchedData = response["data"]["searchedCoords"]
           let unsearchedData = response["data"]["unsearchedCoords"]
           let nextCenter = response["data"]["furthestNearest"]
           let searchID = response["data"]["searchID"]["lastRowID"]
-
-          // !!! to implement !!!
-          // addCoordinates(response["data"]["unsearchedCoords"], coordinatesFeatures, setCoordinatesFeatures)
-          // addCoordinates(response["data"]["searchedCoords"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
-
-          // pass necessary coordinate data to be pre processed for nearbySearch()
 
           return {
               "searchedData": searchedData,
@@ -83,10 +68,8 @@ function buildCirclePerimeter(center, radius) {
 
 // step 2 -> returns {"radius": distance, "googleData": results}
 async function nearbySearchWrapper(currentCenter, searchType) {
-    console.log(searchType)
 
     function callback(results) {
-        console.log("callback")
         let lastLat = results[results.length-1].geometry.location.lat()
         let lastLon = results[results.length-1].geometry.location.lng()
         let from = turf.point(currentCenter);
@@ -97,9 +80,7 @@ async function nearbySearchWrapper(currentCenter, searchType) {
         }
 
     const service = new window.google.maps.places.PlacesService(document.createElement('div'));
-    console.log(service)
-    console.log(currentCenter)
-    console.log(searchType)
+
     try {
         var request = {
         location: new window.google.maps.LatLng(currentCenter[1],currentCenter[0]),
@@ -112,7 +93,6 @@ async function nearbySearchWrapper(currentCenter, searchType) {
         }
 
     let output = await nearbySearch(callback, service, request)
-    console.log(output)
     return output
 }
 
@@ -121,21 +101,16 @@ async function nearbySearchWrapper(currentCenter, searchType) {
 const nearbySearch = (callback, service, request) => new Promise((resolve,reject) => {
   try {
 
-            console.log(request)
             service.nearbySearch(request, function(results,status){
-              console.log(results,status)
             if (status === window.google.maps.places.PlacesServiceStatus.OK)
             {
-                console.log("resolve block")
                 resolve(callback(results));
             } else
             {
-                console.log("reject block")
                 reject(status);
             }
         });
       } catch (error) {
-        console.log('here 3')
         console.log(error)
       }
       console.log("error")
@@ -154,7 +129,6 @@ async function getNextSearchCoord(circleCoordinates, searchID, checksum) {
 
 
 function dummyGoogleCall(center) {
-  console.log('running dummy call')
   return new Promise((resolve) => {
     let radius = Math.random() * (1.5 - .1) + .1;
     let dummyResult = {

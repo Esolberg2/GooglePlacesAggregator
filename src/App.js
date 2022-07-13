@@ -68,14 +68,6 @@ const App = () => {
 
 
   window.gm_authFailure = function(error) {
-   // alert('Google Maps API failed to load. Please check that your API key is correct' +
-   //  ' and that the key is authorized for Google\'s "Maps JavaScript API" and "Places API".' +
-   //  ' This can be done from the Google Cloud Console.' +
-   //  '\n \n' +
-   //  'Instructions for creating Google API keys and enabling the required APIs' +
-   //  ' can be found at the below URL:\n \n' +
-   //  'https://developers.google.com/maps/documentation/javascript/get-api-key'
-   //  );
    let selection = window.confirm(
     'Google Maps API failed to load. Please check that your API key is correct' +
     ' and that the key is authorized for Google\'s "Maps JavaScript API" and "Places API".' +
@@ -178,23 +170,19 @@ const App = () => {
   )
 
   useEffect(() => {
-    calcSearchEfficiency()
+    if (editorRef.current && searchedAreas.features.length > 0) {
+      calcSearchEfficiency()
+    }
   }, [searchedAreas])
 
 
   function calcCoverage() {
     let coordinates =  searchedAreas.features.map(feature => feature.geometry.coordinates[0])
 
-    console.log(coordinates)
     let features = {
       "type": "Features",
       "coordinates": coordinates
     }
-    // let unioned = turf.union.apply(features)
-    // let unioned = turf.union(...coordinates)
-    console.log(searchedAreas)
-    console.log(getPolygons())
-    // console.log(unioned)
   }
 
   function setMergedPoly(coordinates) {
@@ -331,16 +319,6 @@ const App = () => {
   }
 
   async function singleSearch() {
-    console.log("")
-    console.log("")
-    console.log("")
-    console.log("")
-
-    console.log(unsearchedData.current)
-    console.log(searchComplete.current)
-    // if (unsearchedData.current.length == 0) {
-    //   searchComplete.current = true
-    // }
 
     let alertArgs = [
       ['searchInit', [unsearchedData]],
@@ -348,7 +326,6 @@ const App = () => {
       ['resolution', [searchResolution]],
       ['searchType', [searchType]],
       ['budgetExceeded', [budget, budgetUsed]],
-      // ['searchComplete', [unsearchedData]]
       ['searchComplete2', [searchComplete]]
     ]
 
@@ -370,7 +347,6 @@ const App = () => {
         // same
         setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
         updateCoordinates(data["unsearchedData"], coordinatesFeatures, setCoordinatesFeatures)
-        console.log(coordinatesFeatures)
         // addCoordinates(data["searchedData"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
         nextRadius.current = data["radius"]
 
@@ -381,7 +357,6 @@ const App = () => {
         if (data["nextCenter"]) {
           addCoordinates([data["nextCenter"]], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
         }
-        console.log(unsearchedData.current)
         if (nextCenter.current) {
           addCircle(nextCenter.current, nextRadius.current)
         }
@@ -504,17 +479,9 @@ const App = () => {
 
   function addCoordinates(data, target, setTarget) {
     if (data) {
-      console.log("true")
-      console.log(typeof data)
-      console.log(isNaN(data))
-      console.log(data)
-    }
-    if (data) {
       let features = [...target.features]
-      console.log(features)
       let coordFeatures = []
       data.forEach((coord, i) => {
-        console.log(coord)
         coordFeatures.push(buildCoord(coord))
       })
       features = features.concat(coordFeatures)
@@ -524,19 +491,16 @@ const App = () => {
 
 
   function updateCoordinates(data, target, setTarget) {
-    // let features = [...target.features]
-    // console.log(features)
+
     let coordFeatures = []
     data.forEach((coord, i) => {
       coordFeatures.push(buildCoord(coord))
     })
-    // features = features.concat(coordFeatures)
     setTarget((prevValue) => ({ ...prevValue, features: coordFeatures }));
   }
 
   function removeCoordinates(data, target, setTarget) {
     let features = [...target.features]
-    console.log(features)
     let coordFeatures = []
     data.forEach((coord, i) => {
       coordFeatures.push(buildCoord(coord))
@@ -562,9 +526,11 @@ const App = () => {
   }
 
   function getPolygons() {
-    let data = editorRef.current.getFeatures()
-    let result = data.map(currentElement => currentElement.geometry.coordinates[0]);
-    return result
+    if (editorRef.current){
+      let data = editorRef.current.getFeatures()
+      let result = data.map(currentElement => currentElement.geometry.coordinates[0]);
+      return result
+    }
   }
 
 
@@ -1222,6 +1188,9 @@ const App = () => {
     return 'Existing Search'
   }
 
+  function throwAnError() {
+  throw new Error('testing');
+}
 
   return (
       <div style={{ height: '100vh', flex: '1'}}>
