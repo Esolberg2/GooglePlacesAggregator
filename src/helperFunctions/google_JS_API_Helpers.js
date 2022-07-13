@@ -6,7 +6,6 @@ async function removeGoogle() {
       element.parentNode.removeChild(element)
     }
   }
-  console.log("done removing google")
 }
 
 async function addGoogle(apiKey) {
@@ -17,7 +16,6 @@ async function addGoogle(apiKey) {
   s.async = false;
   s.defer = false;
   let node = await document.head.appendChild(s);
-  console.log("done adding google")
 }
 
 function timeout(ms) {
@@ -27,13 +25,10 @@ function timeout(ms) {
 }
 
 export async function updateGoogleApi(apiKey) {
-  console.log('called')
   const done = await timeout(1000)
   try {
-    console.log("trying")
     await removeGoogle()
     await addGoogle(apiKey)
-    console.log("complete")
     return true
   } catch (error){
     return false

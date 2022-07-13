@@ -21,7 +21,22 @@ import js2py
 import hashlib
 import shapely.speedups
 import os
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
 shapely.speedups.enable()
+
+sentry_sdk.init(
+    dsn="https://483ee48988984933820429864e92324f@o1317699.ingest.sentry.io/6570904",
+    integrations=[
+        FlaskIntegration(),
+    ],
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
+    traces_sample_rate=0
+)
+
 
 # r = redis.Redis(host= 'redis',port= '6379')
 r = redis.Redis(host= 'localhost',port= '6379')
@@ -212,24 +227,28 @@ def merge_polygons():
         "projectedSavings": projectedNaiveSearchCost - projectedSearchCost
         }
 
-
 @app.route('/api/test', methods=['GET'])
 def test_api():
-    # return {"time": time.time()}
-    root = os.listdir()
-
-    paths = ['../', './app', './dbVol', './app/dbVol']
-    out = []
-    for path in paths:
-        try:
-            out.append(os.listdir(path))
-        except:
-            out.append("failed")
-
     return {
-    "root": root,
-    "parent": out[0],
-    "app": out[1],
-    "dbVol": out[2],
-    "app/dbVol": out[3]
+    "test": 1/0,
     }
+# @app.route('/api/test', methods=['GET'])
+# def test_api():
+#     # return {"time": time.time()}
+#     root = os.listdir()
+#
+#     paths = ['../', './app', './dbVol', './app/dbVol']
+#     out = []
+#     for path in paths:
+#         try:
+#             out.append(os.listdir(path))
+#         except:
+#             out.append("failed")
+#
+#     return {
+#     "root": root,
+#     "parent": out[0],
+#     "app": out[1],
+#     "dbVol": out[2],
+#     "app/dbVol": out[3]
+#     }

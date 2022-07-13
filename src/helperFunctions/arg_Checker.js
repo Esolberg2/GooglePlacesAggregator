@@ -1,7 +1,6 @@
 
 
 export function triggerAlertFor(funcs) {
-  console.log("triggerAlertFor run")
   const funcMap = {
     "searchType": searchTypeError,
     "resolution": resolutionError,
@@ -21,8 +20,6 @@ export function triggerAlertFor(funcs) {
   } else {
     for (let i=0; i < funcs.length; i++) {
       let status = funcMap[funcs[i][0]](...funcs[i][1])
-      console.log(funcs[i])
-      console.log(status)
       if (status) {
         return true
       }
@@ -52,7 +49,6 @@ function fileError(dataFile) {
 
   for (let i=0; i < requiredKeys.length; i++) {
     if (!Object.keys(dataFileJson).includes(requiredKeys[i])) {
-      console.log(requiredKeys[i])
       window.alert('Your selected file is missing required fields.  Please select a valid file to load.')
       return true
     }
@@ -72,7 +68,6 @@ function fileLoadedError(dataFile) {
 }
 
 function budgetExceededError(budgetSet, budgetUsed) {
-  console.log(budgetUsed, budgetSet)
   if (budgetSet == -1) {
     return false
   }
@@ -94,14 +89,12 @@ function noSearchInitializedError(unsearchedData) {
 function googleInitError() {
   if (!window.google) {
     window.alert('Please make sure to enter your Google API key, and load it into your search using the "Set Key" button.')
-    console.log(window)
     return true
   }
   return false
 }
 
 function polygonError(polygons) {
-  console.log(polygons)
   if (polygons.length == 0) {
     window.alert('Please use the "Select Search Area" option to choose a search region before building your search.')
     return true
