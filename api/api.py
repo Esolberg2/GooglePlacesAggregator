@@ -161,6 +161,7 @@ def merge_polygons():
     args = request.json
     searchRegions = args["searchRegions"]
     searchedAreas = args["searchedAreas"]
+    budgetUsed = args["budgetUsed"]
 
     searchedAreasPoly = [Polygon(poly) for poly in searchedAreas]
     searchRegionsPoly = [Polygon(poly) for poly in searchRegions]
@@ -174,7 +175,7 @@ def merge_polygons():
 
     searchRegionsFootprint = cleanPolygons(searchRegionsMultiPoly)
     projectedNaiveSearchCost = (searchRegionsFootprint.area / minSearchArea.area) * 2.6 * 0.032
-    
+
     #1
     totalSearchedAreas = searchedAreasMultiPoly
 
@@ -198,7 +199,9 @@ def merge_polygons():
     totalHit = totalSearchedAreas.area - totalMiss
     efficiency = totalHit / totalSearchedAreas.area
 
-    projectedSearchCost = (totalSearchRegionFootprint.area / (totalHit / len(searchedAreas))) * 0.032
+    # projectedSearchCost = (totalSearchRegionFootprint.area / (totalHit / len(searchedAreas))) * 0.032
+    projectedSearchCost = float(budgetUsed) + (((totalSearchRegionFootprint.area - totalHit) / (totalHit / len(searchedAreas))) * 0.032)
+
 
     return {
         "efficiency": efficiency,
