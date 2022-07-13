@@ -137,7 +137,7 @@ const App = () => {
   })
 
   // signals
-  const [searchType, setSearchType] = useState("accounting")
+  const [searchType, setSearchType] = useState("Select")
 
   // flags
   const [searchBuilt, setSearchBuilt] = useState(false)
@@ -155,7 +155,7 @@ const App = () => {
   const prevCallType = usePrevious(callType);
   const [bulkSearchCount, setBulkSearchCount] = useState(false)
   const [searchResultLayer, setSearchResultLayer ] = useState(undefined)
-  const [budget, setBudget] = useState(1)
+  const [budget, setBudget] = useState(0)
   const [budgetUsed, setBudgetUsed] = useState(0);
   const [efficiency, setEfficiency] = useState(0)
   const [projectedSavings, setProjectedSavings] = useState(0)
