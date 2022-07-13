@@ -1,6 +1,7 @@
 aniso8601==9.0.1
 async-timeout==4.0.2
 attrs==21.4.0
+blinker==1.4
 cachelib==0.6.0
 certifi==2022.5.18.1
 charset-normalizer==2.0.12
@@ -44,6 +45,7 @@ requests==2.27.1
 Rtree==1.0.0
 scikit-learn==1.0.2
 scipy==1.8.0
+sentry-sdk==1.7.1
 Shapely==1.8.0
 simplejson==3.17.6
 six==1.16.0
