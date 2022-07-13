@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
+import { BsFillQuestionCircleFill } from 'react-icons/bs';
 import MapGL, {GeolocateControl, Source, Layer } from 'react-map-gl'
 import DeckGL, { GeoJsonLayer } from "deck.gl";
 import Geocoder from "react-map-gl-geocoder";
@@ -9,6 +10,7 @@ import { ToggleSlider }  from "react-toggle-slider";
 import CurrencyInput from 'react-currency-input-field';
 import FilePicker from './components/FilePicker.js'
 import SpinnerButton from './components/SpinnerButton.js'
+import IconButton from './components/IconButton.js'
 import axios from 'axios'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import "react-map-gl-geocoder/dist/mapbox-gl-geocoder.css"
@@ -18,6 +20,7 @@ import {axiosPutPostData} from "./helperFunctions/axios_Helpers"
 import {buildSearch, nextSearch} from "./helperFunctions/server_API_Helpers"
 const CryptoJS = require("crypto-js");
 const placeTypes = require('./data/placeTypes.json');
+const infoMessages = require('./data/informationText.json');
 
 const TOKEN='pk.eyJ1IjoiZXNvbGJlcmc3NyIsImEiOiJja3l1ZmpqYWgwYzAxMnRxa3MxeHlvanVpIn0.co7_t1mXkXPRE8BOnOHJXQ'
 
@@ -589,6 +592,7 @@ const App = () => {
       {
         "searchedAreas": coordinates,
         "searchRegions": getPolygons(),
+        "budgetUsed": budgetUsed
       })
       // return response["data"]
       let data = response["data"]
@@ -785,61 +789,49 @@ const App = () => {
     setUserSearchKey(e.target.value)
   }
 
+  function interfaceOptions() {
+    return (
+      <div style={{padding: '20px'}}>
+        <button
+          onClick={() => {
+            if (!newSearch) {
+              selectNewSearch(true)
+            }}}
+          style={{width: '150px', padding: '5px', margin: '5px', backgroundColor: newSearch ? '#cccccc' : undefined }}
+          >
+          New Search
+          </button>
+
+        <button
+          onClick={() => {
+            if (newSearch) {
+              selectNewSearch(false)
+            }}}
+          style={{width: '150px', padding: '5px', margin: '5px', backgroundColor: newSearch ? undefined : '#cccccc'}}
+          >
+          Load Prior Search
+          </button>
+
+        <button
+          onClick={(e) => exportToJson(e)}
+          style={{width: '150px', padding: '5px', margin: '5px'}}
+          >
+          Download Data
+          </button>
+
+        <button
+          onClick={(e) => existingDataWarning(e)}
+          style={{width: '150px', padding: '5px', margin: '5px'}}
+          >
+          Clear Search
+          </button>
+      </div>
+    )
+  }
   function commonSettings() {
     return (
         <div style={{flex: '1', display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
-          <div style={{paddingRight: '20px', justifyContent: 'flex-end', display: 'flex', flexDirection: 'column', width: '250px'}}>
-            <button
-              onClick={() => {
-                if (!newSearch) {
-                  selectNewSearch(true)
-                }}}
-              style={{padding: '5px', margin: '5px', backgroundColor: newSearch ? '#cccccc' : undefined }}
-              >
-              New Search
-              </button>
 
-            <button
-              onClick={() => {
-                if (newSearch) {
-                  selectNewSearch(false)
-                }}}
-              style={{padding: '5px', margin: '5px', backgroundColor: newSearch ? undefined : '#cccccc'}}
-              >
-              Load Prior Search
-              </button>
-
-            <button
-              onClick={(e) => exportToJson(e)}
-              style={{padding: '5px', margin: '5px'}}
-              >
-              Download Data
-              </button>
-
-              <button
-                onClick={(e) => existingDataWarning(e)}
-                style={{padding: '5px', margin: '5px'}}
-                >
-                Clear Search
-                </button>
-
-                <div style={{paddingTop: '10px', display: 'flex', flex: '1', flexDirection: 'column', alignItems:'center'}}>
-                  <div style={{fontWeight: 'bold', fontSize: '14px'}}>
-                    Test Without Google Key
-                  </div>
-                  <div style={{ padding: '5px', paddingTop: '5px', alignItems: 'center', justifyContent: 'space-around', flex: '1', display: 'flex', flexDirection: 'row'}}>
-                  <ToggleSlider
-                    style={{ display: 'flex', flex: '1'}}
-                    onToggle={() => setTestMode((prev) => !prev)}
-                    active={testMode}
-                    />
-
-                    <div style={{paddingLeft: '10px', minWidth: '125px', paddingTop: '5px', fontSize: '12px', whiteSpace: 'wrap'}}>
-                      This setting will replace Google API calls with a dummy call, and produce dummy data.
-                    </div>
-                  </div>
-            </div>
-          </div>
 
           <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
             <div style={{fontWeight: 'bold'}}>
@@ -950,7 +942,24 @@ const App = () => {
             <div style={{ flexGrow: '1'}}/>
             {renderSearchResolution()}
           </div>
-
+          <div style={{paddingRight: '20px', justifyContent: 'flex-end', display: 'flex', flexDirection: 'column', width: '250px'}}>
+                <div style={{paddingTop: '5px', display: 'flex', flex: '1', flexDirection: 'column', alignItems:'center'}}>
+                  <div style={{fontWeight: 'bold'}}>
+                    Test Without Google Key
+                  </div>
+                  <div style={{ padding: '5px', paddingTop: '5px', justifyContent: 'center', display: 'flex', flexDirection: 'row'}}>
+                    <div style={{ paddingLeft: '10px', whiteSpace: 'wrap', minWidth: '125px', paddingTop: '5px', fontSize: '12px', display: 'flex', textAlign: 'center', justifyContent: 'center'}}>
+                      This setting will replace Google API calls with a dummy call, and produce dummy data.
+                    </div>
+                    <div style={{paddingLeft: '10px', display: 'flex', alignItems: 'center'}}>
+                    <ToggleSlider
+                      onToggle={() => setTestMode((prev) => !prev)}
+                      active={testMode}
+                      />
+                    </div>
+                  </div>
+              </div>
+          </div>
         </div>
       )
     }
@@ -1216,72 +1225,59 @@ const App = () => {
 
   return (
       <div style={{ height: '100vh', flex: '1'}}>
-      <div style={{ padding: '10px', justifyContent: 'center', display: 'flex'}}> Search Statistics </div>
-      <div style={{ justifyContent: 'center', backgroundColor: 'blue', display: 'flex', flexDirection: 'row'}}>
+      <div style={{flex: '1', justifyContent: 'center', display: 'flex', marginTop: '20px', fontSize: '25px', fontWeight: 'bold'}}> Google Places Search Helper </div>
+      <div
+        style={{flex: '1', justifyContent: 'center', display: 'flex', margin: '5px', marginBottom: '30px', fontSize: '12px', fontWeight: 'bold', color: '#0000EE', textDecorationLine: 'underline'}}
+        onClick={() => alert(infoMessages["about"])}
+        > About </div>
 
-        <div style={{justifyContent: 'space-between', width: '250px', display: 'flex', flexDirection: 'column'}} >
-          <div style={{textAlign: 'center'}}>Search Efficiency</div>
-            <input
-              type="text"
-              disabled={true}
-              value={efficiency}
-              style={{ padding: '5px', margin: '5px', textAlign: 'center'}}
-              placeholder="Search Efficiency"
-              />
-          </div>
+      <div style={{ display: 'flex', flexDirection: 'row'}}>
 
-          <div style={{justifyContent: 'space-between', width: '250px', display: 'flex', flexDirection: 'column'}} >
-            <div style={{textAlign: 'center'}}>Projected Search Cost</div>
+
+
+      <div style={{fontWeight:'bold', justifyContent: 'center', alignItems: 'center', flexGrow: '1', display:'flex', flex: 1}}>
+      Search Metrics
+      </div>
+
+        <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
+          <div style={{justifyContent: 'space-between', width: '300px', display: 'flex', flexDirection: 'column'}} >
+            <div style={{textAlign:'center', display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>Search Efficiency <IconButton message={infoMessages["SearchEfficiencyMessage"]}/></div>
               <input
                 type="text"
                 disabled={true}
-                value={projectedSearchCost}
+                value={(efficiency*100).toFixed(4).toString()+'%'}
+                style={{ padding: '5px', margin: '5px', textAlign: 'center'}}
+                placeholder="Search Efficiency"
+                />
+          </div>
+
+          <div style={{justifyContent: 'space-between', width: '300px', display: 'flex', flexDirection: 'column'}} >
+            <div style={{textAlign:'center', display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>Projected Search Cost <IconButton message={infoMessages["ProjectedSearchCostMessage"]}/></div>
+              <CurrencyInput
+                prefix={'$'}
+                disabled={true}
+                value={projectedSearchCost.toFixed(4)}
                 style={{ padding: '5px', margin: '5px', textAlign: 'center'}}
                 placeholder="Projected Search Cost"
                 />
           </div>
 
-          <div style={{justifyContent: 'space-between', width: '250px', display: 'flex', flexDirection: 'column'}} >
-            <div style={{textAlign: 'center'}}>Projected Savings vs Naive Search</div>
-              <input
-                type="text"
+          <div style={{justifyContent: 'space-between', width: '300px', display: 'flex', flexDirection: 'column'}} >
+            <div style={{textAlign:'center', display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>Projected Savings vs Naive Search <IconButton message={infoMessages["ProjectedSavingsVsNaiveSearchMessage"]}/></div>
+              <CurrencyInput
+                prefix={'$'}
                 disabled={true}
-                value={projectedSavings}
+                value={projectedSavings.toFixed(4)}
                 style={{ padding: '5px', margin: '5px', textAlign: 'center'}}
                 placeholder="Projected Savings"
                 />
           </div>
+
         </div>
-      <button
-        onClick={() => calcCoverage()}
-        style={{padding: '5px', margin: '5px', width: '150px'}}
-        >
-        calcCoverage
-        </button>
-
-        <button
-          onClick={() => setMergedPoly()}
-          style={{padding: '5px', margin: '5px', width: '150px'}}
-          >
-          setMergedPoly
-          </button>
-
-          <button
-            onClick={() => console.log(cleanPolygons())}
-            style={{padding: '5px', margin: '5px', width: '150px'}}
-            >
-            polygon
-            </button>
-
-            <button
-              onClick={() => calcSearchEfficiency().then((result) => console.log(result))}
-              style={{padding: '5px', margin: '5px', width: '150px'}}
-              >
-              efficiency
-              </button>
-
-
-        <div style={{ height: '50px'}}/>
+        <div style={{ flexGrow: '1'}} />
+        </div>
+          <div style={{marginTop: '10px', height: '2px', backgroundColor: 'black', flex: '1'}} />
+          {interfaceOptions()}
           {commonSettings()}
 
 
