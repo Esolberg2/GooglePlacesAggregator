@@ -2,7 +2,7 @@ import sqlite3
 
 def query(sql, args=[]):
     conn = sqlite3.connect('searches.sqlite')
-        # conn = sqlite3.connect('../dbVol/searches.sqlite')
+    # conn = sqlite3.connect('../dbVol/searches.sqlite')
 
     curs = conn.cursor()
     try:

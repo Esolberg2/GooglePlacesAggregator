@@ -41,7 +41,7 @@ sentry_sdk.init(
 # r = redis.Redis(host= 'redis',port= '6379')
 r = redis.Redis(host= 'localhost',port= '6379')
 
-
+print("redis connection", r)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'mysecret'
