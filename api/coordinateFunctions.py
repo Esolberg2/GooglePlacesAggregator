@@ -100,9 +100,50 @@ def knn(searchedPoints, unsearchedData):
     nbrs = NearestNeighbors(n_neighbors=1, algorithm='ball_tree', n_jobs=-1).fit(searchedPoints)
     distances, indices = nbrs.kneighbors(unsearchedPoints, 1)
 
+    print("---- nbrs ----")
+    for dist, ind in zip(distances, indices):
+        print(dist, ind)
+
+    #unsearched to searched
+    distMap = {i: [ind[0], distances[i][0]] for i, ind in enumerate(indices)}
+
+    print("--- ind map ----")
+    for k, v in distMap.items():
+        print(k, v)
+    # coordMap = {unsearchedPoints[i][0]: searchedPoints[ind][0] for i, ind in enumerate(indices)}
+    #
+    # j = 0
+    # for k, v in coordMap.items():
+    #     print(k, v, "   :   ", j, distMap[j])
+    #     j+= 1
+
+    # print(coordMap)
     indexes = np.where(distances == np.amax(distances))
+    print("")
+    print("dir NearestNeighbors", dir(NearestNeighbors))
+    print("---- indexes ----")
+    print("indexes[0]", indexes[0])
+    print("max distance", np.amax(distances))
+    print("distance at max index", distances[indexes[0]])
+    print("distMap value at key", indexes[0], ":", distMap[indexes[0][0]])
+    print("training index at max index", indices[indexes[0]])
+
+    print("len unsearchedPoints", len(unsearchedPoints))
+    print("len distances", len(distances))
+    print("len searched points", len(searchedPoints))
+    print("")
+    nearestToFurthest = indices[indexes[0]]
+    coordOfNearestToFurthest = searchedPoints[nearestToFurthest]
+    print("coordOfNearestToFurthest", coordOfNearestToFurthest)
+
+    # what i need is a dictionary of unsearched points and their nearest coordinate from searched points
+    # the dictionary should store searched coordinates as keys.
+
     unsearchedCoordIndex = indexes[0][0]
     furthestNearest = unsearchedPoints[unsearchedCoordIndex]
+
+    print("furthestNearest", furthestNearest)
+    print("")
     return furthestNearest.tolist()
 
 
