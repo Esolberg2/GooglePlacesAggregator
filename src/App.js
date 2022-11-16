@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { setPolygons } from './features/map/mapSlice'
+import { settingsPanelActions } from './features/settingsPanel/settingsPanelSlice'
 import { googleSearchManager } from './data/GoogleSearchManager'
+import { alertManager } from './alerts/alertManager'
 import { BsFillQuestionCircleFill } from 'react-icons/bs';
 import MapGL, {GeolocateControl, Source, Layer } from 'react-map-gl'
 import DeckGL, { GeoJsonLayer } from "deck.gl";
@@ -65,6 +67,7 @@ const App = () => {
   const [apiKeyStale, setApiKeyStale] = useState(false)
   const dispatch = useDispatch()
   const  mapData = useSelector((state) => state.buildSearch.data)
+  const sliceSearchResolution = useSelector(state => state.settingsPanel.searchResolution)
   // const googleSearchManager = new GoogleSearchManager()
   // console.log("running googleSearchManager")
   useEffect(() => {
@@ -658,7 +661,8 @@ const App = () => {
   }
 
   function handleResolutionChange(value) {
-    setSearchResolution(value)
+    // setSearchResolution(value)
+    dispatch(settingsPanelActions(value))
   }
 
   function buildFromFile() {
@@ -714,10 +718,10 @@ const App = () => {
           id="input-example"
           name="input-name"
           placeholder="Search Resolution"
-          value={searchResolution}
+          value={sliceSearchResolution}
           decimalsLimit={2}
           onKeyDown = {(evt) => ['e', '-'].includes(evt.key) && evt.preventDefault() }
-          onValueChange={(value) => setSearchResolution(value)}
+          onValueChange={(value) => {dispatch(settingsPanelActions.setSearchResolution(value))}}
           style={{backgroundColor: resolutionInputColor(), paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', height: '15px'}}
           />
       )
@@ -817,13 +821,13 @@ const App = () => {
               <button
                 onClick={() => {
                   // const service = new window.google.maps.places.PlacesService(document.createElement('div'));
-                  console.log(googleSearchManager.service)
-                  console.log(window)
+                  dispatch(settingsPanelActions.setSearchResolution(".2"))
+                  // console.log(sliceSearchResolution)
                 }
               }
                 style={{width: '150px', padding: '5px', margin: '5px'}}
                 >
-                create service
+                search resolution
                 </button>
 
               <button
@@ -857,13 +861,13 @@ const App = () => {
 
               <button
                 onClick={() => {
-                  console.log(window)
-                  console.log(googleSearchManager.service)
+                  alertManager.test()
+                  // console.log(googleSearchManager.service)
                 }
               }
                 style={{width: '150px', padding: '5px', margin: '5px'}}
                 >
-                window
+                alert test
                 </button>
       </div>
     )
