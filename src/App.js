@@ -1,4 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import { setPolygons } from './features/map/mapSlice'
+import { googleSearchManager } from './data/GoogleSearchManager'
 import { BsFillQuestionCircleFill } from 'react-icons/bs';
 import MapGL, {GeolocateControl, Source, Layer } from 'react-map-gl'
 import DeckGL, { GeoJsonLayer } from "deck.gl";
@@ -14,10 +17,11 @@ import IconButton from './components/IconButton.js'
 import axios from 'axios'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import "react-map-gl-geocoder/dist/mapbox-gl-geocoder.css"
-import {updateGoogleApi} from "./helperFunctions/google_JS_API_Helpers"
+// import {updateGoogleApi} from "./helperFunctions/google_JS_API_Helpers"
 import {triggerAlertFor} from "./helperFunctions/arg_Checker"
 import {axiosPutPostData} from "./helperFunctions/axios_Helpers"
 import {buildSearch, nextSearch} from "./helperFunctions/server_API_Helpers"
+import {initializeSearch as initializeSearchSlice} from './features/search/buildSearchSlice'
 const CryptoJS = require("crypto-js");
 const placeTypes = require('./data/placeTypes.json');
 const infoMessages = require('./data/informationText.json');
@@ -59,7 +63,10 @@ const App = () => {
   let service = useRef(undefined);
   const [apiKey, setApiKey] = useState('')
   const [apiKeyStale, setApiKeyStale] = useState(false)
-
+  const dispatch = useDispatch()
+  const  mapData = useSelector((state) => state.buildSearch.data)
+  // const googleSearchManager = new GoogleSearchManager()
+  // console.log("running googleSearchManager")
   useEffect(() => {
     if (!apiKeyStale) {
       setApiKeyStale(true)
@@ -82,7 +89,7 @@ const App = () => {
    } else {
      console.log("stay on page")
    }
-   updateGoogleApi(apiKey)
+   // updateGoogleApi(apiKey)
   }
 
   useEffect(() => {
@@ -389,6 +396,7 @@ const App = () => {
 
   async function initializeSearch() {
     let polygons = getPolygons()
+
 
     let alertArgs = [
       ['polygons', [getPolygons()]],
@@ -791,6 +799,72 @@ const App = () => {
           >
           Clear Search
           </button>
+
+          <button
+            onClick={(e) => dispatch(setPolygons(getPolygons()))}
+            style={{width: '150px', padding: '5px', margin: '5px'}}
+            >
+            getPolygons
+            </button>
+
+            <button
+              onClick={(e) => dispatch(initializeSearchSlice())}
+              style={{width: '150px', padding: '5px', margin: '5px'}}
+              >
+              initialize search
+              </button>
+
+              <button
+                onClick={() => {
+                  // const service = new window.google.maps.places.PlacesService(document.createElement('div'));
+                  console.log(googleSearchManager.service)
+                  console.log(window)
+                }
+              }
+                style={{width: '150px', padding: '5px', margin: '5px'}}
+                >
+                create service
+                </button>
+
+              <button
+                onClick={() => {
+                  console.log("updateGoogleApi")
+                  googleSearchManager.updateGoogleApi('AIzaSyBhJRgpD2FTMa8_q68645LQRb2qNVD6wlE')
+                  // .then(() => {
+                  //   console.log("tag", googleSearchManager.tagScript)
+                  //   console.log("service", googleSearchManager.service)
+                  //   console.log("node", googleSearchManager.node)
+                  // })
+
+                  // googleSearchManager.apiKey = 'AIzaSyBhJRgpD2FTMa8_q68645LQRb2qNVD6wlE'
+                  // const service = new window.google.maps.places.PlacesService(document.createElement('div'));
+                }
+              }
+                style={{width: '150px', padding: '5px', margin: '5px'}}
+                >
+                load google service
+                </button>
+
+              <button
+                onClick={() => {
+                  googleSearchManager.removeGoogle()
+                }
+              }
+                style={{width: '150px', padding: '5px', margin: '5px'}}
+                >
+                remove google
+                </button>
+
+              <button
+                onClick={() => {
+                  console.log(window)
+                  console.log(googleSearchManager.service)
+                }
+              }
+                style={{width: '150px', padding: '5px', margin: '5px'}}
+                >
+                window
+                </button>
       </div>
     )
   }
@@ -817,7 +891,7 @@ const App = () => {
                 />
 
                 <SpinnerButton
-                  func={updateGoogleApi}
+                  func={googleSearchManager.updateGoogleApi}
                   funcArgs={[apiKey]}
                   height='15px'
                   width='47px'
