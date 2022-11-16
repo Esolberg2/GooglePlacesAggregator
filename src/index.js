@@ -6,7 +6,7 @@ import reportWebVitals from './reportWebVitals';
 import * as Sentry from "@sentry/react";
 import { BrowserTracing } from "@sentry/tracing";
 import store from './store';
-import {Provider} from 'reat-redux'
+import {Provider} from 'react-redux'
 
 
 Sentry.init({

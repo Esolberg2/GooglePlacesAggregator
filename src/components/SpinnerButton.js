@@ -1,12 +1,13 @@
 import React, { useRef, useState, useEffect } from "react";
-import {updateGoogleApi} from "../helperFunctions/google_JS_API_Helpers"
+// import {updateGoogleApi} from "../helperFunctions/google_JS_API_Helpers"
+import { googleSearchManager } from '../data/GoogleSearchManager'
 import { TailSpin } from  'react-loader-spinner'
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 
 const SpinnerButton = (props) => {
   const [spinner, setSpinner] = useState(false);
   const [loading, setLoading] = useState(false);
-  const prevLoading = usePrevious(loading);
+  // const prevLoading = usePrevious(loading);
 
   const text = props.text
   const textStyle = props.textStyle
@@ -21,52 +22,57 @@ const SpinnerButton = (props) => {
 
   const [inputUpdated, setInputUpdated] = useState(false)
 
-  function funcWrapper(func) {
-    return async function(...args) {
-      if (spinner) {
-        let res = await func.call(this, ...args)
-        setLoading(false)
-      }
-    }
-  }
+  // function funcWrapper(func) {
+  //   return async function(...args) {
+  //     if (spinner) {
+  //       let res = await func.call(this, ...args)
+  //       setLoading(false)
+  //     }
+  //   }
+  // }
 
   // function onClickWrapper() {
   //   props.onClick()
   //   setLoading(true)
   // }
 
-  useEffect(() => {
-    const wrappedFunction = funcWrapper(func)
-    wrappedFunction(...funcArgs)
-    if (!spinner) {
-      props.onClick()
-    }
-  }, [spinner])
-
-
-  useEffect(() => {
-    if (loading && !prevLoading) {
-      setSpinner(true)
-    } else {
-      setSpinner(false)
-      // props.onClick()
-    }
-  }, [loading])
-
-
-  function usePrevious(value) {
-    const ref = useRef();
-    useEffect(() => {
-      ref.current = value;
-    }, [value]);
-    return ref.current;
-  }
+  // useEffect(() => {
+  //   const wrappedFunction = funcWrapper(func)
+  //   wrappedFunction(...funcArgs)
+  //   if (!spinner) {
+  //     props.onClick()
+  //   }
+  // }, [spinner])
+  //
+  //
+  // useEffect(() => {
+  //   if (loading && !prevLoading) {
+  //     setSpinner(true)
+  //   } else {
+  //     setSpinner(false)
+  //     // props.onClick()
+  //   }
+  // }, [loading])
+  //
+  //
+  // function usePrevious(value) {
+  //   const ref = useRef();
+  //   useEffect(() => {
+  //     ref.current = value;
+  //   }, [value]);
+  //   return ref.current;
+  // }
 
   return (
     <div style={{}}>
       <button
         key={props.buttonKey}
-        onClick={() => setLoading(true)}
+        onClick={() => {
+          // setLoading(true)
+          googleSearchManager.updateGoogleApi(funcArgs[0]).then((res) => {
+            console.log("done loading")
+          })
+        }}
         style={{...{padding: '5px', margin: '5px', whiteSpace: 'nowrap'}, ...buttonStyle}}
         disabled={props.disabled}
         >
