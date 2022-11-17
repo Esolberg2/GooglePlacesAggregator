@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-// import {updateGoogleApi} from "../helperFunctions/google_JS_API_Helpers"
-import { googleSearchManager } from '../data/GoogleSearchManager'
+import { googlePlacesApiManager } from '../googleAPI/googlePlacesApiManager'
 import { TailSpin } from  'react-loader-spinner'
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 
@@ -69,7 +68,7 @@ const SpinnerButton = (props) => {
         key={props.buttonKey}
         onClick={() => {
           // setLoading(true)
-          googleSearchManager.updateGoogleApi(funcArgs[0]).then((res) => {
+          googlePlacesApiManager.updateGoogleApi(funcArgs[0]).then((res) => {
             console.log("done loading")
           })
         }}

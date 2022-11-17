@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { setPolygons } from './features/map/mapSlice'
 import { settingsPanelActions } from './features/settingsPanel/settingsPanelSlice'
-import { googleSearchManager } from './data/GoogleSearchManager'
+// import { googleSearchManager } from './data/GoogleSearchManager'
+import { googlePlacesApiManager } from './googleAPI/googlePlacesApiManager'
 import { alertManager } from './alerts/alertManager'
 import { BsFillQuestionCircleFill } from 'react-icons/bs';
 import MapGL, {GeolocateControl, Source, Layer } from 'react-map-gl'
@@ -23,7 +24,7 @@ import "react-map-gl-geocoder/dist/mapbox-gl-geocoder.css"
 import {triggerAlertFor} from "./helperFunctions/arg_Checker"
 import {axiosPutPostData} from "./helperFunctions/axios_Helpers"
 import {buildSearch, nextSearch} from "./helperFunctions/server_API_Helpers"
-import {initializeSearch as initializeSearchSlice} from './features/search/buildSearchSlice'
+import {initializeSearch as initializeSearchSlice} from './features/search/searchSlice'
 const CryptoJS = require("crypto-js");
 const placeTypes = require('./data/placeTypes.json');
 const infoMessages = require('./data/informationText.json');
@@ -66,7 +67,8 @@ const App = () => {
   const [apiKey, setApiKey] = useState('')
   const [apiKeyStale, setApiKeyStale] = useState(false)
   const dispatch = useDispatch()
-  const  mapData = useSelector((state) => state.buildSearch.data)
+  const  mapData = useSelector((state) => state.search.data)
+  const  testMode = useSelector((state) => state.settingsPanel.testMode)
   const sliceSearchResolution = useSelector(state => state.settingsPanel.searchResolution)
   // const googleSearchManager = new GoogleSearchManager()
   // console.log("running googleSearchManager")
@@ -151,7 +153,7 @@ const App = () => {
 
   // flags
   const [searchBuilt, setSearchBuilt] = useState(false)
-  const [testMode, setTestMode] = useState(true)
+  // const [testMode, setTestMode] = useState(true)
   const [searchRunning, setSearchRunning] = useState(false)
   const [newSearch, setNewSearch] = useState(true)
   const [mode, setMode] = useState(undefined);
@@ -833,7 +835,7 @@ const App = () => {
               <button
                 onClick={() => {
                   console.log("updateGoogleApi")
-                  googleSearchManager.updateGoogleApi('AIzaSyBhJRgpD2FTMa8_q68645LQRb2qNVD6wlE')
+                  googlePlacesApiManager.updateGoogleApi('AIzaSyBhJRgpD2FTMa8_q68645LQRb2qNVD6wlE')
                   // .then(() => {
                   //   console.log("tag", googleSearchManager.tagScript)
                   //   console.log("service", googleSearchManager.service)
@@ -851,7 +853,7 @@ const App = () => {
 
               <button
                 onClick={() => {
-                  googleSearchManager.removeGoogle()
+                  googlePlacesApiManager.removeGoogle()
                 }
               }
                 style={{width: '150px', padding: '5px', margin: '5px'}}
@@ -869,6 +871,18 @@ const App = () => {
                 >
                 alert test
                 </button>
+
+
+                <button
+                  onClick={() => {
+                    googlePlacesApiManager.nearbySearch()
+                    // console.log(googleSearchManager.service)
+                  }
+                }
+                  style={{width: '150px', padding: '5px', margin: '5px'}}
+                  >
+                  service call test
+                  </button>
       </div>
     )
   }
@@ -895,7 +909,7 @@ const App = () => {
                 />
 
                 <SpinnerButton
-                  func={googleSearchManager.updateGoogleApi}
+                  func={googlePlacesApiManager.updateGoogleApi}
                   funcArgs={[apiKey]}
                   height='15px'
                   width='47px'
@@ -997,7 +1011,7 @@ const App = () => {
                     </div>
                     <div style={{paddingLeft: '10px', display: 'flex', alignItems: 'center'}}>
                     <ToggleSlider
-                      onToggle={() => setTestMode((prev) => !prev)}
+                      onToggle={() => {dispatch(settingsPanelActions.setTestMode(!testMode))}}
                       active={testMode}
                       />
                     </div>
