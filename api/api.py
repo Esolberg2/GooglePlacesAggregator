@@ -133,16 +133,17 @@ def get_next_search():
 
     try:
         searchID = args["searchID"]
-        print("searchID")
-        print(searchID)
+        print("searchID", searchID)
         clientChecksum = args["checksum"]
 
         data = redis_get(searchID)
         serverChecksum = checksum(data)
 
         if serverChecksum != clientChecksum:
+            print("----- checksum error")
             return custom_error(409, "Server data out of sync with client, please refresh data.")
     except:
+        print("----- internal data error")
         return custom_error(500, "Internal data error.")
 
 

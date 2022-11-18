@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
+// import { nearbySearch } from '../search/searchSlice'
 
 const initialState = {
   searchEntityType: "Select",
@@ -16,7 +17,9 @@ const initialState = {
 export const settingsPanelSlice = createSlice({
   name: 'settingsPanel',
   initialState,
-
+  extraReducers: {
+    ["search/nearbySearch/fulfilled"]: (state) => {state.budgetUsed += .032}
+  },
   reducers: {
     setSearchEntityType: (state, action) => {state.searchEntityType = action.payload},
     setSearchResolution: (state, action) => {state.searchResolution = action.payload},
