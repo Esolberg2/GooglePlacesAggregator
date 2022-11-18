@@ -12,7 +12,7 @@ class AlertManager {
   };
 
   get _unsearchedData() {
-    return store.getState().search.search.data.unsearchedData;
+    return store.getState().search.search.unsearchedData;
   };
 
   get _polygons() {

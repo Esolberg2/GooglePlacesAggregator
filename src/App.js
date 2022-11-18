@@ -25,6 +25,8 @@ import {triggerAlertFor} from "./helperFunctions/arg_Checker"
 import {axiosPutPostData} from "./helperFunctions/axios_Helpers"
 import {buildSearch, nextSearch} from "./helperFunctions/server_API_Helpers"
 import {initializeSearch as initializeSearchSlice} from './features/search/searchSlice'
+import {nearbySearch as nearbySearchSlice} from './features/search/searchSlice'
+
 const CryptoJS = require("crypto-js");
 const placeTypes = require('./data/placeTypes.json');
 const infoMessages = require('./data/informationText.json');
@@ -67,9 +69,11 @@ const App = () => {
   const [apiKey, setApiKey] = useState('')
   const [apiKeyStale, setApiKeyStale] = useState(false)
   const dispatch = useDispatch()
-  const  mapData = useSelector((state) => state.search.data)
+  const  searchData = useSelector((state) => state.search)
   const  testMode = useSelector((state) => state.settingsPanel.testMode)
   const sliceSearchResolution = useSelector(state => state.settingsPanel.searchResolution)
+  const sliceSearchedAreas = useSelector(state => state.map.searchedAreas)
+
   // const googleSearchManager = new GoogleSearchManager()
   // console.log("running googleSearchManager")
   useEffect(() => {
@@ -283,6 +287,7 @@ const App = () => {
     return polygon
   }
 
+
   function buildCoord(center) {
     var options = {
       steps: 20,
@@ -395,6 +400,8 @@ const App = () => {
         }
       }
     }
+    console.log(coordinatesFeatures)
+    console.log(searchedCoordinatesFeatures)
   }
 
 
@@ -823,13 +830,17 @@ const App = () => {
               <button
                 onClick={() => {
                   // const service = new window.google.maps.places.PlacesService(document.createElement('div'));
-                  dispatch(settingsPanelActions.setSearchResolution(".2"))
+                  // dispatch(settingsPanelActions.setSearchResolution(".2"))
                   // console.log(sliceSearchResolution)
+                  console.log("new features")
+                  console.log(sliceSearchedAreas)
+                  console.log("old features")
+                  console.log(searchedAreas)
                 }
               }
                 style={{width: '150px', padding: '5px', margin: '5px'}}
                 >
-                search resolution
+                log features
                 </button>
 
               <button
@@ -883,6 +894,17 @@ const App = () => {
                   >
                   service call test
                   </button>
+
+              <button
+                onClick={() => {
+                  dispatch(nearbySearchSlice())
+                  // console.log(googleSearchManager.service)
+                }
+              }
+                style={{width: '150px', padding: '5px', margin: '5px'}}
+                >
+                nearby search
+                </button>
       </div>
     )
   }
@@ -1365,7 +1387,7 @@ const App = () => {
               <Layer key={"1"} {...coordinateStyle} />
             </Source>
 
-            <Source id="searchedAreaLayer" type="geojson" data={searchedAreas}>
+            <Source id="searchedAreaLayer" type="geojson" data={sliceSearchedAreas}>
               <Layer key={"2"} {...searchedAreaStyle} />
             </Source>
 
