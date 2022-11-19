@@ -2,6 +2,14 @@
 import { store } from '../store'
 
 class AlertManager {
+  constructor() {
+    this.alertTasks = {
+      "search": [],
+      "loadFile": [],
+      "buildSearch": [],
+      "changeSearchType": []
+    }
+  }
 
   get _searchResolution() {
     return store.getState().settingsPanel.searchResolution;
