@@ -26,7 +26,8 @@ import {axiosPutPostData} from "./helperFunctions/axios_Helpers"
 import {buildSearch, nextSearch} from "./helperFunctions/server_API_Helpers"
 import {initializeSearch as initializeSearchSlice} from './features/search/searchSlice'
 import {nearbySearch as nearbySearchSlice} from './features/search/searchSlice'
-
+import { DialogModal } from './features/modal/Modal'
+import { testModal } from './features/modal/modalSlice'
 const CryptoJS = require("crypto-js");
 const placeTypes = require('./data/placeTypes.json');
 const infoMessages = require('./data/informationText.json');
@@ -847,14 +848,6 @@ const App = () => {
                 onClick={() => {
                   console.log("updateGoogleApi")
                   googlePlacesApiManager.updateGoogleApi('AIzaSyBhJRgpD2FTMa8_q68645LQRb2qNVD6wlE')
-                  // .then(() => {
-                  //   console.log("tag", googleSearchManager.tagScript)
-                  //   console.log("service", googleSearchManager.service)
-                  //   console.log("node", googleSearchManager.node)
-                  // })
-
-                  // googleSearchManager.apiKey = 'AIzaSyBhJRgpD2FTMa8_q68645LQRb2qNVD6wlE'
-                  // const service = new window.google.maps.places.PlacesService(document.createElement('div'));
                 }
               }
                 style={{width: '150px', padding: '5px', margin: '5px'}}
@@ -875,7 +868,6 @@ const App = () => {
               <button
                 onClick={() => {
                   alertManager.test()
-                  // console.log(googleSearchManager.service)
                 }
               }
                 style={{width: '150px', padding: '5px', margin: '5px'}}
@@ -887,7 +879,6 @@ const App = () => {
                 <button
                   onClick={() => {
                     googlePlacesApiManager.nearbySearch()
-                    // console.log(googleSearchManager.service)
                   }
                 }
                   style={{width: '150px', padding: '5px', margin: '5px'}}
@@ -905,6 +896,10 @@ const App = () => {
                 >
                 nearby search
                 </button>
+
+            <button onClick={handleShow}>
+            Open Modal
+            </button>
       </div>
     )
   }
@@ -1305,9 +1300,20 @@ const App = () => {
   function throwAnError() {
   throw new Error('testing');
 }
+// <DialogModal closeCallback={() => {console.log("closeCallback")}} type={"Warning"} />
+
+const [show, setShow] = useState(false);
+const handleClose = () => setShow(false);
+const handleShow = () => setShow(true);
 
   return (
       <div style={{ height: '100vh', flex: '1'}}>
+      <button
+        onClick={dispatch(testModal())}
+        style={{width: '150px', padding: '5px', margin: '5px', backgroundColor: newSearch ? '#cccccc' : undefined }}
+        >
+        modal test
+        </button>
       <div style={{flex: '1', justifyContent: 'center', display: 'flex', marginTop: '20px', fontSize: '25px', fontWeight: 'bold'}}> Google Places Search Helper </div>
       <div
         style={{flex: '1', justifyContent: 'center', display: 'flex', margin: '5px', marginBottom: '30px', fontSize: '12px', fontWeight: 'bold', color: '#0000EE', textDecorationLine: 'underline'}}
@@ -1413,10 +1419,10 @@ const App = () => {
             <div style={{fontWeight: 'bold', paddingTop: '10px', display: 'flex', justifyContent: 'center'}}>
               {renderToolTitle()}
             </div>
+
             {newSearchTools()}
             {loadSearchTools()}
           </div>
-
         </div>
       </div>
      )
