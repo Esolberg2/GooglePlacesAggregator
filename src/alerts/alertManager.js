@@ -4,14 +4,33 @@ import { store } from '../store'
 class AlertManager {
   constructor() {
     this.alertTasks = {
-      "search": [],
+      "search": [
+        this._resolutionError,
+        this._searchEntityError
+      ],
       "loadFile": [],
       "buildSearch": [],
       "changeSearchType": []
     }
   }
 
+  hasAlert(alertKey) {
+    // return this.alertTasks[alertKey].every((func) => func());
+
+    for (const func of this.alertTasks[alertKey]) {
+      let result = func()
+      if (result != false) {
+        console.log("------", result)
+        return result
+      }
+    }
+    console.log("====== returning false")
+    return false
+
+  }
+
   get _searchResolution() {
+    console.log("get search resoltuion")
     return store.getState().settingsPanel.searchResolution;
   };
 
@@ -19,8 +38,8 @@ class AlertManager {
     return store.getState().loadSearch.dataFile;
   };
 
-  get _unsearchedData() {
-    return store.getState().search.search.unsearchedData;
+  get _unsearchedCoords() {
+    return store.getState().search.unsearchedCoords;
   };
 
   get _polygons() {
@@ -56,8 +75,9 @@ class AlertManager {
 
     for (let i=0; i < requiredKeys.length; i++) {
       if (!Object.keys(dataFileJson).includes(requiredKeys[i])) {
-        window.alert('Your selected file is missing required fields.  Please select a valid file to load.');
-        return true;
+        // window.alert('Your selected file is missing required fields.  Please select a valid file to load.');
+        // return true;
+        return 'Your selected file is missing required fields.  Please select a valid file to load.'
       }
       return false;
     };
@@ -65,56 +85,66 @@ class AlertManager {
 
   _fileLoadedError() {
     if (!this._dataFile) {
-      window.alert('Please select a file to load prior to building your search.');
-      return true;
+      // window.alert('Please select a file to load prior to building your search.');
+      // return true;
+      return 'Please select a file to load prior to building your search.'
     }
     return false;
   };
 
   _noSearchInitializedError() {
-    if (this._unsearchedData == undefined) {
-      window.alert('No coordinates are available to search.  Please make sure to "Build Search" or "Build Search From File" prior to conducting additional searches within your selected region.');
-      return true;
+    if (this._unsearchedCoords == undefined) {
+      // window.alert('No coordinates are available to search.  Please make sure to "Build Search" or "Build Search From File" prior to conducting additional searches within your selected region.');
+      // return true;
+      return 'No coordinates are available to search.  Please make sure to "Build Search" or "Build Search From File" prior to conducting additional searches within your selected region.'
     }
     return false;
   };
 
   _googleInitError() {
     if (!window.google) {
-      window.alert('Please make sure to enter your Google API key, and load it into your search using the "Set Key" button.');
-      return true;
+      // window.alert('Please make sure to enter your Google API key, and load it into your search using the "Set Key" button.');
+      // return true;
+      return 'Please make sure to enter your Google API key, and load it into your search using the "Set Key" button.'
     }
     return false;
   };
 
   _polygonError(polygons) {
     if (this._polygons == 0) {
-      window.alert('Please use the "Select Search Area" option to choose a search region before building your search.');
-      return true;
+      // window.alert('Please use the "Select Search Area" option to choose a search region before building your search.');
+      // return true;
+      return 'Please use the "Select Search Area" option to choose a search region before building your search.'
     }
     return false;
   };
 
   _resolutionError() {
-    if (this._searchResolution < 0.1 || !this._searchResolution) {
-      window.alert('Please enter a value for the "Search Resolution".  This is the distance in miles between each potential search coordinate that will be evaluated.');
-      return true;
+    if (store.getState().settingsPanel.searchResolution < 0.1 || !store.getState().settingsPanel.searchResolution) {
+      // window.alert('Please enter a value for the "Search Resolution".  This is the distance in miles between each potential search coordinate that will be evaluated.');
+      // return true;
+      return 'Please enter a value for the "Search Resolution".  This is the distance in miles between each potential search coordinate that will be evaluated.'
     }
     return false;
   };
 
+
   _searchEntityError() {
-    if (this._searchEntityType == "Select" || !this._searchEntityType) {
-      window.alert('Please select an "Entity Type" before building your search.  This is the type of Google Places Entity that the Places API will search for.');
-      return true;
+    console.log("_searchEntityError test")
+    if (store.getState().settingsPanel._searchEntityType == "Select" || !store.getState().settingsPanel._searchEntityType) {
+      // window.alert('Please select an "Entity Type" before building your search.  This is the type of Google Places Entity that the Places API will search for.');
+      // return true;
+      console.log("    _searchEntityError test error found")
+      return 'Please select an "Entity Type" before building your search.  This is the type of Google Places Entity that the Places API will search for.'
     }
     return false;
   };
 
   _searchCompleteError(searchComplete) {
     if (searchComplete.current) {
-      window.alert('All coordinate points for your defined region have been searched. If any areas in your search region are unsearched, you may need to repeat the search with a lower Search Resolution value.');
-      return true;
+      // window.alert('All coordinate points for your defined region have been searched. If any areas in your search region are unsearched, you may need to repeat the search with a lower Search Resolution value.');
+      // return true;
+      return 'All coordinate points for your defined region have been searched. If any areas in your search region are unsearched, you may need to repeat the search with a lower Search Resolution value.'
     }
     return false;
   };
