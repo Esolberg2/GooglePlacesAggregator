@@ -26,8 +26,10 @@ import {axiosPutPostData} from "./helperFunctions/axios_Helpers"
 import {buildSearch, nextSearch} from "./helperFunctions/server_API_Helpers"
 import {initializeSearch as initializeSearchSlice} from './features/search/searchSlice'
 import {nearbySearch as nearbySearchSlice} from './features/search/searchSlice'
+import { ConfirmationModal } from './features/modal/Confirmation'
+import { AlertModal } from './features/modal/Alert'
 import { DialogModal } from './features/modal/Modal'
-import { testModal } from './features/modal/modalSlice'
+import { alertDialog, confirmationDialog } from './features/modal/modalSlice'
 const CryptoJS = require("crypto-js");
 const placeTypes = require('./data/placeTypes.json');
 const infoMessages = require('./data/informationText.json');
@@ -867,13 +869,44 @@ const App = () => {
 
               <button
                 onClick={() => {
-                  alertManager.test()
+                  let args = {
+                    callbackKey:"testKey",
+                    funcs: {
+                      // onAfterOpen: function() {console.log("callback onAfterOpen")},
+                      // onAfterClose: function() {console.log("callback onAfterClose")},
+                      // onRequestClose: function() {console.log("callback onRequestClose")},
+                      onConfirm: function() {console.log("callback onConfirm")},
+                      onDeny: function() {console.log("callback onDeny")},
+                    },
+                    message: "test message"
+                  }
+                  // dispatch(testModal(args))
+                  console.log("test")
+
                 }
               }
                 style={{width: '150px', padding: '5px', margin: '5px'}}
                 >
                 alert test
                 </button>
+
+                <button
+                  onClick={async () => {
+                    // nearbySearchSlice
+                    // this works, do more of this
+                    dispatch(confirmationDialog({"target": nearbySearchSlice}))
+                    // try {
+                    //   const result = await dispatch(confirmPromise())
+                    //   console.log(result)
+                    // } catch (error){
+                    //   console.log(error)
+                    // }
+
+                  }}
+                  style={{width: '150px', padding: '5px', margin: '5px'}}
+                  >
+                  alert test 2
+                  </button>
 
 
                 <button
@@ -888,10 +921,23 @@ const App = () => {
 
               <button
                 onClick={() => {
-                  dispatch(nearbySearchSlice())
-                  // console.log(googleSearchManager.service)
+                  // // dispatch(nearbySearchSlice())
+
+                  // dispatch(alertDialog(
+                  //   {
+                  //     "target": nearbySearchSlice,
+                  //     "alertKey": "search"
+                  //   }
+                  // ))}
+
+                  dispatch(confirmationDialog(
+                    {
+                      "target": nearbySearchSlice,
+                      "alertKey": "search"
+                    }
+                  ))}
+
                 }
-              }
                 style={{width: '150px', padding: '5px', margin: '5px'}}
                 >
                 nearby search
@@ -1308,12 +1354,8 @@ const handleShow = () => setShow(true);
 
   return (
       <div style={{ height: '100vh', flex: '1'}}>
-      <button
-        onClick={dispatch(testModal())}
-        style={{width: '150px', padding: '5px', margin: '5px', backgroundColor: newSearch ? '#cccccc' : undefined }}
-        >
-        modal test
-        </button>
+      <DialogModal />
+
       <div style={{flex: '1', justifyContent: 'center', display: 'flex', marginTop: '20px', fontSize: '25px', fontWeight: 'bold'}}> Google Places Search Helper </div>
       <div
         style={{flex: '1', justifyContent: 'center', display: 'flex', margin: '5px', marginBottom: '30px', fontSize: '12px', fontWeight: 'bold', color: '#0000EE', textDecorationLine: 'underline'}}

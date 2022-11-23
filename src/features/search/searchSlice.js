@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import * as turf from '@turf/turf'
 import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager'
 import { checksumManager } from '../../data/checksumManager'
-
+import { callbackDict, confirmPromise } from '../modal/modalSlice'
 import axios from 'axios'
 
 const initialState = {
@@ -42,13 +42,14 @@ export const initializeSearch = createAsyncThunk('search/initializeSearch',(a, b
     .catch((error) => error.msg)
 })
 
+
 // nearby search
 export const nearbySearch = createAsyncThunk('search/nearbySearch', async (a, b) => {
+  console.log("calling google")
   let rawGoogleData = await googlePlacesApiManager.nearbySearch()
   console.log(rawGoogleData)
+  console.log("google called")
   try {
-
-
     const center = b.getState().search.nextCenter
     const searchID = b.getState().search.searchID
     let options = {

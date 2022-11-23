@@ -27,7 +27,7 @@ export const mapSlice = createSlice({
   initialState,
   extraReducers: {
     ["search/nearbySearch/fulfilled"]: (state, action) => {
-
+      console.log(action.payload)
       state.searchedAreas.features = [...state.searchedAreas.features, buildCoordJSON(action.payload.lastSearchPerimeter)]
     }
   },

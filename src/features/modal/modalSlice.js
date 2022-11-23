@@ -1,38 +1,77 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { DialogModal } from './Modal'
+import { useSelector, useDispatch } from 'react-redux'
+import { alertManager } from '../../alerts/alertManager'
 
 const initialState = {
   visible: false,
   error: false,
-  message: ''
+  message: '',
+  callbackKey: '',
+  dialogType: '',
+  promise: ''
 }
 
+export const callbackDict = {}
 
-export const testModal = createAsyncThunk('modal/testModal',(a, b) => {
-  return (
-    <DialogModal closeCallback={() => {console.log("closeCallback")}} type={"Warning"} />
+export const confirmationDialog = createAsyncThunk('modal/confirmPromise', async (args, b) => {
+  let { target, message } = args
+  b.dispatch(setMessage('test message'))
+  b.dispatch(setDialogType('Confirmation'))
+  b.dispatch(setVisible(true))
+  const confirmed = await new Promise(function(resolve, reject){
+    callbackDict["resolve"] = resolve;
+  });
 
-  )
+  if (confirmed) {
+    b.dispatch(target())
+  }
 })
+
+
+export const alertDialog = createAsyncThunk('modal/alertPromise', async (args, b) => {
+  let { target, alertKey } = args
+  let alert = alertManager.hasAlert(alertKey)
+  if (alert) {
+    b.dispatch(setMessage(alert))
+    b.dispatch(setDialogType('Alert'))
+    b.dispatch(setVisible(true))
+    const promise = await new Promise(function(resolve, reject){
+      callbackDict["resolve"] = () => {resolve(true)};
+    });
+  } else {
+    b.dispatch(target())
+  }
+})
+
 
 export const modalSlice = createSlice({
   name: 'modal',
   initialState,
-  // extraReducers: {
-  //   ["search/nearbySearch/fulfilled"]: (state, action) => {
-  //
-  //     state.searchedAreas.features = [...state.searchedAreas.features, buildCoordJSON(action.payload.lastSearchPerimeter)]
-  //   }
-  // },
-  reducers: {
-    setVisible: (state, action) => {state.visible = action.payload},
+  extraReducers: (builder) => {
+    builder.addCase(alertDialog.fulfilled, (state, action) => {
+      state.visible = false
+      state.message = ''
+      state.dialogType = ''
+    })
+    builder.addCase(confirmationDialog.fulfilled, (state, action) => {
+      state.visible = false
+      state.message = ''
+      state.dialogType = ''
+    })
   },
-
+  reducers: {
+  setDialogType: (state, action) => {state.dialogType = action.payload},
+  setMessage: (state, action) => {state.message = action.payload},
+  setVisible: (state, action) => {state.visible = action.payload},
+}
 })
+
 
 export const
 {
-setVisible
+setVisible,
+setMessage,
+setDialogType,
 } = modalSlice.actions
 
 export default modalSlice.reducer
