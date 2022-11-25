@@ -72,8 +72,12 @@ const App = () => {
   const [apiKey, setApiKey] = useState('')
   const [apiKeyStale, setApiKeyStale] = useState(false)
   const dispatch = useDispatch()
-  const  searchData = useSelector((state) => state.search)
-  const  testMode = useSelector((state) => state.settingsPanel.testMode)
+  const searchData = useSelector((state) => state.search)
+  const testMode = useSelector((state) => state.settingsPanel.testMode)
+  const budget = useSelector((state) => state.settingsPanel.budget)
+  const budgetUsed = useSelector((state) => state.settingsPanel.budgetUsed)
+
+  const searchEntityType = useSelector((state) => state.settingsPanel.searchEntityType)
   const sliceSearchResolution = useSelector(state => state.settingsPanel.searchResolution)
   const sliceSearchedAreas = useSelector(state => state.map.searchedAreas)
 
@@ -174,8 +178,8 @@ const App = () => {
   const prevCallType = usePrevious(callType);
   const [bulkSearchCount, setBulkSearchCount] = useState(false)
   const [searchResultLayer, setSearchResultLayer ] = useState(undefined)
-  const [budget, setBudget] = useState(0)
-  const [budgetUsed, setBudgetUsed] = useState(0);
+  const [budgetOld, setBudgetOld] = useState(0)
+  const [budgetUsedOld, setBudgetUsed] = useState(0);
   const [efficiency, setEfficiency] = useState(0)
   const [projectedSavings, setProjectedSavings] = useState(0)
   const [projectedSearchCost, setProjectedSearchCost] = useState(0)
@@ -246,25 +250,25 @@ const App = () => {
     }
   )
 
-  useEffect(() => {
-    const validCalls = {
-      'initializeSearch': initializeSearch,
-      'singleSearch': singleSearch
-    }
-
-    if (Object.keys(validCalls).includes(callType) && !searchRunning) {
-
-      validCalls[callType]().then(() => {
-        }).catch((error) => {
-          console.log(error)
-        }).finally(() => {
-          setCallType('')
-          setSearchRunning(false)
-        })
-    } else {
-      console.log("aborted")
-    }
-  }, [callType])
+  // useEffect(() => {
+  //   const validCalls = {
+  //     'initializeSearch': initializeSearch,
+  //     'singleSearch': singleSearch
+  //   }
+  //
+  //   if (Object.keys(validCalls).includes(callType) && !searchRunning) {
+  //
+  //     validCalls[callType]().then(() => {
+  //       }).catch((error) => {
+  //         console.log(error)
+  //       }).finally(() => {
+  //         setCallType('')
+  //         setSearchRunning(false)
+  //       })
+  //   } else {
+  //     console.log("aborted")
+  //   }
+  // }, [callType])
 
 
   function checksumDataBundler() {
@@ -302,157 +306,157 @@ const App = () => {
     return polygon
   }
 
-  async function bulkSearch() {
+  // async function bulkSearch() {
+  //
+  //   let alertArgs = [
+  //
+  //     ['searchInit', [unsearchedData]],
+  //     ['polygons', [getPolygons()]],
+  //     ['resolution', [searchResolution]],
+  //     ['searchType', [searchType]],
+  //     ['budgetExceeded', [budget, budgetUsed]],
+  //     ['searchInit', [unsearchedData]],
+  //     ['searchComplete', [unsearchedData]] // different
+  //   ]
+  //
+  // if (!testMode) {
+  //   alertArgs = [['googleInit', []], ...alertArgs]
+  // }
+  //
+  //   if (!bulkSearchCount) {
+  //     alert("Please specify the Qty of  searches to run in bulk.")
+  //   } else {
+  //
+  //     if (confirmBulkSearch(bulkSearchCount, bulkSearchCount * .032)) {
+  //       for (let i=0; i < bulkSearchCount; i++) {
+  //
+  //         if (triggerAlertFor(alertArgs)) {
+  //           return
+  //         } else {
+  //           await singleSearch()
+  //         }
+  //
+  //       }
+  //     }
+  //     alert("Bulk Search complete.")
+  //   }
+  // }
 
-    let alertArgs = [
-
-      ['searchInit', [unsearchedData]],
-      ['polygons', [getPolygons()]],
-      ['resolution', [searchResolution]],
-      ['searchType', [searchType]],
-      ['budgetExceeded', [budget, budgetUsed]],
-      ['searchInit', [unsearchedData]],
-      ['searchComplete', [unsearchedData]] // different
-    ]
-
-  if (!testMode) {
-    alertArgs = [['googleInit', []], ...alertArgs]
-  }
-
-    if (!bulkSearchCount) {
-      alert("Please specify the Qty of  searches to run in bulk.")
-    } else {
-
-      if (confirmBulkSearch(bulkSearchCount, bulkSearchCount * .032)) {
-        for (let i=0; i < bulkSearchCount; i++) {
-
-          if (triggerAlertFor(alertArgs)) {
-            return
-          } else {
-            await singleSearch()
-          }
-
-        }
-      }
-      alert("Bulk Search complete.")
-    }
-  }
-
-  async function singleSearch() {
-
-    let alertArgs = [
-      ['searchInit', [unsearchedData]],
-      ['polygons', [getPolygons()]],
-      ['resolution', [searchResolution]],
-      ['searchType', [searchType]],
-      ['budgetExceeded', [budget, budgetUsed]],
-      ['searchComplete2', [searchComplete]]
-    ]
-
-  if (!testMode) {
-    alertArgs = [['googleInit', []], ...alertArgs]
-  }
-
-    // same
-    let alertPresent = triggerAlertFor(alertArgs)
-
-    if (alertPresent) {
-      console.log("single search aborted due to rule fail")
-      return
-    }
-
-    try {
-        // different
-        let data = await nextSearch(nextCenter.current, searchID.current, checksum(checksumDataBundler()), searchType, testMode)
-        // same
-        setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
-        updateCoordinates(data["unsearchedData"], coordinatesFeatures, setCoordinatesFeatures)
-        // addCoordinates(data["searchedData"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
-        nextRadius.current = data["radius"]
-
-        if (data["unsearchedData"].length == 0) {
-          searchComplete.current = true
-        }
-
-        if (data["nextCenter"]) {
-          addCoordinates([data["nextCenter"]], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
-        }
-        if (nextCenter.current) {
-          addCircle(nextCenter.current, nextRadius.current)
-        }
-        setTotalSearchedArea((prev) => prev + (3.14 * (nextRadius.current**2)))
-        searchedData.current = data["searchedData"]
-        unsearchedData.current = data["unsearchedData"]
-        nextCenter.current = data["nextCenter"]
-        googleData.current = [...googleData.current, ...data["googleData"]]
-        // calcSearchEfficiency()
-      // same
-    } catch(error) {
-      if (error == 'ZERO_RESULTS') {
-      }
-      console.log(error)
-      // if effor code 409, sync backend
-      throw(error)
-      if (error.response.status) {
-        try {
-          console.log("syncing")
-          await syncBackend()
-          singleSearch()
-        } catch {
-          console.log("failed to sync")
-        }
-      }
-    }
-    console.log(coordinatesFeatures)
-    console.log(searchedCoordinatesFeatures)
-  }
-
-
-
-  async function initializeSearch() {
-    let polygons = getPolygons()
+  // async function singleSearch() {
+  //
+  //   let alertArgs = [
+  //     ['searchInit', [unsearchedData]],
+  //     ['polygons', [getPolygons()]],
+  //     ['resolution', [searchResolution]],
+  //     ['searchType', [searchType]],
+  //     ['budgetExceeded', [budget, budgetUsed]],
+  //     ['searchComplete2', [searchComplete]]
+  //   ]
+  //
+  // if (!testMode) {
+  //   alertArgs = [['googleInit', []], ...alertArgs]
+  // }
+  //
+  //   // same
+  //   let alertPresent = triggerAlertFor(alertArgs)
+  //
+  //   if (alertPresent) {
+  //     console.log("single search aborted due to rule fail")
+  //     return
+  //   }
+  //
+  //   try {
+  //       // different
+  //       let data = await nextSearch(nextCenter.current, searchID.current, checksum(checksumDataBundler()), searchType, testMode)
+  //       // same
+  //       setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
+  //       updateCoordinates(data["unsearchedData"], coordinatesFeatures, setCoordinatesFeatures)
+  //       // addCoordinates(data["searchedData"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
+  //       nextRadius.current = data["radius"]
+  //
+  //       if (data["unsearchedData"].length == 0) {
+  //         searchComplete.current = true
+  //       }
+  //
+  //       if (data["nextCenter"]) {
+  //         addCoordinates([data["nextCenter"]], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
+  //       }
+  //       if (nextCenter.current) {
+  //         addCircle(nextCenter.current, nextRadius.current)
+  //       }
+  //       setTotalSearchedArea((prev) => prev + (3.14 * (nextRadius.current**2)))
+  //       searchedData.current = data["searchedData"]
+  //       unsearchedData.current = data["unsearchedData"]
+  //       nextCenter.current = data["nextCenter"]
+  //       googleData.current = [...googleData.current, ...data["googleData"]]
+  //       // calcSearchEfficiency()
+  //     // same
+  //   } catch(error) {
+  //     if (error == 'ZERO_RESULTS') {
+  //     }
+  //     console.log(error)
+  //     // if effor code 409, sync backend
+  //     throw(error)
+  //     if (error.response.status) {
+  //       try {
+  //         console.log("syncing")
+  //         await syncBackend()
+  //         singleSearch()
+  //       } catch {
+  //         console.log("failed to sync")
+  //       }
+  //     }
+  //   }
+  //   console.log(coordinatesFeatures)
+  //   console.log(searchedCoordinatesFeatures)
+  // }
 
 
-    let alertArgs = [
-      ['polygons', [getPolygons()]],
-      ['resolution', [searchResolution]],
-      ['searchType', [searchType]],
-      ['budgetExceeded', [budget, budgetUsed]],
-      ['searchComplete', [unsearchedData]]
-    ]
 
-  if (!testMode) {
-    alertArgs = [['googleInit', []], ...alertArgs]
-  }
-
-    let alertPresent = triggerAlertFor(alertArgs)
-    if (alertPresent) {
-      return
-    }
-
-    try {
-      // different
-      let data = await buildSearch(polygons, searchResolution, searchType, testMode)
-      // same
-      // setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
-      addCoordinates(data["searchedData"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
-      addCoordinates([data["nextCenter"]], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
-      updateCoordinates(data["unsearchedData"], coordinatesFeatures, setCoordinatesFeatures)
-      // setSearchedCoordinatesFeatures((prev) => ...prev, features: data["unsearchedData"])
-
-      searchedData.current = data["searchedData"]
-      unsearchedData.current = data["unsearchedData"]
-      nextCenter.current = data["nextCenter"]
-      searchCentroid.current = data["nextCenter"]
-
-      // different
-      searchID.current = data["searchID"]
-      // addCoordinates(data["unsearchedData"], coordinatesFeatures, setCoordinatesFeatures)
-      // same
-    } catch(error) {
-      console.log(error)
-    }
-  }
+  // async function initializeSearch() {
+  //   let polygons = getPolygons()
+  //
+  //
+  //   let alertArgs = [
+  //     ['polygons', [getPolygons()]],
+  //     ['resolution', [searchResolution]],
+  //     ['searchType', [searchType]],
+  //     ['budgetExceeded', [budget, budgetUsed]],
+  //     ['searchComplete', [unsearchedData]]
+  //   ]
+  //
+  // if (!testMode) {
+  //   alertArgs = [['googleInit', []], ...alertArgs]
+  // }
+  //
+  //   let alertPresent = triggerAlertFor(alertArgs)
+  //   if (alertPresent) {
+  //     return
+  //   }
+  //
+  //   try {
+  //     // different
+  //     let data = await buildSearch(polygons, searchResolution, searchType, testMode)
+  //     // same
+  //     // setBudgetUsed((prev) => (parseFloat(prev) + 0.032).toFixed(4))
+  //     addCoordinates(data["searchedData"], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
+  //     addCoordinates([data["nextCenter"]], searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
+  //     updateCoordinates(data["unsearchedData"], coordinatesFeatures, setCoordinatesFeatures)
+  //     // setSearchedCoordinatesFeatures((prev) => ...prev, features: data["unsearchedData"])
+  //
+  //     searchedData.current = data["searchedData"]
+  //     unsearchedData.current = data["unsearchedData"]
+  //     nextCenter.current = data["nextCenter"]
+  //     searchCentroid.current = data["nextCenter"]
+  //
+  //     // different
+  //     searchID.current = data["searchID"]
+  //     // addCoordinates(data["unsearchedData"], coordinatesFeatures, setCoordinatesFeatures)
+  //     // same
+  //   } catch(error) {
+  //     console.log(error)
+  //   }
+  // }
 
   function clearData() {
     let features = editorRef.current.getFeatures()
@@ -631,9 +635,10 @@ const App = () => {
   function handleBudgetChange(value) {
     let cleanValue = isNaN(value) ? 0 : parseFloat(value)
     if (cleanValue < -1) {
-        setBudget(-1)
+        // setBudget(-1)
+        dispatch(settingsPanelActions.setBudget(-1))
       } else {
-        setBudget(value)}
+        dispatch(settingsPanelActions.setBudget(value))}
     }
 
 
@@ -674,7 +679,8 @@ const App = () => {
 
   function handleResolutionChange(value) {
     // setSearchResolution(value)
-    dispatch(settingsPanelActions(value))
+    // dispatch(settingsPanelActions(value))
+    dispatch(settingsPanelActions.setSearchResolution(value))
   }
 
   function buildFromFile() {
@@ -704,7 +710,7 @@ const App = () => {
       setUserSearchKey(data["userSearchKey"])
 
       setBudgetUsed(data["budgetUsed"])
-      setBudget(data["budget"])
+      setBudgetOld(data["budget"])
       editorRef.current.addFeatures(data["searchBorders"])
       addCoordinates(unsearchedData.current, coordinatesFeatures, setCoordinatesFeatures)
       // addCoordinates(searchedData.current, searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
@@ -733,7 +739,7 @@ const App = () => {
           value={sliceSearchResolution}
           decimalsLimit={2}
           onKeyDown = {(evt) => ['e', '-'].includes(evt.key) && evt.preventDefault() }
-          onValueChange={(value) => {dispatch(settingsPanelActions.setSearchResolution(value))}}
+          onValueChange={handleResolutionChange}
           style={{backgroundColor: resolutionInputColor(), paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', height: '15px'}}
           />
       )
@@ -764,7 +770,8 @@ const App = () => {
   }
 
   function handleSelectChange(event) {
-    setSearchType(event.target.value)
+    // setSearchType(event.target.value)
+    dispatch(settingsPanelActions.setSearchEntityType(event.target.value))
   }
 
   function onChangeBulkQtyInput(e) {
@@ -923,19 +930,19 @@ const App = () => {
                 onClick={() => {
                   // // dispatch(nearbySearchSlice())
 
-                  // dispatch(alertDialog(
-                  //   {
-                  //     "target": nearbySearchSlice,
-                  //     "alertKey": "search"
-                  //   }
-                  // ))}
-
-                  dispatch(confirmationDialog(
+                  dispatch(alertDialog(
                     {
                       "target": nearbySearchSlice,
                       "alertKey": "search"
                     }
                   ))}
+
+                  // dispatch(confirmationDialog(
+                  //   {
+                  //     "target": nearbySearchSlice,
+                  //     "alertKey": "search"
+                  //   }
+                  // ))}
 
                 }
                 style={{width: '150px', padding: '5px', margin: '5px'}}
@@ -995,7 +1002,7 @@ const App = () => {
               to one type per search.
             </div>
             <div style={{ flexGrow: '1'}}/>
-            <select key={searchType} disabled={newSearch ? false : true} value={searchType} onChange={handleSelectChange} id="typeSelect" style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}>
+            <select key={searchEntityType} disabled={newSearch ? false : true} value={searchEntityType} onChange={handleSelectChange} id="typeSelect" style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}>
               {renderTypeOptions()}
             </select>
           </div>
@@ -1127,7 +1134,7 @@ const App = () => {
 
             <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'}}>
               <button
-                onClick={() => bulkSearch()}
+                onClick={() => console.log("bulkSearch()")}
                 style={{padding: '5px', margin: '5px', width: '150px'}}
                 >
                 Bulk Search
@@ -1182,7 +1189,7 @@ const App = () => {
 
             <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'}}>
               <button
-                onClick={() => initializeSearch()}
+                onClick={() => dispatch(initializeSearchSlice())}
                 style={{padding: '5px', margin: '5px', width: '150px'}}
                 disabled={unsearchedData.current != undefined}
                 >
@@ -1199,7 +1206,7 @@ const App = () => {
 
             <div style={{display: 'flex', flexDirection: 'column'}}>
               <button
-                onClick={() => bulkSearch()}
+                onClick={() => console.log("bulkSearch()")}
                 style={{padding: '5px', margin: '5px', width: '150px'}}
                 >
                 Bulk Search

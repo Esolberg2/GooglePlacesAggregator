@@ -5,18 +5,27 @@ class AlertManager {
   constructor() {
     this.alertTasks = {
       "search": [
-        this._resolutionError,
-        this._searchEntityError
+        this._googleInitError,
+        this._searchEntityError,
+        this._budgetExceededError,
+        this._searchCompleteError,
+        this._noSearchInitializedError
       ],
       "loadFile": [],
-      "buildSearch": [],
+      "buildSearch": [
+        this._resolutionError,
+        this._searchEntityError,
+        this._polygonError,
+      ],
       "changeSearchType": []
     }
   }
 
-  hasAlert(alertKey) {
-    // return this.alertTasks[alertKey].every((func) => func());
+//   _noSearchInitializedError
+// _googleInitError
 
+
+  hasAlert(alertKey) {
     for (const func of this.alertTasks[alertKey]) {
       let result = func()
       if (result != false) {
@@ -29,33 +38,8 @@ class AlertManager {
 
   }
 
-  get _searchResolution() {
-    console.log("get search resoltuion")
-    return store.getState().settingsPanel.searchResolution;
-  };
-
-  get _dataFile() {
-    return store.getState().loadSearch.dataFile;
-  };
-
-  get _unsearchedCoords() {
-    return store.getState().search.unsearchedCoords;
-  };
-
-  get _polygons() {
-    return store.getState().map.polygons;
-  };
-
-  get _searchEntityType() {
-    return store.getState().settingsPanel.searchEntityType;
-  };
-
-  test() {
-    console.log("test", this._searchResolution);
-  };
-
   _fileError() {
-    let dataFileJson = JSON.parse(this._dataFile);
+    let dataFileJson = JSON.parse(store.getState().loadSearch.dataFile);
     let requiredKeys = [
       "googleData",
       "searchType",
@@ -84,7 +68,7 @@ class AlertManager {
   };
 
   _fileLoadedError() {
-    if (!this._dataFile) {
+    if (!store.getState().loadSearch.dataFile) {
       // window.alert('Please select a file to load prior to building your search.');
       // return true;
       return 'Please select a file to load prior to building your search.'
@@ -93,7 +77,9 @@ class AlertManager {
   };
 
   _noSearchInitializedError() {
-    if (this._unsearchedCoords == undefined) {
+    console.log(store.getState().search.unsearchedCoords)
+    if (store.getState().search.unsearchedCoords.length == 0) {
+      console.log("_noSearchInitializedError should trigger")
       // window.alert('No coordinates are available to search.  Please make sure to "Build Search" or "Build Search From File" prior to conducting additional searches within your selected region.');
       // return true;
       return 'No coordinates are available to search.  Please make sure to "Build Search" or "Build Search From File" prior to conducting additional searches within your selected region.'
@@ -102,16 +88,17 @@ class AlertManager {
   };
 
   _googleInitError() {
-    if (!window.google) {
-      // window.alert('Please make sure to enter your Google API key, and load it into your search using the "Set Key" button.');
-      // return true;
-      return 'Please make sure to enter your Google API key, and load it into your search using the "Set Key" button.'
+    if (!store.getState().settingsPanel.testMode) {
+      if (!window.google) {
+        return 'Please make sure to enter your Google API key, and load it into your search using the "Set Key" button.'
+      }
     }
     return false;
   };
 
   _polygonError(polygons) {
-    if (this._polygons == 0) {
+    console.log(store.getState().map.polygons)
+    if (!store.getState().map.polygons || store.getState().map.polygons.length == 0) {
       // window.alert('Please use the "Select Search Area" option to choose a search region before building your search.');
       // return true;
       return 'Please use the "Select Search Area" option to choose a search region before building your search.'
@@ -130,8 +117,8 @@ class AlertManager {
 
 
   _searchEntityError() {
-    console.log("_searchEntityError test")
-    if (store.getState().settingsPanel._searchEntityType == "Select" || !store.getState().settingsPanel._searchEntityType) {
+    console.log(store.getState().settingsPanel.searchEntityType)
+    if (store.getState().settingsPanel.searchEntityType == "Select" || !store.getState().settingsPanel.searchEntityType) {
       // window.alert('Please select an "Entity Type" before building your search.  This is the type of Google Places Entity that the Places API will search for.');
       // return true;
       console.log("    _searchEntityError test error found")
@@ -141,7 +128,7 @@ class AlertManager {
   };
 
   _searchCompleteError(searchComplete) {
-    if (searchComplete.current) {
+    if (store.getState().search.unsearchedCoords.length == 0 && store.getState().search.searchedCoords.length != 0) {
       // window.alert('All coordinate points for your defined region have been searched. If any areas in your search region are unsearched, you may need to repeat the search with a lower Search Resolution value.');
       // return true;
       return 'All coordinate points for your defined region have been searched. If any areas in your search region are unsearched, you may need to repeat the search with a lower Search Resolution value.'
@@ -149,33 +136,16 @@ class AlertManager {
     return false;
   };
 
+  _budgetExceededError() {
+    console.log(store.getState().settingsPanel.budget)
+    console.log(!store.getState().settingsPanel.budget >= 0)
+    if (store.getState().settingsPanel.budgetUsed >= store.getState().settingsPanel.budget || store.getState().settingsPanel.budget <= 0) {
+      // window.alert('You have exhausted your set budget. To run additional searches or build a new search, please increase your budget setting.')
+      return 'You have exhausted your set budget. To run additional searches or build a new search, please increase your budget setting.'
+    }
+    return false
+  }
 }
 
 
 export const alertManager = new AlertManager();
-
-
-
-
-//
-//
-// // could be added to reducer comparing budget to budgetUsed whenever budgetUsed is set
-// _budgetExceededError(budgetSet, budgetUsed) {
-//   if (budgetSet == -1) {
-//     return false
-//   }
-//   if (budgetUsed >= budgetSet || !budgetSet) {
-//     window.alert('You have exhausted your set budget. To run additional searches or build a new search, please increase your budget setting.')
-//     return true
-//   }
-//   return false
-// }
-//
-// // reducer should check if unsearchedData is exhausted and update searchComplete state
-// _searchCompleteError(unsearchedCoords) {
-//   if (unsearchedCoords.current && unsearchedCoords.current.length == 0) {
-//     window.alert('All coordinate points for your defined region have been searched. If any areas in your search region are unsearched, you may need to repeat the search with a lower Search Resolution value.');
-//     return true;
-//   }
-//   return false;
-// };
