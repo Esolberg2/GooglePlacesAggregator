@@ -9,23 +9,24 @@ import { BsFillQuestionCircleFill } from 'react-icons/bs';
 import MapGL, {GeolocateControl, Source, Layer } from 'react-map-gl'
 import DeckGL, { GeoJsonLayer } from "deck.gl";
 import Geocoder from "react-map-gl-geocoder";
-import {Editor, DrawPolygonMode, EditingMode} from 'react-map-gl-draw';
-import {getFeatureStyle, getEditHandleStyle} from './style';
+import { Editor, DrawPolygonMode, EditingMode } from 'react-map-gl-draw';
+import { getFeatureStyle, getEditHandleStyle } from './style';
 import * as turf from '@turf/turf'
 import { ToggleSlider }  from "react-toggle-slider";
 import CurrencyInput from 'react-currency-input-field';
-import FilePicker from './components/FilePicker.js'
+import { FilePicker } from './components/FilePicker.js'
 import SpinnerButton from './components/SpinnerButton.js'
 import IconButton from './components/IconButton.js'
 import axios from 'axios'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import "react-map-gl-geocoder/dist/mapbox-gl-geocoder.css"
 // import {updateGoogleApi} from "./helperFunctions/google_JS_API_Helpers"
-import {triggerAlertFor} from "./helperFunctions/arg_Checker"
-import {axiosPutPostData} from "./helperFunctions/axios_Helpers"
-import {buildSearch, nextSearch} from "./helperFunctions/server_API_Helpers"
-import {initializeSearch as initializeSearchSlice} from './features/search/searchSlice'
-import {nearbySearch as nearbySearchSlice} from './features/search/searchSlice'
+import { triggerAlertFor } from "./helperFunctions/arg_Checker"
+import { axiosPutPostData } from "./helperFunctions/axios_Helpers"
+import { buildSearch, nextSearch } from "./helperFunctions/server_API_Helpers"
+import { initializeSearch as initializeSearchSlice } from './features/search/searchSlice'
+import { nearbySearch as nearbySearchSlice } from './features/search/searchSlice'
+import { searchActions } from './features/search/searchSlice'
 import { ConfirmationModal } from './features/modal/Confirmation'
 import { AlertModal } from './features/modal/Alert'
 import { DialogModal } from './features/modal/Modal'
@@ -71,18 +72,39 @@ const App = () => {
   let service = useRef(undefined);
   const [apiKey, setApiKey] = useState('')
   const [apiKeyStale, setApiKeyStale] = useState(false)
+
+
   const dispatch = useDispatch()
   const searchData = useSelector((state) => state.search)
-  const testMode = useSelector((state) => state.settingsPanel.testMode)
-  const budget = useSelector((state) => state.settingsPanel.budget)
-  const budgetUsed = useSelector((state) => state.settingsPanel.budgetUsed)
+  const settingsData = useSelector((state) => state.settingsPanel)
+  const mapData = useSelector(state => state.map)
 
-  const searchEntityType = useSelector((state) => state.settingsPanel.searchEntityType)
-  const sliceSearchResolution = useSelector(state => state.settingsPanel.searchResolution)
-  const sliceSearchedAreas = useSelector(state => state.map.searchedAreas)
+  const testMode = settingsData.testMode
+  const budget = settingsData.budget
+  const budgetUsed = settingsData.budgetUsed
+  const bulkSearchCount = searchData.bulkSearchCount
 
-  // const googleSearchManager = new GoogleSearchManager()
-  // console.log("running googleSearchManager")
+  const searchEntityType = settingsData.searchEntityType
+  const sliceSearchResolution = settingsData.searchResolution
+  const sliceSearchedAreas = mapData.searchedAreas
+
+
+  // const searchDataObject = {
+  //   "searchedCoords": useSelector((state) => state.search.searchedCoords),
+  //   "unsearchedCoords": useSelector((state) => state.search.unsearchedCoords),
+  //   "searchedAreas": useSelector((state) => state.map.searchedAreas),
+  //   "googleData": useSelector((state) => state.search.googleData),
+  //   "searchEntityType": useSelector((state) => state.settingsPanel.searchEntityType),
+  //   "budget": useSelector((state) => state.settingsPanel.budget),
+  //   "budgetUsed": useSelector((state) => state.settingsPanel.budgetUsed),
+  //   "searchResolution": useSelector((state) => state.settingsPanel.searchResolution),
+  //   "userSearchKey": useSelector((state) => state.settingsPanel.userSearchKey),
+  //   "nextCenter": useSelector((state) => state.search.nextCenter),
+  //   "lastSearchRadius": useSelector((state) => state.search.lastSearchRadius),
+  //   "searchID": useSelector((state) => state.search.searchID),
+  //   "polygons": useSelector((state) => state.map.polygons),
+  // }
+
   useEffect(() => {
     if (!apiKeyStale) {
       setApiKeyStale(true)
@@ -176,7 +198,7 @@ const App = () => {
   const [searchResolution, setSearchResolution] = useState(0.5)
   const [callType, setCallType] = useState('')
   const prevCallType = usePrevious(callType);
-  const [bulkSearchCount, setBulkSearchCount] = useState(false)
+  const [bulkSearchCountOld, setBulkSearchCount] = useState(false)
   const [searchResultLayer, setSearchResultLayer ] = useState(undefined)
   const [budgetOld, setBudgetOld] = useState(0)
   const [budgetUsedOld, setBudgetUsed] = useState(0);
@@ -775,7 +797,8 @@ const App = () => {
   }
 
   function onChangeBulkQtyInput(e) {
-    setBulkSearchCount(e.target.value)
+    // setBulkSearchCount(e.target.value)
+    dispatch(searchActions.setBulkSearchCount(e.target.value))
   }
 
   function onChangeAPIkeyInput(e) {
@@ -1141,7 +1164,7 @@ const App = () => {
                 </button>
               <input
                 type="number"
-                value={bulkSearchCount}
+                value={bulkSearchCount == 0 ? false : bulkSearchCount}
                 min="0"
                 onKeyDown={ (evt) => ['e', '.', '-'].includes(evt.key) && evt.preventDefault() }
                 onChange={(e) => onChangeBulkQtyInput(e)} style={{ padding: '5px', margin: '5px', textAlign: 'center'}}
@@ -1214,7 +1237,7 @@ const App = () => {
 
                 <input
                   type="number"
-                  value={bulkSearchCount}
+                  value={bulkSearchCount == 0 ? "Bulk Search Qty" : bulkSearchCount}
                   min="0"
                   onKeyDown={ (evt) => ['e', '.', '-'].includes(evt.key) && evt.preventDefault() }
                   onChange={(e) => onChangeBulkQtyInput(e)}
@@ -1278,22 +1301,39 @@ const App = () => {
     e.preventDefault()
     let datetime = new Date().toLocaleString();
 
-    let searchDataObject = {
-          "searchedData": searchedData.current,
-          "unsearchedData": unsearchedData.current,
-          "searchedAreas": searchedAreas,
-          "googleData": googleData.current,
-          "searchType": searchType,
-          "budget": budget,
-          "budgetUsed": budgetUsed,
-          "resolution": searchResolution,
-          "userSearchKey": userSearchKey,
-          "nextCenter": nextCenter.current,
-          "searchID": searchID.current,
-          "searchBorders": features,
-          "circleCoordinates": circleCoordinates.current,
-          "searchCentroid": searchCentroid.current
-        }
+    // let searchDataObject = {
+    //       "searchedCoords": searchedData.current,
+    //       "unsearchedCoords": unsearchedData.current,
+    //       "searchedAreas": searchedAreas,
+    //       "googleData": googleData.current,
+    //       "searchEntityType": searchType,
+    //       "budget": budget,
+    //       "budgetUsed": budgetUsed,
+    //       "searchResolution": searchResolution,
+    //       "userSearchKey": userSearchKey,
+    //       "nextCenter": nextCenter.current,
+    //       "lastSearchRadius": "TSET",
+    //       "searchID": searchID.current,
+    //       "polygons": features,
+    //       "circleCoordinates": circleCoordinates.current,
+    //       "searchCentroid": searchCentroid.current
+    //     }
+
+    const searchDataObject = {
+      "searchedCoords": searchData.searchedCoords,
+      "unsearchedCoords": searchData.unsearchedCoords,
+      "searchedAreas": mapData.searchedAreas,
+      "googleData": searchData.googleData,
+      "searchEntityType": settingsData.searchEntityType,
+      "budget": settingsData.budget,
+      "budgetUsed": settingsData.budgetUsed,
+      "searchResolution": settingsData.searchResolution,
+      "userSearchKey": settingsData.userSearchKey,
+      "nextCenter": searchData.nextCenter,
+      "lastSearchRadius": searchData.lastSearchRadius,
+      "searchID": searchData.searchID,
+      "polygons": mapData.polygons,
+    }
 
     let include = [
     'west',
@@ -1337,7 +1377,7 @@ const App = () => {
     let d = JSON.stringify(searchDataObject, include)
     downloadFile({
       data: JSON.stringify(searchDataObject, include),
-      fileName: `${searchType}_${userSearchKey}_${datetime}.json`,
+      fileName: `${searchEntityType}_${userSearchKey}_${datetime}.json`,
       fileType: 'text/json',
     })
   }

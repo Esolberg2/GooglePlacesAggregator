@@ -24,6 +24,7 @@ const initialState = {
   searchComplete: false,
   bulkSearchCount: 0,
   fileData: {},
+  fileName: ''
 }
 
 
@@ -183,7 +184,7 @@ export const searchSlice = createSlice({
   },
   reducers: {
     loadStateFromFile: (state, action) => {
-      let file = state.fileData
+      let file = action.payload
 
       state.searchID = file.searchID
       state.nextCenter = file.nextCenter
@@ -196,6 +197,9 @@ export const searchSlice = createSlice({
       state.searchReady = true
       state.searchComplete = false
     },
+
+    setFileData: (state, action) => {state.fileData = action.payload},
+    setFileName: (state, action) => {state.fileName = action.payload},
     addSearchCallType: (state, action) => {state.searchCallType = action.payload},
     setSearchReady: (state, action) => {state.searchReady = action.payload},
     setSearchComplete: (state, action) => {state.searchComplete = action.payload},
