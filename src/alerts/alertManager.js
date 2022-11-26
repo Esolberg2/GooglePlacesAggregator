@@ -39,28 +39,26 @@ class AlertManager {
   }
 
   _fileError() {
-    let dataFileJson = JSON.parse(store.getState().loadSearch.dataFile);
+    let dataFileJson = JSON.parse(store.getState().search.fileData);
+
     let requiredKeys = [
-      "googleData",
-      "searchType",
-      "searchID",
-      "searchCentroid",
-      "circleCoordinates",
-      "searchedData",
-      "unsearchedData",
-      "nextCenter",
-      "userSearchKey",
-      "budgetUsed",
-      "budget",
-      "searchBorders",
+      "searchedCoords",
+      "unsearchedCoords",
       "searchedAreas",
-      "resolution"
+      "googleData",
+      "searchEntityType",
+      "budget",
+      "budgetUsed",
+      "searchResolution",
+      "userSearchKey",
+      "nextCenter",
+      "lastSearchRadius",
+      "searchID",
+      "polygons"
     ];
 
     for (let i=0; i < requiredKeys.length; i++) {
       if (!Object.keys(dataFileJson).includes(requiredKeys[i])) {
-        // window.alert('Your selected file is missing required fields.  Please select a valid file to load.');
-        // return true;
         return 'Your selected file is missing required fields.  Please select a valid file to load.'
       }
       return false;
@@ -68,9 +66,7 @@ class AlertManager {
   };
 
   _fileLoadedError() {
-    if (!store.getState().loadSearch.dataFile) {
-      // window.alert('Please select a file to load prior to building your search.');
-      // return true;
+    if (Object.keys(store.getState().search.fileData).length === 0) {
       return 'Please select a file to load prior to building your search.'
     }
     return false;
