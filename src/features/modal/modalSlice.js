@@ -23,14 +23,15 @@ export const confirmationDialog = createAsyncThunk('modal/confirmPromise', async
   });
 
   if (confirmed) {
-    b.dispatch(target())
+    target()
+    // b.dispatch(target())
   }
 })
 
 
 export const alertDialog = createAsyncThunk('modal/alertPromise', async (args, b) => {
-  let { target, alertKey } = args
-  let alert = alertManager.hasAlert(alertKey)
+  let { target, alertKey, data } = args
+  let alert = alertManager.hasAlert(alertKey, data)
   if (alert) {
     b.dispatch(setMessage(alert))
     b.dispatch(setDialogType('Alert'))
@@ -38,8 +39,18 @@ export const alertDialog = createAsyncThunk('modal/alertPromise', async (args, b
     const promise = await new Promise(function(resolve, reject){
       callbackDict["resolve"] = () => {resolve(true)};
     });
+    return true
   } else {
-    b.dispatch(target())
+    console.log("should forward to action")
+    console.log(args)
+    try {
+      target()
+    }
+    catch (error) {
+      console.log(error)
+    }
+
+    // b.dispatch(target())
   }
 })
 

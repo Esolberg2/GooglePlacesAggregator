@@ -646,6 +646,7 @@ export function dummyGoogleCall(center) {
 }
 
 const zero_results_dummy = (lng, lat) => {
+// export function zero_results_dummy(lng, lat) {
 return [{
     "types": [
       "none",
