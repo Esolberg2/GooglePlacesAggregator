@@ -18,7 +18,17 @@ export const settingsPanelSlice = createSlice({
   name: 'settingsPanel',
   initialState,
   extraReducers: {
-    ["search/nearbySearch/fulfilled"]: (state) => {state.budgetUsed += .032}
+    ["search/nearbySearch/fulfilled"]: (state) => {state.budgetUsed += .032},
+    ["searchSlice/loadStateFromFile"]: (state, action) => {
+      let file = action.payload
+
+      state.budget = file.budget
+      state.budgetUsed = file.budgetUsed
+      state.searchResolution = file.searchResolution
+      state.searchEntityType = file.searchEntityType
+      state.userSearchKey = file.userSearchKey
+    },
+
   },
   reducers: {
     setSearchEntityType: (state, action) => {state.searchEntityType = action.payload},

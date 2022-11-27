@@ -2,6 +2,11 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { setPolygons } from './features/map/mapSlice'
 import { settingsPanelActions } from './features/settingsPanel/settingsPanelSlice'
+import { MapComponent } from './features/map/MapComponent'
+// import { SearchInterface } from './features/search/SearchInterface'
+// import { TestComponent } from './features/search/TestComponent'
+
+// import { MapComponent } from './features/map/MapComponent'
 // import { googleSearchManager } from './data/GoogleSearchManager'
 import { googlePlacesApiManager } from './googleAPI/googlePlacesApiManager'
 import { alertManager } from './alerts/alertManager'
@@ -26,7 +31,8 @@ import { axiosPutPostData } from "./helperFunctions/axios_Helpers"
 import { buildSearch, nextSearch } from "./helperFunctions/server_API_Helpers"
 import { initializeSearch as initializeSearchSlice } from './features/search/searchSlice'
 import { nearbySearch as nearbySearchSlice } from './features/search/searchSlice'
-import { searchActions } from './features/search/searchSlice'
+import { loadStateFromFile, setBulkSearchCount } from './features/search/searchSlice'
+import { mapActions } from './features/map/mapSlice'
 import { ConfirmationModal } from './features/modal/Confirmation'
 import { AlertModal } from './features/modal/Alert'
 import { DialogModal } from './features/modal/Modal'
@@ -69,6 +75,7 @@ const coordinateStyle = {
 
 
 const App = () => {
+  // console.log(MapComponent.editorRef)
   let service = useRef(undefined);
   const [apiKey, setApiKey] = useState('')
   const [apiKeyStale, setApiKeyStale] = useState(false)
@@ -86,7 +93,10 @@ const App = () => {
 
   const searchEntityType = settingsData.searchEntityType
   const sliceSearchResolution = settingsData.searchResolution
+  const fileData = searchData.fileData
+
   const sliceSearchedAreas = mapData.searchedAreas
+  // const editorRefState = mapData.editorRefState
 
 
   // const searchDataObject = {
@@ -162,6 +172,7 @@ const App = () => {
 
   const resolutionRef = useRef()
   const editorRef = useRef(undefined);
+  // dispatch(mapActions.setEditorRefState(editorRef))
   const containerRef = useRef(undefined);
   const mapRef = useRef();
   const searchedData = useRef(undefined);
@@ -198,7 +209,7 @@ const App = () => {
   const [searchResolution, setSearchResolution] = useState(0.5)
   const [callType, setCallType] = useState('')
   const prevCallType = usePrevious(callType);
-  const [bulkSearchCountOld, setBulkSearchCount] = useState(false)
+  const [bulkSearchCountOld, setBulkSearchCountOld] = useState(false)
   const [searchResultLayer, setSearchResultLayer ] = useState(undefined)
   const [budgetOld, setBudgetOld] = useState(0)
   const [budgetUsedOld, setBudgetUsed] = useState(0);
@@ -706,44 +717,52 @@ const App = () => {
   }
 
   function buildFromFile() {
+    // editorRef.current.addFeatures(data["searchBorders"])
 
-    let alertArgs = [
-      ['fileLoaded', [dataFile]],
-      ['fileError', [dataFile]]
-    ]
+    let alert = dispatch(alertDialog({
+      "target": () => {dispatch(loadStateFromFile(fileData))},
+      "alertKey": "loadFile",
+    }))
 
-    // same
-    let alertPresent = triggerAlertFor(alertArgs)
 
-    if (alertPresent) {
-      return
-    }
 
-    try {
-      let data = JSON.parse(dataFile.current)
-      googleData.current = data["googleData"]
-      setSearchType(data["searchType"])
-      searchID.current = data["searchID"]
-      searchCentroid.current = data["searchCentroid"]
-      circleCoordinates.current = data["circleCoordinates"]
-      searchedData.current = data["searchedData"]
-      unsearchedData.current = data["unsearchedData"]
-      nextCenter.current = data["nextCenter"]
-      setUserSearchKey(data["userSearchKey"])
-
-      setBudgetUsed(data["budgetUsed"])
-      setBudgetOld(data["budget"])
-      editorRef.current.addFeatures(data["searchBorders"])
-      addCoordinates(unsearchedData.current, coordinatesFeatures, setCoordinatesFeatures)
-      // addCoordinates(searchedData.current, searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
-      setSearchedAreas(data["searchedAreas"])
-      setSearchResolution(data["resolution"])
-      findOrigin(...data["searchCentroid"])
-      setSearchBuilt(true)
-
-    } catch(error){
-      console.log(error)
-      }
+    // let alertArgs = [
+    //   ['fileLoaded', [dataFile]],
+    //   ['fileError', [dataFile]]
+    // ]
+    //
+    // // same
+    // let alertPresent = triggerAlertFor(alertArgs)
+    //
+    // if (alertPresent) {
+    //   return
+    // }
+    //
+    // try {
+    //   let data = JSON.parse(dataFile.current)
+    //   googleData.current = data["googleData"]
+    //   setSearchType(data["searchType"])
+    //   searchID.current = data["searchID"]
+    //   searchCentroid.current = data["searchCentroid"]
+    //   circleCoordinates.current = data["circleCoordinates"]
+    //   searchedData.current = data["searchedData"]
+    //   unsearchedData.current = data["unsearchedData"]
+    //   nextCenter.current = data["nextCenter"]
+    //   setUserSearchKey(data["userSearchKey"])
+    //
+    //   setBudgetUsed(data["budgetUsed"])
+    //   setBudgetOld(data["budget"])
+    //   editorRef.current.addFeatures(data["searchBorders"])
+    //   addCoordinates(unsearchedData.current, coordinatesFeatures, setCoordinatesFeatures)
+    //   // addCoordinates(searchedData.current, searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
+    //   setSearchedAreas(data["searchedAreas"])
+    //   setSearchResolution(data["resolution"])
+    //   findOrigin(...data["searchCentroid"])
+    //   setSearchBuilt(true)
+    //
+    // } catch(error){
+    //   console.log(error)
+    //   }
     }
 
 
@@ -798,7 +817,7 @@ const App = () => {
 
   function onChangeBulkQtyInput(e) {
     // setBulkSearchCount(e.target.value)
-    dispatch(searchActions.setBulkSearchCount(e.target.value))
+    dispatch(setBulkSearchCount(e.target.value))
   }
 
   function onChangeAPIkeyInput(e) {
@@ -953,9 +972,16 @@ const App = () => {
                 onClick={() => {
                   // // dispatch(nearbySearchSlice())
 
+                  // dispatch(alertDialog(
+                  //   {
+                  //     "target": nearbySearchSlice,
+                  //     "alertKey": "search"
+                  //   }
+                  // ))}
+
                   dispatch(alertDialog(
                     {
-                      "target": nearbySearchSlice,
+                      "target": () => {dispatch(nearbySearchSlice())},
                       "alertKey": "search"
                     }
                   ))}
@@ -973,7 +999,7 @@ const App = () => {
                 nearby search
                 </button>
 
-            <button onClick={handleShow}>
+            <button onClick={() => {console.log(editorRef)}}>
             Open Modal
             </button>
       </div>
@@ -1293,7 +1319,8 @@ const App = () => {
   }
 
   function selectNewSearch(val) {
-    if (existingDataWarning())
+    // if (existingDataWarning())
+
     setNewSearch((prev) => val)
     }
 
@@ -1460,58 +1487,9 @@ const handleShow = () => setShow(true);
 
 
         <div style={{display: 'flex', height: '100%', flexDirection: 'column'}}>
-          <div style={{height: '100%'}}>
-          <MapGL
-            ref={mapRef}
-            {...viewport}
-            width="100%"
-            height="100%"
-            mapboxApiAccessToken={TOKEN}
-            mapStyle="mapbox://styles/mapbox/streets-v11"
-            onViewportChange={_onViewportChange}
-            >
+          <MapComponent ref={editorRef}/>
 
-           <Geocoder
-              mapRef={mapRef}
-              onViewportChange={handleGeocoderViewportChange}
-              mapboxApiAccessToken={TOKEN}
-              position='top-right'
-              />
 
-            <Source id="coordinateLayer" type="geojson" data={coordinatesFeatures}>
-              <Layer key={"1"} {...coordinateStyle} />
-            </Source>
-
-            <Source id="searchedAreaLayer" type="geojson" data={sliceSearchedAreas}>
-              <Layer key={"2"} {...searchedAreaStyle} />
-            </Source>
-
-            <Source id="searchedCoordinateLayer" type="geojson" data={searchedCoordinatesFeatures}>
-              <Layer key={"3"} {...searchedCoordinateStyle} />
-            </Source>
-
-            <Editor
-              ref={editorRef}
-              style={{width: '100%', height: '100%'}}
-              clickRadius={12}
-              mode={mode}
-              onSelect={onSelect}
-              onUpdate={onUpdate}
-              editHandleShape={'circle'}
-              featureStyle={getFeatureStyle}
-              editHandleStyle={getEditHandleStyle}
-              />
-          </MapGL>
-          </div>
-
-          <div style={{backdropFilter: 'blur(20px)', borderBottomRightRadius: '10px', position: 'absolute', alingSelf: 'flex-start'}}>
-            <div style={{fontWeight: 'bold', paddingTop: '10px', display: 'flex', justifyContent: 'center'}}>
-              {renderToolTitle()}
-            </div>
-
-            {newSearchTools()}
-            {loadSearchTools()}
-          </div>
         </div>
       </div>
      )

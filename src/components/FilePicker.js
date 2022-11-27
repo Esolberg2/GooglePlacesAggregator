@@ -3,7 +3,16 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { searchActions } from '../features/search/searchSlice'
+import {
+  setFileData,
+  setFileName
+} from '../features/loadFile/loadFileSlice'
+import { alertManager } from '../alerts/alertManager'
+import { alertDialog } from '../features/modal/modalSlice'
+
+// let searchActions;
+// let alertManager;
+// let alertDialog;
 
 export const FilePicker = (props) => {
   const inputRef = useRef();
@@ -16,22 +25,39 @@ export const FilePicker = (props) => {
   function loadFile(value) {
     let fileReader;
 
-    const handleFileRead = (e) => {
-      const content = fileReader.result;
-      // setFileData(content)
-      dispatch(searchActions.setFileData(content))
-      // dataFile.current = content
-    }
-
     const handleFileChosen = (file) => {
-      // set state for filename
-      // setFileNameText(file["name"])
-      dispatch(searchActions.setFileName(file["name"]))
+      dispatch(setFileData({}))
+      dispatch(setFileName(''))
+
       fileReader = new FileReader();
-      fileReader.onloadend = handleFileRead;
+      fileReader.onloadend = (e) => {handleFileRead(e, file)};
       if (file) {
         fileReader.readAsText(file);
       }
+
+      inputRef.current.value = null
+      // console.log(inputRef)
+    }
+
+    const handleFileRead = async (e, file) => {
+      const content = fileReader.result;
+
+      let alert = await dispatch(alertDialog({
+        "target": () => {
+          // console.log(JSON.parse(content))
+          dispatch(setFileData(JSON.parse(content)))
+          dispatch(setFileName(file["name"]))
+        },
+        "alertKey": "selectFile",
+        "data": {"dataFile": content}
+      }))
+
+      console.log("alert return")
+      console.log(alert)
+      // if (alert.payload == true) {
+      //   dispatch(searchActions.setFileData({}))
+      //   dispatch(searchActions.setFileName(''))
+      // }
     }
 
     handleFileChosen(value.target.files[0])
@@ -59,7 +85,7 @@ export const FilePicker = (props) => {
       />
       <input
         type="text"
-        value={props.filename}
+        value={fileName}
         readOnly={true}
         style={{ padding: '5px', margin: '5px', textAlign: 'center', backgroundColor: '#cccccc'}}
         placeholder="Prior Data File"
@@ -67,6 +93,7 @@ export const FilePicker = (props) => {
     </div>
   );
 }
+
 
 
 

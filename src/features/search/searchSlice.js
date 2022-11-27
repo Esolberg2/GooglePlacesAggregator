@@ -32,7 +32,11 @@ const initialState = {
 // initialize search
 export const initializeSearch = createAsyncThunk('search/initializeSearch',(a, b) => {
   const polygons = b.getState().map.polygons
+  console.log(polygons)
+
   const searchResolution = b.getState().settingsPanel.searchResolution
+  console.log(searchResolution)
+
   return axios
     .post(`/api/searchSession`, {
     "searchRegions": polygons,
@@ -40,7 +44,9 @@ export const initializeSearch = createAsyncThunk('search/initializeSearch',(a, b
     "coordinateResolution": searchResolution
     })
     .then((response) => response.data)
-    .catch((error) => error.msg)
+    .catch((error) => {
+      console.log(error.msg)
+    })
 })
 
 
@@ -185,17 +191,14 @@ export const searchSlice = createSlice({
   reducers: {
     loadStateFromFile: (state, action) => {
       let file = action.payload
+      console.log(file)
 
       state.searchID = file.searchID
       state.nextCenter = file.nextCenter
-      state.lastSearchRadius = null
-      state.searchedCoords = file
-      state.unsearchedCoords = file.searchedCoords
+      state.lastSearchRadius = file.lastSearchRadius
+      state.searchedCoords = file.searchedCoords
+      state.unsearchedCoords = file.unsearchedCoords
       state.googleData = file.googleData
-      state.searchCallType = file.searchCallType
-      state.bulkSearchCount = 0
-      state.searchReady = true
-      state.searchComplete = false
     },
 
     setFileData: (state, action) => {state.fileData = action.payload},
@@ -208,5 +211,15 @@ export const searchSlice = createSlice({
   },
 })
 
-export const searchActions = searchSlice.actions
+// export const searchActions = searchSlice.actions
+export const {
+  setFileData,
+  setFileName,
+  addSearchCallType,
+  setSearchReady,
+  setSearchComplete,
+  setBulkSearchCount,
+  setBulkSearchMode,
+  loadStateFromFile,
+} = searchSlice.actions
 export default searchSlice.reducer

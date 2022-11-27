@@ -13,7 +13,7 @@ import shapely
 import shapely.speedups
 import geopy.distance
 from bisect import bisect_left
-shapely.speedups.enable()
+# shapely.speedups.enable()
 
 
 
@@ -148,6 +148,9 @@ def knn(searchedPoints, unsearchedData):
 
 
 def cleanPolygons(searchRegions):
+    print("***********")
+    print(searchRegions)
+    print("***********")
     polys = [Polygon(p) for p in searchRegions]
     joinedPolys = unary_union(polys)
     return joinedPolys

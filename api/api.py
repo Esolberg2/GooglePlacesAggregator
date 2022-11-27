@@ -23,7 +23,7 @@ import shapely.speedups
 import os
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
-shapely.speedups.enable()
+# shapely.speedups.enable()
 
 sentry_sdk.init(
     dsn="https://483ee48988984933820429864e92324f@o1317699.ingest.sentry.io/6570904",
