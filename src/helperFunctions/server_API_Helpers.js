@@ -33,11 +33,11 @@ export async function nextSearch(currentCenter, searchID, checksum, searchType, 
 
 
 // step 1
-export async function buildSearch(polygons, searchResolution, searchType, testMode) {
+export async function buildSearch(polygonCoordinates, searchResolution, searchType, testMode) {
       // get coordinate data
       let response = await axiosPutPostData('POST', `/api/searchSession`,
         {
-          "searchRegions": polygons,
+          "searchRegions": polygonCoordinates,
           "searchID": null,
           "coordinateResolution": searchResolution
         })

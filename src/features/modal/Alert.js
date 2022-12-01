@@ -21,10 +21,10 @@ export const AlertModal = React.memo(props => {
   const visible = useSelector((state) => state.modal.visible)
   const message = useSelector((state) => state.modal.message)
   const callback = callbackDict.resolve
-
+  console.log(callback)
 
   function onConfirm() {
-    callback(true)
+    callback(false)
 
   }
 
@@ -35,7 +35,11 @@ export const AlertModal = React.memo(props => {
         style={customStyles}
         contentLabel="Alert Modal"
       >
-        <button onClick={() => {onConfirm()}}>ok</button>
+        <button onClick={() => {
+          console.log("clicked")
+          console.log(callback)
+          onConfirm()
+        }}>ok</button>
         <div>{message}</div>
       </Modal>
     </div>

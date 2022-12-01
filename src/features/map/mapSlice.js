@@ -9,8 +9,9 @@ const initialState = {
     'features': []
     },
   selectedFeatureIndex: null,
-  polygons: null,
-  editorRefState: undefined
+  polygonCoordinates: null,
+  mapPolygons: []
+  // editorRefState: undefined
 }
 
 
@@ -32,22 +33,33 @@ export const mapSlice = createSlice({
       console.log(action.payload)
       state.searchedAreas.features = [...state.searchedAreas.features, buildCoordJSON(action.payload.lastSearchPerimeter)]
     },
+    ["loadStateFromFile"]: (state, action) => {
+      let file = action.payload
+      console.log("map slice loadStateFromFile2")
+
+    },
     ["searchSlice/loadStateFromFile"]: (state, action) => {
       let file = action.payload
-      console.log("map slice")
+      console.log("map slice loadStateFromFile")
       console.log(file)
       console.log(file.searchedCoords)
-      console.log(typeof file)
-      state.polygons = file.polygons
+      state.polygonCoordinates = file.polygonCoordinates
+      state.mapPolygons = file.mapPolygons
       state.searchedAreas = file.searchedAreas
-      state.editorRefState.addFeatures(file.polygons)
+      // state.editorRefState.addFeatures(file.polygons)
     }
   },
   reducers: {
-    setEditorRefState: (state, action) => {state.editorRefState = action.payload},
+    // setEditorRefState: (state, action) => {state.editorRefState = action.payload},
     setSearchedAreas: (state, action) => {state.searchedAreas.features = action.payload},
     setSelectedFeatureIndex: (state, action) => {state.setSelectedFeatureIndex = action.payload},
-    setPolygons: (state, action) => {state.polygons = action.payload}
+    setPolygonCoordinates: (state, action) => {
+
+      let coords = action.payload.map(currentElement => currentElement.geometry.coordinates[0]);
+      state.polygonCoordinates = coords
+      state.mapPolygons = action.payload
+
+    }
   },
 
 })
@@ -57,7 +69,7 @@ export const
 addSearchedAreas,
 setSearchedAreas,
 setSelectedFeatureIndex,
-setPolygons,
+setPolygonCoordinates,
 } = mapSlice.actions
 
 export const mapActions = mapSlice.actions

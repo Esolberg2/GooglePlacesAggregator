@@ -7,9 +7,10 @@ import { Editor, DrawPolygonMode, EditingMode } from 'react-map-gl-draw';
 import { getFeatureStyle, getEditHandleStyle } from '../../style';
 import { mapActions } from './mapSlice'
 import { SearchInterface } from '../search/SearchInterface'
-import { initializeSearch, nearbySearch, loadStateFromFile } from '../search/searchSlice'
-import { alertDialog, confirmationDialog } from '../modal/modalSlice'
+import { debounce, initializeSearch, nearbySearch, loadStateFromFile, setPriorSearch } from '../search/searchSlice'
+import { modalDialog, alertDialog, confirmationDialog } from '../modal/modalSlice'
 // import { fileData } from '../loadFile/loadFileSlice'
+import { unwrapResult } from '@reduxjs/toolkit'
 
 const searchedAreaStyle = {
   id: 'searchedAreaLayers',
@@ -23,7 +24,7 @@ const searchedAreaStyle = {
 
 // React.forwardRef((props, ref) => {})
 export const MapComponent = React.forwardRef((props, ref) => {
-
+  const polygons = useSelector(state => state.map.polygonCoordinates)
   const TOKEN='pk.eyJ1IjoiZXNvbGJlcmc3NyIsImEiOiJja3l1ZmpqYWgwYzAxMnRxa3MxeHlvanVpIn0.co7_t1mXkXPRE8BOnOHJXQ'
 
   // redux
@@ -31,8 +32,10 @@ export const MapComponent = React.forwardRef((props, ref) => {
   const mapData = useSelector(state => state.map)
   const fileData = useSelector(state => state.loadFile.fileData)
   const sliceSearchedAreas = mapData.searchedAreas
+  const searchActive = useSelector(state => state.search.searchActive)
+  const priorSearch = useSelector(state => state.search.priorSearch)
   // const count = useSelector((state) => state.map.value)
-
+  // console.log(searchActive)
   // refs
   const mapRef = useRef();
   const editorRef = useRef();
@@ -58,21 +61,24 @@ export const MapComponent = React.forwardRef((props, ref) => {
 
   const onDelete = useCallback( async () => {
     if (selectedFeatureIndex !== null && selectedFeatureIndex >= 0) {
+      // delete search polygon from Editor object
       await editorRef.current.deleteFeatures(selectedFeatureIndex);
       setSelectedFeatureIndex(null)
-      dispatch(mapActions.setPolygons(editorRef.current.getFeatures()))
+
+      // filter remaining polygons in Editor to aggregate GEOJson only
+      let data = editorRef.current.getFeatures()
+      // let result = data.map(currentElement => currentElement.geometry.coordinates[0]);
+
+      dispatch(mapActions.setPolygonCoordinates(data))
     }
   }, [selectedFeatureIndex]);
 
   const onUpdate = useCallback(({editType}) => {
-    console.log(editType)
-    // console.log(editorRef.current.getFeatures())
     if (editType === 'addFeature') {
-      // console.log(editorRef.current.getFeatures())
+      console.log("adding to polygons")
       let data = editorRef.current.getFeatures()
-      let result = data.map(currentElement => currentElement.geometry.coordinates[0]);
-
-      dispatch(mapActions.setPolygons(result))
+      // let result = data.map(currentElement => currentElement.geometry.coordinates[0]);
+      dispatch(mapActions.setPolygonCoordinates(data))
       setMode(new EditingMode());
     }
   }, []);
@@ -95,12 +101,40 @@ export const MapComponent = React.forwardRef((props, ref) => {
   );
 
 
-  function buildFromFile() {
-    editorRef.current.addFeatures(fileData.polygons)
-    let alert = dispatch(alertDialog({
+  async function buildFromFile() {
+    console.log(editorRef.current)
+    console.log(polygons)
+    // editorRef.current.addFeatures(fileData.polygons)
+    let alert = dispatch(modalDialog({
       "target": () => {dispatch(loadStateFromFile(fileData))},
       "alertKey": "loadFile",
     }))
+    .then(unwrapResult)
+    .then((res) => {
+      console.log(res)
+      console.log("thenned")
+      console.log(fileData.mapPolygons)
+      // editorRef.current.addFeatures(fileData.mapPolygons)
+      // editorRef.current.props.features = fileData.mapPolygons
+      editorRef.current.state.featureCollection.featureCollection.features = []
+      editorRef.current.addFeatures(fileData.mapPolygons)
+      // editorRef.current.setState()
+      console.log("done")
+    })
+    .catch(() => {console.log("catchedded")})
+    // .then((res) => {
+    //   console.log("map componenet fulfilled")
+    //   // return res
+    //   editorRef.current.addFeatures(fileData.polygons)
+    //   return res
+    // })
+    // .catch((error) => {
+    //   console.log("map componenet rejected")
+    //   console.log(error)
+    //   return error
+    // })
+    console.log(editorRef)
+    console.log(alert)
   }
 
   function search() {
@@ -112,6 +146,10 @@ export const MapComponent = React.forwardRef((props, ref) => {
     ))
   }
 
+  function debouncedSearch() {
+    dispatch(debounce(search))
+  }
+
   function buildSearch() {
     dispatch(alertDialog(
       {
@@ -119,6 +157,10 @@ export const MapComponent = React.forwardRef((props, ref) => {
         "alertKey": "buildSearch"
       }
     ))
+  }
+
+  function debouncedBuildSearch() {
+    dispatch(debounce(buildSearch))
   }
 
 
@@ -163,12 +205,14 @@ export const MapComponent = React.forwardRef((props, ref) => {
           test
         </div>
         <SearchInterface
-        setMode = {setMode}
-        onDelete = {onDelete}
-        initializeSearch = {buildSearch}
-        nearbySearch = {search}
-        buildFromFile = {buildFromFile}
-        editorRef = {editorRef}
+        setMode={setMode}
+        onDelete={onDelete}
+        initializeSearch={debouncedBuildSearch}
+        nearbySearch={debouncedSearch}
+        buildFromFile={buildFromFile}
+        editorRef={editorRef}
+        searchActive={searchActive}
+        priorSearch={priorSearch}
         />
       </div>
     </div>

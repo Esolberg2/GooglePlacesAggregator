@@ -1,8 +1,11 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { setPolygons } from './features/map/mapSlice'
+import { setPolygonCoordinates } from './features/map/mapSlice'
 import { settingsPanelActions } from './features/settingsPanel/settingsPanelSlice'
 import { MapComponent } from './features/map/MapComponent'
+import { styles } from './style'
+import { SettingsPanel } from './features/settingsPanel/SettingsPanel'
+
 // import { SearchInterface } from './features/search/SearchInterface'
 // import { TestComponent } from './features/search/TestComponent'
 
@@ -20,6 +23,8 @@ import * as turf from '@turf/turf'
 import { ToggleSlider }  from "react-toggle-slider";
 import CurrencyInput from 'react-currency-input-field';
 import { FilePicker } from './components/FilePicker.js'
+import { SettingsButton } from './components/SettingsButton.js'
+import { SettingsTextContainer } from './components/SettingsTextContainer.js'
 import SpinnerButton from './components/SpinnerButton.js'
 import IconButton from './components/IconButton.js'
 import axios from 'axios'
@@ -31,7 +36,7 @@ import { axiosPutPostData } from "./helperFunctions/axios_Helpers"
 import { buildSearch, nextSearch } from "./helperFunctions/server_API_Helpers"
 import { initializeSearch as initializeSearchSlice } from './features/search/searchSlice'
 import { nearbySearch as nearbySearchSlice } from './features/search/searchSlice'
-import { loadStateFromFile, setBulkSearchCount } from './features/search/searchSlice'
+import { loadStateFromFile, setBulkSearchCount, setPriorSearch } from './features/search/searchSlice'
 import { mapActions } from './features/map/mapSlice'
 import { ConfirmationModal } from './features/modal/Confirmation'
 import { AlertModal } from './features/modal/Alert'
@@ -87,10 +92,12 @@ const App = () => {
   const mapData = useSelector(state => state.map)
 
   const testMode = settingsData.testMode
+  console.log("TEST MODE")
+  console.log(testMode)
   const budget = settingsData.budget
   const budgetUsed = settingsData.budgetUsed
   const bulkSearchCount = searchData.bulkSearchCount
-
+  const priorSearch = searchData.priorSearch
   const searchEntityType = settingsData.searchEntityType
   const sliceSearchResolution = settingsData.searchResolution
   const fileData = searchData.fileData
@@ -587,9 +594,10 @@ const App = () => {
 
   function getPolygons() {
     if (editorRef.current){
-      let data = editorRef.current.getFeatures()
-      let result = data.map(currentElement => currentElement.geometry.coordinates[0]);
-      return result
+      return editorRef.current.getFeatures()
+      // let data = editorRef.current.getFeatures()
+      // let result = data.map(currentElement => currentElement.geometry.coordinates[0]);
+      // return result
     }
   }
 
@@ -831,240 +839,131 @@ const App = () => {
   function interfaceOptions() {
     return (
       <div style={{padding: '20px'}}>
-        <button
-          onClick={() => {
-            if (!newSearch) {
-              selectNewSearch(true)
-            }}}
-          style={{width: '150px', padding: '5px', margin: '5px', backgroundColor: newSearch ? '#cccccc' : undefined }}
+        <SettingsButton
+          onClick={() => {dispatch(setPriorSearch(false))}}
           >
           New Search
-          </button>
+          </SettingsButton>
 
-        <button
+        <SettingsButton
           onClick={() => {
-            if (newSearch) {
-              selectNewSearch(false)
-            }}}
-          style={{width: '150px', padding: '5px', margin: '5px', backgroundColor: newSearch ? undefined : '#cccccc'}}
+            if (newSearch) {dispatch(setPriorSearch(true))}}}
           >
           Load Prior Search
-          </button>
+          </SettingsButton>
 
-        <button
+        <SettingsButton
           onClick={(e) => exportToJson(e)}
-          style={{width: '150px', padding: '5px', margin: '5px'}}
           >
           Download Data
-          </button>
+          </SettingsButton>
 
-        <button
+        <SettingsButton
           onClick={(e) => existingDataWarning(e)}
-          style={{width: '150px', padding: '5px', margin: '5px'}}
           >
           Clear Search
-          </button>
+          </SettingsButton>
 
-          <button
-            onClick={(e) => dispatch(setPolygons(getPolygons()))}
-            style={{width: '150px', padding: '5px', margin: '5px'}}
-            >
-            getPolygons
-            </button>
+        <SettingsButton
+          onClick={(e) => dispatch(setPolygonCoordinates(getPolygons()))}
+          >
+          getPolygons
+          </SettingsButton>
 
-            <button
-              onClick={(e) => dispatch(initializeSearchSlice())}
-              style={{width: '150px', padding: '5px', margin: '5px'}}
-              >
-              initialize search
-              </button>
+        <SettingsButton
+          onClick={(e) => dispatch(initializeSearchSlice())}
+          >
+          initialize search
+          </SettingsButton>
 
-              <button
-                onClick={() => {
-                  // const service = new window.google.maps.places.PlacesService(document.createElement('div'));
-                  // dispatch(settingsPanelActions.setSearchResolution(".2"))
-                  // console.log(sliceSearchResolution)
-                  console.log("new features")
-                  console.log(sliceSearchedAreas)
-                  console.log("old features")
-                  console.log(searchedAreas)
-                }
-              }
-                style={{width: '150px', padding: '5px', margin: '5px'}}
-                >
-                log features
-                </button>
+        <SettingsButton
+          onClick={() => {
+            console.log("updateGoogleApi")
+            googlePlacesApiManager.updateGoogleApi('AIzaSyBhJRgpD2FTMa8_q68645LQRb2qNVD6wlE')
+            }
+          }
+          >
+          load google service
+          </SettingsButton>
 
-              <button
-                onClick={() => {
-                  console.log("updateGoogleApi")
-                  googlePlacesApiManager.updateGoogleApi('AIzaSyBhJRgpD2FTMa8_q68645LQRb2qNVD6wlE')
-                }
-              }
-                style={{width: '150px', padding: '5px', margin: '5px'}}
-                >
-                load google service
-                </button>
+        <SettingsButton
+          onClick={() => {googlePlacesApiManager.removeGoogle()}}
+          >
+          remove google
+          </SettingsButton>
 
-              <button
-                onClick={() => {
-                  googlePlacesApiManager.removeGoogle()
-                }
-              }
-                style={{width: '150px', padding: '5px', margin: '5px'}}
-                >
-                remove google
-                </button>
-
-              <button
-                onClick={() => {
-                  let args = {
-                    callbackKey:"testKey",
-                    funcs: {
-                      // onAfterOpen: function() {console.log("callback onAfterOpen")},
-                      // onAfterClose: function() {console.log("callback onAfterClose")},
-                      // onRequestClose: function() {console.log("callback onRequestClose")},
-                      onConfirm: function() {console.log("callback onConfirm")},
-                      onDeny: function() {console.log("callback onDeny")},
-                    },
-                    message: "test message"
-                  }
-                  // dispatch(testModal(args))
-                  console.log("test")
-
-                }
-              }
-                style={{width: '150px', padding: '5px', margin: '5px'}}
-                >
-                alert test
-                </button>
-
-                <button
-                  onClick={async () => {
-                    // nearbySearchSlice
-                    // this works, do more of this
-                    dispatch(confirmationDialog({"target": nearbySearchSlice}))
-                    // try {
-                    //   const result = await dispatch(confirmPromise())
-                    //   console.log(result)
-                    // } catch (error){
-                    //   console.log(error)
-                    // }
-
-                  }}
-                  style={{width: '150px', padding: '5px', margin: '5px'}}
-                  >
-                  alert test 2
-                  </button>
-
-
-                <button
-                  onClick={() => {
-                    googlePlacesApiManager.nearbySearch()
-                  }
-                }
-                  style={{width: '150px', padding: '5px', margin: '5px'}}
-                  >
-                  service call test
-                  </button>
-
-              <button
-                onClick={() => {
-                  // // dispatch(nearbySearchSlice())
-
-                  // dispatch(alertDialog(
-                  //   {
-                  //     "target": nearbySearchSlice,
-                  //     "alertKey": "search"
-                  //   }
-                  // ))}
-
-                  dispatch(alertDialog(
-                    {
-                      "target": () => {dispatch(nearbySearchSlice())},
-                      "alertKey": "search"
-                    }
-                  ))}
-
-                  // dispatch(confirmationDialog(
-                  //   {
-                  //     "target": nearbySearchSlice,
-                  //     "alertKey": "search"
-                  //   }
-                  // ))}
-
-                }
-                style={{width: '150px', padding: '5px', margin: '5px'}}
-                >
-                nearby search
-                </button>
-
-            <button onClick={() => {console.log(editorRef)}}>
-            Open Modal
-            </button>
+        <SettingsButton
+          onClick={() => {
+            dispatch(alertDialog(
+              {
+                "target": () => {dispatch(nearbySearchSlice())},
+                "alertKey": "search"
+              }))
+            }
+          }
+          >
+          nearby search
+          </SettingsButton>
       </div>
     )
   }
+
   function commonSettings() {
     return (
-        <div style={{flex: '1', display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
-
-
-          <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
-            <div style={{fontWeight: 'bold'}}>
-            Enter Google API Key
-            </div>
-            <div style={{ paddingTop: '10px', fontSize: '12px', display: 'flex', textAlign: 'center', justifyContent: 'center'}}>
-              The Key will not be saved and is only used to call the google places API directly.
-            </div>
-
-            <div style={{ flex: '1', display: 'flex', flexDirection: 'row', alignItems: 'flex-end'}}>
-              <input
-                value={apiKey}
-                onChange={(e) => onChangeAPIkeyInput(e)}
-                style={{ marginLeft: '5px', height: '15px', paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}
-                placeholder="Google API Key"
-                disabled={testMode}
+        <div style={{display: 'flex', flexDirection: 'row'}}>
+          <SettingsTextContainer
+            title={'Test Without Google Key'}
+            description={'This setting will replace Google API calls with a dummy call, and produce dummy data.'}
+            style={{display: 'flex', flex: '1'}}
+            >
+              <ToggleSlider
+                onToggle={() => {dispatch(settingsPanelActions.setTestMode(!testMode))}}
+                active={testMode}
+                barWidth={75}
                 />
+          </SettingsTextContainer>
 
-                <SpinnerButton
-                  func={googlePlacesApiManager.updateGoogleApi}
-                  funcArgs={[apiKey]}
-                  height='15px'
-                  width='47px'
-                  onClick={() => setApiKeyStale(false)}
-                  buttonStyle={{backgroundColor: apiKeyStale ? '#fde0e0' : 'none'}}
-                  buttonKey={apiKeyStale}
+          <SettingsTextContainer
+            title={'Enter Google API Key'}
+            description={'The Key will not be saved and is only used to call the google places API directly.'}
+            >
+              <div style={{ flex: '1', display: 'flex', flexDirection: 'row', alignItems: 'flex-end'}}>
+                <input
+                  value={apiKey}
+                  onChange={(e) => onChangeAPIkeyInput(e)}
+                  style={{ marginLeft: '5px', height: '15px', paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}
+                  placeholder="Google API Key"
                   disabled={testMode}
-                  >
-                  {apiKeyStale ? 'Set Key' : 'Key Set'}
+                  />
+
+                  <SpinnerButton
+                    func={googlePlacesApiManager.updateGoogleApi}
+                    funcArgs={[apiKey]}
+                    height='15px'
+                    width='47px'
+                    onClick={() => setApiKeyStale(false)}
+                    buttonStyle={{backgroundColor: apiKeyStale ? '#fde0e0' : 'none'}}
+                    buttonKey={apiKeyStale}
+                    disabled={testMode}
+                    >
+                    {apiKeyStale ? 'Set Key' : 'Key Set'}
                   </SpinnerButton>
-            </div>
-          </div>
+              </div>
+          </SettingsTextContainer>
 
-          <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1' }}>
-            <div style={{fontWeight: 'bold'}}>
-            Select Search Entity Type
-            </div>
-            <div style={{ paddingTop: '10px', fontSize: '12px', display: 'flex', textAlign: 'center', justifyContent: 'center'}}>
-              These types are dictated by Google, and are limited
-              to one type per search.
-            </div>
-            <div style={{ flexGrow: '1'}}/>
-            <select key={searchEntityType} disabled={newSearch ? false : true} value={searchEntityType} onChange={handleSelectChange} id="typeSelect" style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}>
-              {renderTypeOptions()}
-            </select>
-          </div>
+          <SettingsTextContainer
+            title={'Search Entity Type'}
+            description={'These types are dictated by Google, and are limited to one type per search.'}
+            >
+              <select key={searchEntityType} disabled={newSearch ? false : true} value={searchEntityType} onChange={handleSelectChange} id="typeSelect" style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}>
+                {renderTypeOptions()}
+              </select>
+          </SettingsTextContainer>
 
-
-
-          <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
-            <div style={{fontWeight: 'bold'}}>
-            Set Budget
-            </div>
-            <div style={{ paddingTop: '10px', fontSize: '12px', display: 'flex', textAlign: 'center', justifyContent: 'center'}}>
-              Enter -1 for unlimited budget: use this option with care.
-            </div>
+          <SettingsTextContainer
+            title={'Budget'}
+            description={'Enter -1 for unlimited budget: use this option with care.'}
+            >
               <CurrencyInput
                 prefix="$"
                 id="input-example"
@@ -1076,67 +975,38 @@ const App = () => {
                 onValueChange={(value) => handleBudgetChange(value)}
                 style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '20px', marginBottom: '5px', height: '15px'}}
                 />
-            <div style={{fontWeight: 'bold', flexGrow: '1'}}/>
-              <div style={{fontWeight: 'bold'}}>
-              Budget Used
-              </div>
-              <CurrencyInput
-                prefix="$"
-                id="input-example"
-                name="input-name"
-                placeholder="Enter a max budget"
-                value={budgetUsed}
-                disabled={true}
-                decimalsLimit={4}
-                style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', height: '15px'}}
+              <SettingsTextContainer title={'Budget Used'}>
+                  <CurrencyInput
+                    prefix="$"
+                    id="input-example"
+                    name="input-name"
+                    placeholder="Enter a max budget"
+                    value={budgetUsed}
+                    disabled={true}
+                    decimalsLimit={4}
+                    style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', height: '15px'}}
+                    />
+              </SettingsTextContainer>
+          </SettingsTextContainer>
+
+          <SettingsTextContainer
+            title={'User Key'}
+            description={'This key is anything you want, and is used to organize your search data.'}
+            >
+              <input
+                value={userSearchKey}
+                onChange={(e) => onChangeUserKey(e)}
+                style={{ paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}
+                placeholder="Custom User Key"
                 />
-          </div>
+          </SettingsTextContainer>
 
-          <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
-            <div style={{fontWeight: 'bold'}}>
-            Enter User Key
-            </div>
-            <div style={{ fontSize: '12px', paddingTop: '10px'}}>
-              This key is anything you want, and is used to organize your search data.
-            </div>
-            <div style={{ flexGrow: '1'}}/>
-            <input
-              value={userSearchKey}
-              onChange={(e) => onChangeUserKey(e)}
-              style={{ paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}
-              placeholder="Custom User Key"
-              />
-          </div>
-
-          <div style={{ paddingLeft: '5px', paddingRight: '5px', paddingTop: '5px', display: 'flex', flexDirection: 'column', textAlign: 'center', flex: '1'}}>
-            <div style={{fontWeight: 'bold'}}>
-            Enter Search Resolution
-            </div>
-            <div style={{ fontSize: '12px', paddingTop: '10px'}}>
-              This is the spacing between search coordinates within the search region.
-              The minimum resolution is 0.1 miles.
-            </div>
-            <div style={{ flexGrow: '1'}}/>
-            {renderSearchResolution()}
-          </div>
-          <div style={{paddingRight: '20px', justifyContent: 'flex-end', display: 'flex', flexDirection: 'column', width: '250px'}}>
-                <div style={{paddingTop: '5px', display: 'flex', flex: '1', flexDirection: 'column', alignItems:'center'}}>
-                  <div style={{fontWeight: 'bold'}}>
-                    Test Without Google Key
-                  </div>
-                  <div style={{ padding: '5px', paddingTop: '5px', justifyContent: 'center', display: 'flex', flexDirection: 'row'}}>
-                    <div style={{ paddingLeft: '10px', whiteSpace: 'wrap', minWidth: '125px', paddingTop: '5px', fontSize: '12px', display: 'flex', textAlign: 'center', justifyContent: 'center'}}>
-                      This setting will replace Google API calls with a dummy call, and produce dummy data.
-                    </div>
-                    <div style={{paddingLeft: '10px', display: 'flex', alignItems: 'center'}}>
-                    <ToggleSlider
-                      onToggle={() => {dispatch(settingsPanelActions.setTestMode(!testMode))}}
-                      active={testMode}
-                      />
-                    </div>
-                  </div>
-              </div>
-          </div>
+          <SettingsTextContainer
+          title={'Search Resolution'}
+          description={'This is the spacing between search coordinates within the search region. The minimum resolution is 0.1 miles.'}
+          >
+          {renderSearchResolution()}
+          </SettingsTextContainer>
         </div>
       )
     }
@@ -1328,24 +1198,6 @@ const App = () => {
     e.preventDefault()
     let datetime = new Date().toLocaleString();
 
-    // let searchDataObject = {
-    //       "searchedCoords": searchedData.current,
-    //       "unsearchedCoords": unsearchedData.current,
-    //       "searchedAreas": searchedAreas,
-    //       "googleData": googleData.current,
-    //       "searchEntityType": searchType,
-    //       "budget": budget,
-    //       "budgetUsed": budgetUsed,
-    //       "searchResolution": searchResolution,
-    //       "userSearchKey": userSearchKey,
-    //       "nextCenter": nextCenter.current,
-    //       "lastSearchRadius": "TSET",
-    //       "searchID": searchID.current,
-    //       "polygons": features,
-    //       "circleCoordinates": circleCoordinates.current,
-    //       "searchCentroid": searchCentroid.current
-    //     }
-
     const searchDataObject = {
       "searchedCoords": searchData.searchedCoords,
       "unsearchedCoords": searchData.unsearchedCoords,
@@ -1359,7 +1211,7 @@ const App = () => {
       "nextCenter": searchData.nextCenter,
       "lastSearchRadius": searchData.lastSearchRadius,
       "searchID": searchData.searchID,
-      "polygons": mapData.polygons,
+      "polygons": mapData.polygonCoordinates,
     }
 
     let include = [
@@ -1428,68 +1280,21 @@ const handleShow = () => setShow(true);
 
   return (
       <div style={{ height: '100vh', flex: '1'}}>
-      <DialogModal />
-
-      <div style={{flex: '1', justifyContent: 'center', display: 'flex', marginTop: '20px', fontSize: '25px', fontWeight: 'bold'}}> Google Places Search Helper </div>
-      <div
-        style={{flex: '1', justifyContent: 'center', display: 'flex', margin: '5px', marginBottom: '30px', fontSize: '12px', fontWeight: 'bold', color: '#0000EE', textDecorationLine: 'underline'}}
-        onClick={() => alert(infoMessages["about"])}
-        > About </div>
-
-      <div style={{ display: 'flex', flexDirection: 'row'}}>
-
-
-
-      <div style={{fontWeight:'bold', justifyContent: 'center', alignItems: 'center', flexGrow: '1', display:'flex', flex: 1}}>
-      Search Metrics
-      </div>
-
-        <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
-          <div style={{justifyContent: 'space-between', width: '300px', display: 'flex', flexDirection: 'column'}} >
-            <div style={{textAlign:'center', display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>Search Efficiency <IconButton message={infoMessages["SearchEfficiencyMessage"]}/></div>
-              <input
-                type="text"
-                disabled={true}
-                value={(efficiency*100).toFixed(4).toString()+'%'}
-                style={{ padding: '5px', margin: '5px', textAlign: 'center'}}
-                placeholder="Search Efficiency"
-                />
-          </div>
-
-          <div style={{justifyContent: 'space-between', width: '300px', display: 'flex', flexDirection: 'column'}} >
-            <div style={{textAlign:'center', display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>Projected Search Cost <IconButton message={infoMessages["ProjectedSearchCostMessage"]}/></div>
-              <CurrencyInput
-                prefix={'$'}
-                disabled={true}
-                value={projectedSearchCost.toFixed(4)}
-                style={{ padding: '5px', margin: '5px', textAlign: 'center'}}
-                placeholder="Projected Search Cost"
-                />
-          </div>
-
-          <div style={{justifyContent: 'space-between', width: '300px', display: 'flex', flexDirection: 'column'}} >
-            <div style={{textAlign:'center', display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>Projected Savings vs Naive Search <IconButton message={infoMessages["ProjectedSavingsVsNaiveSearchMessage"]}/></div>
-              <CurrencyInput
-                prefix={'$'}
-                disabled={true}
-                value={projectedSavings.toFixed(4)}
-                style={{ padding: '5px', margin: '5px', textAlign: 'center'}}
-                placeholder="Projected Savings"
-                />
-          </div>
-
+        <DialogModal />
+        <div style={{flex: '1', justifyContent: 'center', display: 'flex', marginTop: '20px', fontSize: '25px', fontWeight: 'bold'}}>
+        Google Places Search Helper
         </div>
-        <div style={{ flexGrow: '1'}} />
+        <div
+          style={{flex: '1', justifyContent: 'center', display: 'flex', margin: '5px', marginBottom: '30px', fontSize: '12px', fontWeight: 'bold', color: '#0000EE', textDecorationLine: 'underline'}}
+          onClick={() => alert(infoMessages["about"])}
+          >
+          About
         </div>
-          <div style={{marginTop: '10px', height: '2px', backgroundColor: 'black', flex: '1'}} />
-          {interfaceOptions()}
-          {commonSettings()}
-
-
+        <SettingsPanel
+        />
+        <div style={{marginTop: '10px', height: '2px', backgroundColor: 'black', flex: '1'}} />
         <div style={{display: 'flex', height: '100%', flexDirection: 'column'}}>
           <MapComponent ref={editorRef}/>
-
-
         </div>
       </div>
      )
