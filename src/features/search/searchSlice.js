@@ -9,6 +9,8 @@ const initialState = {
 // == api call meta ==
   loading: false,
   error: '',
+  searchActive: false,
+  priorSearch: false,
 
 // == api data ==
   searchID: '',
@@ -23,23 +25,45 @@ const initialState = {
   searchReady: false,
   searchComplete: false,
   bulkSearchCount: 0,
-  fileData: {},
-  fileName: ''
 }
 
 
 // ============= Thunks ==================
-// initialize search
+
+// export const setPriorSearch = createAsyncThunk('search/setPriorSearch',(args, b) => {
+//
+//   if (b.getState().map.polygons.length > 0 || b.getState().search.googleData.length != 0 || b.getState().search.searchedCoords.length != 0 || b.getState().search.unsearchedCoords.length != 0) {
+//
+//   }
+//   if (b.getState().search.loading) {
+//     console.log("aborted")
+//     b.abort()
+//   } else {
+//     console.log("allowed")
+//     target()
+//   }
+// })
+
+export const debounce = createAsyncThunk('search/debounce',(target, b) => {
+  if (b.getState().search.loading) {
+    console.log("aborted")
+    b.abort()
+  } else {
+    console.log("allowed")
+    target()
+  }
+})
+
 export const initializeSearch = createAsyncThunk('search/initializeSearch',(a, b) => {
-  const polygons = b.getState().map.polygons
-  console.log(polygons)
+  const polygonCoordinates = b.getState().map.polygonCoordinates
+  console.log(polygonCoordinates)
 
   const searchResolution = b.getState().settingsPanel.searchResolution
   console.log(searchResolution)
 
   return axios
     .post(`/api/searchSession`, {
-    "searchRegions": polygons,
+    "searchRegions": polygonCoordinates,
     "searchID": null,
     "coordinateResolution": searchResolution
     })
@@ -130,6 +154,7 @@ export const searchSlice = createSlice({
         //pending
     builder.addCase(initializeSearch.pending, (state) => {
       state.loading = true
+      state.searchActive = true
     })
         //success
     builder.addCase(initializeSearch.fulfilled, (state, action) => {
@@ -148,6 +173,7 @@ export const searchSlice = createSlice({
     builder.addCase(initializeSearch.rejected, (state, action) => {
       state.loading = false
       state.error = action.error.message
+      state.searchActive = false
     })
 
     // nearby search
@@ -187,12 +213,15 @@ export const searchSlice = createSlice({
       state.loading = false
       state.error = action.error.message
     })
+
   },
   reducers: {
     loadStateFromFile: (state, action) => {
+      console.log("loadStateFromFile running on searchSlice")
       let file = action.payload
       console.log(file)
 
+      state.searchActive = true
       state.searchID = file.searchID
       state.nextCenter = file.nextCenter
       state.lastSearchRadius = file.lastSearchRadius
@@ -200,9 +229,8 @@ export const searchSlice = createSlice({
       state.unsearchedCoords = file.unsearchedCoords
       state.googleData = file.googleData
     },
-
-    setFileData: (state, action) => {state.fileData = action.payload},
-    setFileName: (state, action) => {state.fileName = action.payload},
+    setPriorSearch: (state, action) => {state.priorSearch = action.payload},
+    setSearchActive: (state, action) => {state.searchActive = action.payload},
     addSearchCallType: (state, action) => {state.searchCallType = action.payload},
     setSearchReady: (state, action) => {state.searchReady = action.payload},
     setSearchComplete: (state, action) => {state.searchComplete = action.payload},
@@ -213,13 +241,12 @@ export const searchSlice = createSlice({
 
 // export const searchActions = searchSlice.actions
 export const {
-  setFileData,
-  setFileName,
   addSearchCallType,
   setSearchReady,
   setSearchComplete,
   setBulkSearchCount,
   setBulkSearchMode,
   loadStateFromFile,
+  setPriorSearch,
 } = searchSlice.actions
 export default searchSlice.reducer

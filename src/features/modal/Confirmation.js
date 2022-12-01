@@ -17,17 +17,20 @@ const customStyles = {
 
 export const ConfirmationModal = React.memo(props => {
   const visible = useSelector((state) => state.modal.visible)
-  const callback = callbackDict.resolve
+  const resolveCallback = callbackDict.resolve
+  const rejectCallback = callbackDict.reject
   const message = useSelector((state) => state.modal.message)
 
 
   function onConfirm() {
-    callback(true)
+    console.log("confirming")
+    resolveCallback(true)
     return true
   }
 
   function onDeny() {
-    callback(false)
+    console.log("rejecting")
+    rejectCallback(false)
     return false
   }
 

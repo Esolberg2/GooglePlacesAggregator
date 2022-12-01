@@ -47,3 +47,48 @@ export function getFeatureStyle({feature, index, state}) {
       };
   }
 }
+
+// const SettingsButton = {
+//   paddingTop: '10px',
+//   fontSize: '12px',
+//   display: 'flex',
+//   textAlign: 'center',
+//   justifyContent: 'center'
+// }
+
+const SettingsButton = {
+  width: '150px',
+  padding: '5px',
+  margin: '5px',
+}
+
+const ButtonDisabled = {
+  backgroundColor:'#cccccc'
+}
+
+const SettingsDescription = {
+  paddingTop: '10px',
+  fontSize: '12px',
+  display: 'flex',
+  textAlign: 'center',
+  justifyContent: 'center'
+}
+
+const SettingsTextContainer = {
+  paddingLeft: '5px',
+  paddingRight: '5px',
+  paddingTop: '5px',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  textAlign: 'center',
+  flex: '1', 
+  justifyContent: 'space-between',
+}
+
+export const styles = {
+  SettingsButton: SettingsButton,
+  ButtonDisabled: ButtonDisabled,
+  SettingsDescription: SettingsDescription,
+  SettingsTextContainer: SettingsTextContainer,
+}

@@ -18,8 +18,8 @@ export const FilePicker = (props) => {
   const inputRef = useRef();
 
   const dispatch = useDispatch()
-  const fileData = useSelector((state) => state.search.fileData)
-  const fileName = useSelector((state) => state.search.fileName)
+  const fileData = useSelector((state) => state.loadFile.fileData)
+  const fileName = useSelector((state) => state.loadFile.fileName)
 
 
   function loadFile(value) {

@@ -94,8 +94,8 @@ function googleInitError() {
   return false
 }
 
-function polygonError(polygons) {
-  if (polygons.length == 0) {
+function polygonError(polygonCoordinates) {
+  if (polygonCoordinates.length == 0) {
     window.alert('Please use the "Select Search Area" option to choose a search region before building your search.')
     return true
   }

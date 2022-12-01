@@ -13,12 +13,16 @@ export function SearchInterface(props) {
     nearbySearch,
     buildFromFile,
     editorRef,
+    searchActive,
+    priorSearch,
   } = props
 
-  const [newSearch, setNewSearch] = useState(true)
+  // const [newSearch, setNewSearch] = useState(true)
   const [callType, setCallType] = useState('singleSearch')
-  const [searchBuilt, setSearchBuilt] = useState(false)
+  // const [searchBuilt, setSearchBuilt] = useState(false)
   const bulkSearchCount = useSelector(state => state.search.bulkSearchCount)
+  const mapPolygons = useSelector(state => state.map.mapPolygons)
+  const polygonCoordinates = useSelector(state => state.map.polygonCoordinates)
 
   function onChangeBulkQtyInput(e) {
     dispatch(setBulkSearchCount(e.target.value))
@@ -43,7 +47,7 @@ export function SearchInterface(props) {
                   setMode(new DrawPolygonMode())}
                 }
                 style={{padding: '5px', margin: '5px', width: '150px'}}
-                disabled={searchBuilt}
+                disabled={searchActive}
                 >
                 Select Search Area
                 </button>
@@ -52,6 +56,7 @@ export function SearchInterface(props) {
                   title="Delete"
                   onClick={onDelete}
                   style={{padding: '5px', margin: '5px', width: '150px'}}
+                  disabled={searchActive}
                   >
                   Delete Search Area
                   </button>
@@ -61,7 +66,7 @@ export function SearchInterface(props) {
               <button
                 onClick={initializeSearch}
                 style={{padding: '5px', margin: '5px', width: '150px'}}
-                disabled={false}
+                disabled={searchActive}
                 >
                 Build Search
                 </button>
@@ -74,6 +79,14 @@ export function SearchInterface(props) {
                 </button>
             </div>
 
+            <button onClick={() => {
+              console.log(mapPolygons)
+              console.log(polygonCoordinates)
+              console.log(editorRef.current)
+              console.log(editorRef.current.getFeatures())
+            }} >
+            mapPolygons
+            </button>
             <div style={{display: 'flex', flexDirection: 'column'}}>
               <button
                 onClick={() => console.log("bulkSearch()")}
@@ -113,7 +126,7 @@ export function SearchInterface(props) {
 
             <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'}}>
               <FilePicker
-                disabled={searchBuilt}
+                disabled={searchActive}
                 />
             </div>
 
@@ -121,13 +134,13 @@ export function SearchInterface(props) {
               <button
                 onClick={() => buildFromFile()}
                 style={{padding: '5px', margin: '5px', width: '150px'}}
-                disabled={searchBuilt}
+                disabled={searchActive}
                 >
                 Build Search From File
                 </button>
 
               <button
-                onClick={() => setCallType('singleSearch')}
+                onClick={nearbySearch}
                 style={{padding: '5px', margin: '5px', width: '150px'}}
                 >
                 Single Search
@@ -155,15 +168,15 @@ export function SearchInterface(props) {
       )
   }
 
-  function toggleSearchType() {
-    setNewSearch(newSearch => !newSearch)
-  }
+  // function toggleSearchType() {
+  //   setNewSearch(newSearch => !newSearch)
+  // }
 
   function conditionalRender() {
-    if (newSearch) {
+    if (!priorSearch) {
       return newSearchTools()
     } else {
-      loadSearchTools()
+      return loadSearchTools()
     }
   }
 
