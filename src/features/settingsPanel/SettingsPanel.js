@@ -15,18 +15,21 @@ const placeTypes = require('../../data/placeTypes.json');
 
 export function SettingsPanel(props) {
   const dispatch = useDispatch()
-  const priorSearch = useSelector(state => state.search.priorSearch)
   const searchData = useSelector((state) => state.search)
   const settingsData = useSelector((state) => state.settingsPanel)
   const mapData = useSelector(state => state.map)
 
+  const {
+  priorSearch
+  } = searchData
 
   const {
     budget,
     budgetUsed,
     searchResolution,
     testMode,
-    searchEntityType
+    searchEntityType,
+    userSearchKey
   } = settingsData
 
 const {
@@ -35,7 +38,6 @@ const {
   onChangeAPIkeyInput,
   setApiKeyStale,
   apiKeyStale,
-  userSearchKey,
   onChangeUserKey,
 } = props
 

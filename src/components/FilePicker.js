@@ -9,6 +9,7 @@ import {
 } from '../features/loadFile/loadFileSlice'
 import { alertManager } from '../alerts/alertManager'
 import { alertDialog } from '../features/modal/modalSlice'
+import { ModalBuilder } from '../features/modal/ModalBuilder'
 
 // let searchActions;
 // let alertManager;
@@ -20,6 +21,38 @@ export const FilePicker = (props) => {
   const dispatch = useDispatch()
   const fileData = useSelector((state) => state.loadFile.fileData)
   const fileName = useSelector((state) => state.loadFile.fileName)
+
+
+  // function loadFile(value) {
+  //   let fileReader;
+  //
+  //   const handleFileChosen = (file) => {
+  //     dispatch(setFileData({}))
+  //     dispatch(setFileName(''))
+  //
+  //     fileReader = new FileReader();
+  //     fileReader.onloadend = (e) => {handleFileRead(e, file)};
+  //     if (file) {
+  //       fileReader.readAsText(file);
+  //     }
+  //     inputRef.current.value = null
+  //   }
+  //
+  //   const handleFileRead = async (e, file) => {
+  //     const content = fileReader.result;
+  //
+  //     let alert = await dispatch(alertDialog({
+  //       "target": () => {
+  //         dispatch(setFileData(JSON.parse(content)))
+  //         dispatch(setFileName(file["name"]))
+  //       },
+  //       "alertKey": "selectFile",
+  //       "data": {"dataFile": content}
+  //     }))
+  //   }
+  //
+  //   handleFileChosen(value.target.files[0])
+  // }
 
 
   function loadFile(value) {
@@ -34,30 +67,26 @@ export const FilePicker = (props) => {
       if (file) {
         fileReader.readAsText(file);
       }
-
       inputRef.current.value = null
-      // console.log(inputRef)
     }
 
     const handleFileRead = async (e, file) => {
       const content = fileReader.result;
 
-      let alert = await dispatch(alertDialog({
-        "target": () => {
-          // console.log(JSON.parse(content))
-          dispatch(setFileData(JSON.parse(content)))
-          dispatch(setFileName(file["name"]))
-        },
-        "alertKey": "selectFile",
-        "data": {"dataFile": content}
-      }))
+      let modalBuilder = new ModalBuilder()
+      modalBuilder.alertKey = 'selectFile'
 
-      console.log("alert return")
-      console.log(alert)
-      // if (alert.payload == true) {
-      //   dispatch(searchActions.setFileData({}))
-      //   dispatch(searchActions.setFileName(''))
-      // }
+      modalBuilder.callback = () => {
+        console.log("accepted")
+        dispatch(setFileData(JSON.parse(content)))
+        dispatch(setFileName(file["name"]))
+      }
+      modalBuilder.errorback = (error) => {
+          console.log("reject callback run")
+          console.log(error)
+        }
+      modalBuilder.data = {"dataFile": content}
+      modalBuilder.run()
     }
 
     handleFileChosen(value.target.files[0])
