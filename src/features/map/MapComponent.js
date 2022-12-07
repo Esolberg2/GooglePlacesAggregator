@@ -9,6 +9,7 @@ import { mapActions } from './mapSlice'
 import { SearchInterface } from '../search/SearchInterface'
 import { debounce, initializeSearch, nearbySearch, loadStateFromFile, setPriorSearch } from '../search/searchSlice'
 import { modalDialog, alertDialog, confirmationDialog } from '../modal/modalSlice'
+import { ModalBuilder } from '../modal/ModalBuilder'
 // import { fileData } from '../loadFile/loadFileSlice'
 import { unwrapResult } from '@reduxjs/toolkit'
 
@@ -100,63 +101,153 @@ export const MapComponent = React.forwardRef((props, ref) => {
     [handleViewportChange]
   );
 
+  // function modalBuilder(alertKey, targetObj, callbackObj, errorObj) {
+  //   let modal = dispatch(modalDialog({
+  //     "target": () => {dispatch(targetObj.func(...targetObj.args))},
+  //     "alertKey": alertKey,
+  //   }))
+  //   .then(unwrapResult)
+  //   .then((result) => {callbackObj.func(result, ...callbackObj.args)})
+  //   .catch((error) => {errorObj.func(error, ...errorObj.args)})
+  // }
 
-  async function buildFromFile() {
-    console.log(editorRef.current)
-    console.log(polygons)
-    // editorRef.current.addFeatures(fileData.polygons)
-    let alert = dispatch(modalDialog({
-      "target": () => {dispatch(loadStateFromFile(fileData))},
-      "alertKey": "loadFile",
-    }))
-    .then(unwrapResult)
-    .then((res) => {
-      console.log(res)
-      console.log("thenned")
-      console.log(fileData.mapPolygons)
-      // editorRef.current.addFeatures(fileData.mapPolygons)
-      // editorRef.current.props.features = fileData.mapPolygons
-      editorRef.current.state.featureCollection.featureCollection.features = []
-      editorRef.current.addFeatures(fileData.mapPolygons)
-      // editorRef.current.setState()
-      console.log("done")
-    })
-    .catch(() => {console.log("catchedded")})
-    // .then((res) => {
-    //   console.log("map componenet fulfilled")
-    //   // return res
-    //   editorRef.current.addFeatures(fileData.polygons)
-    //   return res
-    // })
-    // .catch((error) => {
-    //   console.log("map componenet rejected")
-    //   console.log(error)
-    //   return error
-    // })
-    console.log(editorRef)
-    console.log(alert)
+  // function modalBuilder(args) {
+  //   let { alertKey, target, callback, errorBack } = args
+  //   console.log("modalBuilder run")
+  //   let modal = dispatch(modalDialog({
+  //     "target": target,
+  //     "alertKey": alertKey,
+  //   }))
+  //   .then(unwrapResult)
+  //   .then((result) => {callback(result)})
+  //   .catch((error) => {errorBack(error)})
+  // }
+
+  function buildFromFile() {
+    let modalBuilder = new ModalBuilder()
+    modalBuilder.alertKey = 'loadFile'
+    modalBuilder.callback = (result) => {
+        console.log("resolve callback run")
+        dispatch(loadStateFromFile(fileData))
+        editorRef.current.state.featureCollection.featureCollection.features = []
+        editorRef.current.addFeatures(fileData.mapPolygons)
+      }
+    modalBuilder.errorback = (error) => {
+        console.log("reject callback run")
+        console.log(error)
+      }
+    modalBuilder.run()
   }
 
+  // async function buildFromFile() {
+  //   modalBuilder({
+  //     alertKey: "loadFile",
+  //     target: ()=> {dispatch(loadStateFromFile(fileData))},
+  //     callback: (result) => {
+  //         console.log("resolve callback run")
+  //         editorRef.current.state.featureCollection.featureCollection.features = []
+  //         editorRef.current.addFeatures(fileData.mapPolygons)
+  //       },
+  //     errorBack: (error) => {
+  //         console.log("reject callback run")
+  //         console.log(error)
+  //       }
+  //     })}
+
+  // async function buildFromFile() {
+  //   dispatch(modalBuilder({
+  //     alertKey: "loadFile",
+  //     targetObj: {func: loadStateFromFile, args: [fileData]},
+  //     callbackObj: {func: (result) => {
+  //         console.log("resolve callback run")
+  //         editorRef.current.state.featureCollection.featureCollection.features = []
+  //         editorRef.current.addFeatures(fileData.mapPolygons)
+  //       },
+  //       args: []
+  //     },
+  //     errorObj: {func: (error) => {
+  //         console.log("reject callback run")
+  //         console.log(error)
+  //       },
+  //       args: []
+  //     },
+  //   }))
+
+    //   "loadFile",
+    //   {func: loadStateFromFile, args: [fileData]},
+    //   {func: (result) => {
+    //       editorRef.current.state.featureCollection.featureCollection.features = []
+    //       editorRef.current.addFeatures(fileData.mapPolygons)
+    //     },
+    //     args: []
+    //   },
+    //   {func: (error) => {
+    //       console.log(error)
+    //     },
+    //     args: []
+    //   }
+    // )
+  // }
+
+
+  // async function buildFromFile() {
+  //
+  //   let alert = dispatch(modalDialog({
+  //     "target": () => {dispatch(loadStateFromFile(fileData))},
+  //     "alertKey": "loadFile",
+  //   }))
+  //   .then(unwrapResult)
+  //   .then((res) => {
+  //     editorRef.current.state.featureCollection.featureCollection.features = []
+  //     editorRef.current.addFeatures(fileData.mapPolygons)
+  //   })
+  //   .catch(() => {console.log("catchedded")})
+  //
+  // }
+
+  // function search() {
+  //   dispatch(alertDialog(
+  //     {
+  //       "target": () => {dispatch(nearbySearch())},
+  //       "alertKey": "search"
+  //     }
+  //   ))
+  // }
+
+
   function search() {
-    dispatch(alertDialog(
-      {
-        "target": () => {dispatch(nearbySearch())},
-        "alertKey": "search"
+    let modalBuilder = new ModalBuilder()
+    modalBuilder.alertKey = 'search'
+    modalBuilder.callback = () => {dispatch(nearbySearch())}
+    modalBuilder.errorback = (error) => {
+        console.log("reject callback run")
+        console.log(error)
       }
-    ))
+    modalBuilder.run()
   }
 
   function debouncedSearch() {
     dispatch(debounce(search))
   }
 
+  // function buildSearch() {
+  //   dispatch(alertDialog(
+  //     {
+  //       "target": () => {dispatch(initializeSearch())},
+  //       "alertKey": "buildSearch"
+  //     }
+  //   ))
+  // }
+
   function buildSearch() {
-    dispatch(alertDialog(
-      {
-        "target": () => {dispatch(initializeSearch())},
-        "alertKey": "buildSearch"
+    let modalBuilder = new ModalBuilder()
+    modalBuilder.alertKey = 'buildSearch'
+    modalBuilder.callback = () => {dispatch(initializeSearch())}
+    modalBuilder.errorback = (error) => {
+        console.log("reject callback run")
+        console.log(error)
       }
-    ))
+    modalBuilder.run()
   }
 
   function debouncedBuildSearch() {

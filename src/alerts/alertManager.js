@@ -34,9 +34,8 @@ class AlertManager {
 
 
   hasAlert(alertKey, args) {
+    console.log(args)
     try {
-
-
     console.log("====" + alertKey + "====")
     console.log(alertKey in this.alertTasks)
 

@@ -14,10 +14,24 @@ const initialState = {
 
 }
 
+function makeid(length) {
+    var result           = '';
+    var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for ( var i = 0; i < length; i++ ) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+}
+
 export const settingsPanelSlice = createSlice({
   name: 'settingsPanel',
   initialState,
   extraReducers: {
+    ["search/initializeSearch/fulfilled"]: (state) => {
+      let randomKey = makeid(18)
+      state.userSearchKey = randomKey
+    },
     ["search/nearbySearch/fulfilled"]: (state) => {state.budgetUsed += .032},
     ["searchSlice/loadStateFromFile"]: (state, action) => {
       let file = action.payload

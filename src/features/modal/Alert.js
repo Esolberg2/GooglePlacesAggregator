@@ -20,10 +20,11 @@ export const AlertModal = React.memo(props => {
   console.log("alert module triggered")
   const visible = useSelector((state) => state.modal.visible)
   const message = useSelector((state) => state.modal.message)
-  const callback = callbackDict.resolve
+  const callback = callbackDict.reject
   console.log(callback)
 
   function onConfirm() {
+    console.log("rejected")
     callback(false)
 
   }
