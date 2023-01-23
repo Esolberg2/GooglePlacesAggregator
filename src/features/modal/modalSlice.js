@@ -14,44 +14,6 @@ const initialState = {
 
 export const callbackDict = {}
 
-// export const confirmationDialog = createAsyncThunk('modal/confirmPromise', async (args, b) => {
-//   let { target, message } = args
-//   b.dispatch(setMessage('test message'))
-//   b.dispatch(setDialogType('Confirmation'))
-//   b.dispatch(setVisible(true))
-//   const confirmed = await new Promise(function(resolve, reject){
-//     callbackDict["resolve"] = resolve;
-//   });
-//
-//   if (confirmed) {
-//     target()
-//   }
-// })
-
-
-export const modalBuilder = createAsyncThunk('modal/modalBuilder', (args, b) => {
-  let {alertKey, targetObj, callbackObj, errorObj} = args
-
-  let modal = b.dispatch(modalDialog({
-    "target": () => {targetObj.func(...targetObj.args)},
-    "alertKey": alertKey,
-  }))
-  .then(unwrapResult)
-  .then((result) => {callbackObj.func(result, ...callbackObj.args)})
-  .catch((error) => {errorObj.func(error, ...errorObj.args)})
-})
-
-// export const modalBuilder = createAsyncThunk('modal/modalBuilder', (args, b) => {
-//   let {alertKey, targetObj, callbackObj, errorObj} = args
-//
-//   let modal = b.dispatch(modalDialog({
-//     "target": () => {b.dispatch(targetObj.func(...targetObj.args))},
-//     "alertKey": alertKey,
-//   }))
-//   .then(unwrapResult)
-//   .then((result) => {callbackObj.func(result, ...callbackObj.args)})
-//   .catch((error) => {errorObj.func(error, ...errorObj.args)})
-// })
 
 export const confirmationDialog = createAsyncThunk('modal/confirmPromise', async (args, b) => {
   let { target, alertKey, data } = args
@@ -121,51 +83,6 @@ export const modalDialog = createAsyncThunk('modal/modalPromise', async (args, b
   }
 })
 
-////original
-// export const modalDialog = createAsyncThunk('modal/modalPromise', async (args, b) => {
-//   console.log("modal builder dialog")
-//   console.log(args)
-//   let { target, alertKey, data } = args
-//   let alert = alertManager.hasAlert(alertKey, data)
-//
-//   try {
-//   if (alert) {
-//     b.dispatch(setMessage(alert.text))
-//     b.dispatch(setDialogType(alert.type))
-//     b.dispatch(setVisible(true))
-//     console.log("1")
-//
-//     const promise = await new Promise(function(resolve, reject){
-//       console.log("2")
-//       callbackDict["resolve"] = resolve
-//       callbackDict["reject"] = reject
-//     })
-//     .then(() => {
-//       console.log("alert resolved")
-//       target()
-//       return true
-//       // resolve(true)
-//     })
-//     .catch((error) => {
-//       console.log("alert rejected")
-//       b.abort()
-//       return error
-//       // retject(false)
-//     });
-//     console.log("3")
-//     return promise
-//
-//   } else {
-//     console.log("modal slice running target")
-//     try {target()}
-//     catch (error) {console.log(error)}
-//   }
-// } catch (error) {
-//   console.log("catch")
-//   console.log(error)
-// }
-// console.log("4")
-// })
 
 export const alertDialog = createAsyncThunk('modal/alertPromise', async (args, b) => {
   let { target, alertKey, data } = args

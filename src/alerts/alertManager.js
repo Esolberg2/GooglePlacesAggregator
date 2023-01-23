@@ -25,6 +25,17 @@ class AlertManager {
       ],
       "changeSearchType": [
         this._existingDataWarning
+      ],
+      "clearSearch": [
+        this._existingDataWarning
+      ],
+      "bulkSearch": [
+        this._googleInitError,
+        this._searchEntityError,
+        this._budgetExceededError,
+        this._searchCompleteError,
+        this._noSearchInitializedError,
+        this._confirmBulkSearch
       ]
     }
   }

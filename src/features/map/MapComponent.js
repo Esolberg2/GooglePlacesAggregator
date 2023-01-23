@@ -5,7 +5,7 @@ import DeckGL, { GeoJsonLayer } from "deck.gl";
 import Geocoder from "react-map-gl-geocoder";
 import { Editor, DrawPolygonMode, EditingMode } from 'react-map-gl-draw';
 import { getFeatureStyle, getEditHandleStyle } from '../../style';
-import { mapActions } from './mapSlice'
+import { mapActions, deletePolygon } from './mapSlice'
 import { SearchInterface } from '../search/SearchInterface'
 import { debounce, initializeSearch, nearbySearch, loadStateFromFile, setPriorSearch } from '../search/searchSlice'
 import { modalDialog, alertDialog, confirmationDialog } from '../modal/modalSlice'
@@ -31,10 +31,15 @@ export const MapComponent = React.forwardRef((props, ref) => {
   // redux
   const dispatch = useDispatch()
   const mapData = useSelector(state => state.map)
+  const mapPolygons = mapData.mapPolygons
+  const selectedFeatureIndex = mapData.selectedFeatureIndex
+  const setSelectedFeatureIndex = mapActions.setSelectedFeatureIndex
+
   const fileData = useSelector(state => state.loadFile.fileData)
   const sliceSearchedAreas = mapData.searchedAreas
   const searchActive = useSelector(state => state.search.searchActive)
   const priorSearch = useSelector(state => state.search.priorSearch)
+  const bulkSearchCount = useSelector(state => state.search.bulkSearchCount)
   // const count = useSelector((state) => state.map.value)
   // console.log(searchActive)
   // refs
@@ -43,7 +48,7 @@ export const MapComponent = React.forwardRef((props, ref) => {
 
   // local state
   const [mode, setMode] = useState(undefined);
-  const [selectedFeatureIndex, setSelectedFeatureIndex] = useState(null);
+  // const [selectedFeatureIndex, setSelectedFeatureIndex] = useState(null);
   const [viewport, setViewPort] = useState({
     width: "100%",
     height: 900,
@@ -56,23 +61,46 @@ export const MapComponent = React.forwardRef((props, ref) => {
   // callbacks
   const _onViewportChange = viewport => setViewPort({...viewport, transitionDuration: 0 })
 
+  // const onSelect = useCallback(options => {
+  //   setSelectedFeatureIndex(options && options.selectedFeatureIndex);
+  // }, []);
+
   const onSelect = useCallback(options => {
-    setSelectedFeatureIndex(options && options.selectedFeatureIndex);
+    dispatch(setSelectedFeatureIndex(options && options.selectedFeatureIndex))
+    // setSelectedFeatureIndex(options && options.selectedFeatureIndex);
   }, []);
 
-  const onDelete = useCallback( async () => {
-    if (selectedFeatureIndex !== null && selectedFeatureIndex >= 0) {
-      // delete search polygon from Editor object
-      await editorRef.current.deleteFeatures(selectedFeatureIndex);
-      setSelectedFeatureIndex(null)
+  // const onDelete = useCallback( async () => {
+  //   if (selectedFeatureIndex !== null && selectedFeatureIndex >= 0) {
+  //     // delete search polygon from Editor object
+  //     await editorRef.current.deleteFeatures(selectedFeatureIndex);
+  //     setSelectedFeatureIndex(null)
+  //
+  //     // filter remaining polygons in Editor to aggregate GEOJson only
+  //     let data = editorRef.current.getFeatures()
+  //     // let result = data.map(currentElement => currentElement.geometry.coordinates[0]);
+  //
+  //     dispatch(mapActions.setPolygonCoordinates(data))
+  //   }
+  // }, [selectedFeatureIndex]);
 
-      // filter remaining polygons in Editor to aggregate GEOJson only
-      let data = editorRef.current.getFeatures()
-      // let result = data.map(currentElement => currentElement.geometry.coordinates[0]);
+  useEffect(() => {
+    if (editorRef.current) {
+      let removalQ = []
+      editorRef.current.getFeatures().forEach((item, i) => {
+        if (!mapPolygons.includes(item)) {
+          removalQ.push(i)
+        }
+      });
 
-      dispatch(mapActions.setPolygonCoordinates(data))
+      editorRef.current.deleteFeatures(removalQ)
     }
-  }, [selectedFeatureIndex]);
+  }, [mapPolygons])
+
+  function onDelete() {
+    dispatch(deletePolygon())
+  }
+
 
   const onUpdate = useCallback(({editType}) => {
     if (editType === 'addFeature') {
@@ -101,28 +129,6 @@ export const MapComponent = React.forwardRef((props, ref) => {
     [handleViewportChange]
   );
 
-  // function modalBuilder(alertKey, targetObj, callbackObj, errorObj) {
-  //   let modal = dispatch(modalDialog({
-  //     "target": () => {dispatch(targetObj.func(...targetObj.args))},
-  //     "alertKey": alertKey,
-  //   }))
-  //   .then(unwrapResult)
-  //   .then((result) => {callbackObj.func(result, ...callbackObj.args)})
-  //   .catch((error) => {errorObj.func(error, ...errorObj.args)})
-  // }
-
-  // function modalBuilder(args) {
-  //   let { alertKey, target, callback, errorBack } = args
-  //   console.log("modalBuilder run")
-  //   let modal = dispatch(modalDialog({
-  //     "target": target,
-  //     "alertKey": alertKey,
-  //   }))
-  //   .then(unwrapResult)
-  //   .then((result) => {callback(result)})
-  //   .catch((error) => {errorBack(error)})
-  // }
-
   function buildFromFile() {
     let modalBuilder = new ModalBuilder()
     modalBuilder.alertKey = 'loadFile'
@@ -139,82 +145,6 @@ export const MapComponent = React.forwardRef((props, ref) => {
     modalBuilder.run()
   }
 
-  // async function buildFromFile() {
-  //   modalBuilder({
-  //     alertKey: "loadFile",
-  //     target: ()=> {dispatch(loadStateFromFile(fileData))},
-  //     callback: (result) => {
-  //         console.log("resolve callback run")
-  //         editorRef.current.state.featureCollection.featureCollection.features = []
-  //         editorRef.current.addFeatures(fileData.mapPolygons)
-  //       },
-  //     errorBack: (error) => {
-  //         console.log("reject callback run")
-  //         console.log(error)
-  //       }
-  //     })}
-
-  // async function buildFromFile() {
-  //   dispatch(modalBuilder({
-  //     alertKey: "loadFile",
-  //     targetObj: {func: loadStateFromFile, args: [fileData]},
-  //     callbackObj: {func: (result) => {
-  //         console.log("resolve callback run")
-  //         editorRef.current.state.featureCollection.featureCollection.features = []
-  //         editorRef.current.addFeatures(fileData.mapPolygons)
-  //       },
-  //       args: []
-  //     },
-  //     errorObj: {func: (error) => {
-  //         console.log("reject callback run")
-  //         console.log(error)
-  //       },
-  //       args: []
-  //     },
-  //   }))
-
-    //   "loadFile",
-    //   {func: loadStateFromFile, args: [fileData]},
-    //   {func: (result) => {
-    //       editorRef.current.state.featureCollection.featureCollection.features = []
-    //       editorRef.current.addFeatures(fileData.mapPolygons)
-    //     },
-    //     args: []
-    //   },
-    //   {func: (error) => {
-    //       console.log(error)
-    //     },
-    //     args: []
-    //   }
-    // )
-  // }
-
-
-  // async function buildFromFile() {
-  //
-  //   let alert = dispatch(modalDialog({
-  //     "target": () => {dispatch(loadStateFromFile(fileData))},
-  //     "alertKey": "loadFile",
-  //   }))
-  //   .then(unwrapResult)
-  //   .then((res) => {
-  //     editorRef.current.state.featureCollection.featureCollection.features = []
-  //     editorRef.current.addFeatures(fileData.mapPolygons)
-  //   })
-  //   .catch(() => {console.log("catchedded")})
-  //
-  // }
-
-  // function search() {
-  //   dispatch(alertDialog(
-  //     {
-  //       "target": () => {dispatch(nearbySearch())},
-  //       "alertKey": "search"
-  //     }
-  //   ))
-  // }
-
-
   function search() {
     let modalBuilder = new ModalBuilder()
     modalBuilder.alertKey = 'search'
@@ -230,14 +160,25 @@ export const MapComponent = React.forwardRef((props, ref) => {
     dispatch(debounce(search))
   }
 
-  // function buildSearch() {
-  //   dispatch(alertDialog(
-  //     {
-  //       "target": () => {dispatch(initializeSearch())},
-  //       "alertKey": "buildSearch"
-  //     }
-  //   ))
-  // }
+  function bulkSearch() {
+    let modalBuilder = new ModalBuilder()
+    modalBuilder.alertKey = 'bulkSearch'
+    modalBuilder.callback = async () => {
+      for (let i = 0; i < bulkSearchCount; i++) {
+        await dispatch(debouncedSearch())
+      }
+    }
+    modalBuilder.errorback = (error) => {
+        console.log("reject callback run")
+        console.log(error)
+      }
+    modalBuilder.run()
+  }
+
+  function debouncedBulkSearch() {
+    dispatch(debounce(bulkSearch))
+  }
+
 
   function buildSearch() {
     let modalBuilder = new ModalBuilder()
@@ -304,105 +245,9 @@ export const MapComponent = React.forwardRef((props, ref) => {
         editorRef={editorRef}
         searchActive={searchActive}
         priorSearch={priorSearch}
+        bulkSearch={debouncedBulkSearch}
         />
       </div>
     </div>
   )
 })
-
-// export function MapComponent() {
-//   const dispatch = useDispatch()
-//   const mapData = useSelector(state => state.map)
-//   const sliceSearchedAreas = mapData.searchedAreas
-//
-//   const count = useSelector((state) => state.map.value)
-//   const mapRef = useRef();
-//   const _onViewportChange = viewport => setViewPort({...viewport, transitionDuration: 0 })
-//   const editorRef = useRef(undefined);
-//   const [mode, setMode] = useState(undefined);
-//   const [selectedFeatureIndex, setSelectedFeatureIndex] = useState(undefined);
-//
-//   const onSelect = useCallback(options => {
-//     setSelectedFeatureIndex(options && options.selectedFeatureIndex);
-//   }, []);
-//
-//   const onDelete = useCallback(() => {
-//     if (selectedFeatureIndex !== null && selectedFeatureIndex >= 0) {
-//       editorRef.current.deleteFeatures(selectedFeatureIndex);
-//     }
-//   }, [selectedFeatureIndex]);
-//
-//   const onUpdate = useCallback(({editType}) => {
-//     if (editType === 'addFeature') {
-//       setMode(new EditingMode());
-//     }
-//   }, []);
-//
-//   const handleViewportChange = useCallback(
-//     (newViewport) => setViewPort(newViewport),
-//     []
-//   );
-//
-//   const handleGeocoderViewportChange = useCallback(
-//     (newViewport) => {
-//       const geocoderDefaultOverrides = { transitionDuration: 1000 };
-//
-//       return handleViewportChange({
-//         ...newViewport,
-//         ...geocoderDefaultOverrides
-//       });
-//     },
-//     [handleViewportChange]
-//   );
-//
-//   const TOKEN='pk.eyJ1IjoiZXNvbGJlcmc3NyIsImEiOiJja3l1ZmpqYWgwYzAxMnRxa3MxeHlvanVpIn0.co7_t1mXkXPRE8BOnOHJXQ'
-//
-//
-//   const [viewport, setViewPort] = useState({
-//     width: "100%",
-//     height: 900,
-//     latitude: 0,
-//     longitude: 0,
-//     zoom: 1,
-//     transitionDuration: 100
-//   })
-//
-//
-//   return (
-//     <div style={{height: '100%'}}>
-//     <MapGL
-//       ref={mapRef}
-//       {...viewport}
-//       width="100%"
-//       height="100%"
-//       mapboxApiAccessToken={TOKEN}
-//       mapStyle="mapbox://styles/mapbox/streets-v11"
-//       onViewportChange={_onViewportChange}
-//       >
-//
-//      <Geocoder
-//         mapRef={mapRef}
-//         onViewportChange={handleGeocoderViewportChange}
-//         mapboxApiAccessToken={TOKEN}
-//         position='top-right'
-//         />
-//
-//       <Source id="searchedAreaLayer" type="geojson" data={sliceSearchedAreas}>
-//         <Layer key={"2"} {...searchedAreaStyle} />
-//       </Source>
-//
-//       <Editor
-//         ref={editorRef}
-//         style={{width: '100%', height: '100%'}}
-//         clickRadius={12}
-//         mode={mode}
-//         onSelect={onSelect}
-//         onUpdate={onUpdate}
-//         editHandleShape={'circle'}
-//         featureStyle={getFeatureStyle}
-//         editHandleStyle={getEditHandleStyle}
-//         />
-//     </MapGL>
-//     </div>
-//   )
-// }

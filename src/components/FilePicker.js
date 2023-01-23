@@ -23,38 +23,6 @@ export const FilePicker = (props) => {
   const fileName = useSelector((state) => state.loadFile.fileName)
 
 
-  // function loadFile(value) {
-  //   let fileReader;
-  //
-  //   const handleFileChosen = (file) => {
-  //     dispatch(setFileData({}))
-  //     dispatch(setFileName(''))
-  //
-  //     fileReader = new FileReader();
-  //     fileReader.onloadend = (e) => {handleFileRead(e, file)};
-  //     if (file) {
-  //       fileReader.readAsText(file);
-  //     }
-  //     inputRef.current.value = null
-  //   }
-  //
-  //   const handleFileRead = async (e, file) => {
-  //     const content = fileReader.result;
-  //
-  //     let alert = await dispatch(alertDialog({
-  //       "target": () => {
-  //         dispatch(setFileData(JSON.parse(content)))
-  //         dispatch(setFileName(file["name"]))
-  //       },
-  //       "alertKey": "selectFile",
-  //       "data": {"dataFile": content}
-  //     }))
-  //   }
-  //
-  //   handleFileChosen(value.target.files[0])
-  // }
-
-
   function loadFile(value) {
     let fileReader;
 
@@ -122,41 +90,3 @@ export const FilePicker = (props) => {
     </div>
   );
 }
-
-
-
-
-// import React, { useRef, useState } from "react";
-
-
-// const FilePicker = React.forwardRef((props, ref) => {
-//   const inputRef = useRef();
-//   let fileReader;
-//   return (
-//     <div style={{display: 'flex', flexDirection: 'column'}}>
-//       <button
-//       onClick={() => inputRef.current.click()}
-//       style={{padding: '5px', margin: '5px', width: '150px'}}
-//       disabled={props.disabled}
-//       >
-//         Select File
-//       </button>
-//       <input
-//         ref={inputRef}
-//
-//         onChange={e => props.onChange(e)}
-//         multiple={false}
-//         type="file"
-//         accept='.json'
-//         hidden
-//       />
-//       <input
-//         type="text"
-//         value={props.filename}
-//         readOnly={true}
-//         style={{ padding: '5px', margin: '5px', textAlign: 'center', backgroundColor: '#cccccc'}}
-//         placeholder="Prior Data File"
-//         />
-//     </div>
-//   );
-// })

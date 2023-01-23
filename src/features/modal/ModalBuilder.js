@@ -13,10 +13,6 @@ export class ModalBuilder {
 
     this.alertKey = alertKey
 
-    // this.target = target ? target : () => {
-    //   throw new Error('A target must be provided to class ModalBuilder(alertKey, target, callback, errorback)')
-    // }
-
     this.callback = callback ? callback : () => {
       throw new Error('A callback must be provided to class ModalBuilder(alertKey, data, callback, errorback)')
     }
