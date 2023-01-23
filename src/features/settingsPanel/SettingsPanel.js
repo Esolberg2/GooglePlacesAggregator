@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { mapActions } from '../map/mapSlice'
+import { wrapperActions } from '../stateWrapper/wrapperSlice'
 import { SettingsButton } from '../../components/SettingsButton'
 import { SettingsTextContainer } from '../../components/SettingsTextContainer'
 import { ToggleSlider }  from "react-toggle-slider";
@@ -10,7 +11,7 @@ import { initializeSearch, nearbySearch, loadStateFromFile, setBulkSearchCount, 
 import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager'
 import { settingsPanelActions } from './settingsPanelSlice'
 import { alertDialog, confirmationDialog } from '../modal/modalSlice'
-
+import { ModalBuilder } from '../modal/ModalBuilder'
 const placeTypes = require('../../data/placeTypes.json');
 
 export function SettingsPanel(props) {
@@ -228,15 +229,25 @@ function renderTypeOptions() {
       </SettingsButton>
 
     <SettingsButton
-      onClick={(e) => existingDataWarning(e)}
+      onClick={(e) =>
+        {
+          // existingDataWarning(e)
+          let modalBuilder = new ModalBuilder()
+          modalBuilder.alertKey = 'clearSearch'
+          modalBuilder.callback = (result) => {
+              // console.log("no callback set")
+              dispatch(wrapperActions.reset())
+
+            }
+          modalBuilder.errorback = (error) => {
+              console.log("reject callback run")
+              console.log(error)
+            }
+          modalBuilder.run()
+        }
+      }
       >
       Clear Search
-      </SettingsButton>
-
-    <SettingsButton
-      onClick={(e) => dispatch(initializeSearch())}
-      >
-      initialize search
       </SettingsButton>
 
     <SettingsButton
@@ -254,24 +265,6 @@ function renderTypeOptions() {
       >
       remove google
       </SettingsButton>
-
-    <SettingsButton
-      onClick={() => {
-        dispatch(alertDialog(
-          {
-            "target": () => {dispatch(nearbySearch())},
-            "alertKey": "search"
-          }))
-        }
-      }
-      >
-      nearby search
-      </SettingsButton>
-      <button
-      onClick={()=>{console.log(settingsPanelActions)}}
-      >
-      test
-      </button>
   </div>
 
   <div style={{display: 'flex', flexDirection: 'row'}}>

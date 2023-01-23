@@ -74,47 +74,6 @@ export const initializeSearch = createAsyncThunk('search/initializeSearch',(a, b
 })
 
 
-// export const nearbySearch = createAsyncThunk('search/nearbySearch', async (a, b) => {
-//
-//
-//   let rawGoogleData = await googlePlacesApiManager.nearbySearch()
-//
-//   if (!rawGoogleData) {
-//     b.abort()
-//     return false
-//   }
-//
-//   const center = b.getState().search.nextCenter
-//   const searchID = b.getState().search.searchID
-//   let options = {
-//     steps: 20,
-//     units: 'miles',
-//     options: {}
-//   };
-//   let polygon = turf.circle(center, rawGoogleData["radius"], options);
-//   let searchPerimeter = polygon.geometry.coordinates[0];
-//
-//   let data = await axios
-//   .put(`/api/searchSession`, {
-//     "circleCoordinates": searchPerimeter,
-//     "searchID": searchID,
-//     "checksum": checksumManager.dataChecksum()
-//     })
-//
-//     .then((result) => {
-//       return {
-//         "lastSearchPerimeter": searchPerimeter,
-//         "googleData": rawGoogleData.googleData,
-//         "apiData": data.data
-//       }
-//     })
-//     .catch((error) => {
-//       console.log("put catch")
-//       b.abort()
-//       return false
-//     })
-//   })
-
 // nearby search
 export const nearbySearch = createAsyncThunk('search/nearbySearch', async (a, b) => {
   console.log("calling google")
@@ -167,16 +126,6 @@ export const nearbySearch = createAsyncThunk('search/nearbySearch', async (a, b)
       })
 
       return data
-      // console.log("API DATA")
-      // console.log(data)
-      // console.log("axios call done")
-      // // return ["test"]
-      // return {
-      //   "lastSearchPerimeter": searchPerimeter,
-      //   "googleData": rawGoogleData.googleData,
-      //   "apiData": data.data
-      // }
-      // return data.data
   }
   catch (error) {
     console.log(error)

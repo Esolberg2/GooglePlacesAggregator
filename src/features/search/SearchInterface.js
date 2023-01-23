@@ -15,6 +15,7 @@ export function SearchInterface(props) {
     editorRef,
     searchActive,
     priorSearch,
+    bulkSearch,
   } = props
 
   // const [newSearch, setNewSearch] = useState(true)
@@ -89,7 +90,7 @@ export function SearchInterface(props) {
             </button>
             <div style={{display: 'flex', flexDirection: 'column'}}>
               <button
-                onClick={() => console.log("bulkSearch()")}
+                onClick={bulkSearch}
                 style={{padding: '5px', margin: '5px', width: '150px'}}
                 >
                 Bulk Search

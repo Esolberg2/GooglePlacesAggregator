@@ -1,5 +1,5 @@
 // import { useRef } from 'react'
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import * as turf from '@turf/turf'
 
 
@@ -24,6 +24,25 @@ function buildCoordJSON(coords) {
       }
   }
 }
+
+// export const deletePolygon = createAsyncThunk('map/deletePolygon', async (editorRef, b) => {
+//   await editorRef.current.deleteFeatures(b.state.selectedFeatureIndex);
+//   b.dispatch(setSelectedFeatureIndex(null))
+//   let data = editorRef.current.getFeatures()
+//   b.dispatch(mapActions.setPolygonCoordinates(data))
+// })
+
+export const deletePolygon = createAsyncThunk('map/deletePolygon', (args, b) => {
+  let polygons = b.getState().map.mapPolygons
+  let index = b.getState().map.selectedFeatureIndex
+  let length = polygons.length
+
+  if (index != null) {
+    let newPolygons = polygons.slice(0, index).concat(polygons.slice(index+1, length))
+
+    b.dispatch(setPolygonCoordinates(newPolygons))
+  }
+})
 
 export const mapSlice = createSlice({
   name: 'map',
@@ -52,13 +71,12 @@ export const mapSlice = createSlice({
   reducers: {
     // setEditorRefState: (state, action) => {state.editorRefState = action.payload},
     setSearchedAreas: (state, action) => {state.searchedAreas.features = action.payload},
-    setSelectedFeatureIndex: (state, action) => {state.setSelectedFeatureIndex = action.payload},
+    setSelectedFeatureIndex: (state, action) => {state.selectedFeatureIndex = action.payload},
     setPolygonCoordinates: (state, action) => {
 
       let coords = action.payload.map(currentElement => currentElement.geometry.coordinates[0]);
       state.polygonCoordinates = coords
       state.mapPolygons = action.payload
-
     }
   },
 
