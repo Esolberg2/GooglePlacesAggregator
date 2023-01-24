@@ -165,9 +165,10 @@ export const MapComponent = React.forwardRef((props, ref) => {
     modalBuilder.alertKey = 'bulkSearch'
     modalBuilder.callback = async () => {
       for (let i = 0; i < bulkSearchCount; i++) {
-        await dispatch(debouncedSearch())
+        await dispatch(nearbySearch())
       }
     }
+
     modalBuilder.errorback = (error) => {
         console.log("reject callback run")
         console.log(error)

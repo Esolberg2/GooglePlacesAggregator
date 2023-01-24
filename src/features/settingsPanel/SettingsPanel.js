@@ -7,7 +7,7 @@ import { SettingsTextContainer } from '../../components/SettingsTextContainer'
 import { ToggleSlider }  from "react-toggle-slider";
 import SpinnerButton from '../../components/SpinnerButton'
 import CurrencyInput from 'react-currency-input-field';
-import { initializeSearch, nearbySearch, loadStateFromFile, setBulkSearchCount, setPriorSearch } from '../search/searchSlice'
+import { setPriorSearch } from '../search/searchSlice'
 import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager'
 import { settingsPanelActions } from './settingsPanelSlice'
 import { alertDialog, confirmationDialog } from '../modal/modalSlice'
@@ -347,18 +347,6 @@ function renderTypeOptions() {
               style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', height: '15px', textAlign: 'center'}}
               />
         </SettingsTextContainer>
-    </SettingsTextContainer>
-
-    <SettingsTextContainer
-      title={'User Key'}
-      description={'This key is anything you want, and is used to organize your search data.'}
-      >
-        <input
-          value={userSearchKey}
-          onChange={(e) => onChangeUserKey(e)}
-          style={{ paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}
-          placeholder="Custom User Key"
-          />
     </SettingsTextContainer>
 
     <SettingsTextContainer
