@@ -30,8 +30,15 @@ export class ModalBuilder {
   }))
 
   .then(unwrapResult)
-  .then((result) => {this.callback(result)})
-  .catch((error) => {this.errorback(error)})
+  .then((result) => {
+    console.log("running unwrapped")
+    this.callback(result)
+  })
+  .catch((error) => {
+    console.log("error unwrapped")
+    console.log(error)
+    this.errorback(error)
+  })
 }
 }
 

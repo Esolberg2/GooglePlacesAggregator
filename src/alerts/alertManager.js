@@ -217,18 +217,33 @@ class AlertManager {
     return false
   }
 
-  _confirmBulkSearch(args) {
-    let { searchQty, totalCost } = args
-    let selection = window.confirm(
-      `WARNING: Please confirm you execute ${searchQty} calls to the Google Places Api.` +
-      ` for a projected total cost of $${totalCost}.`
-    )
-    if (selection) {
-      return true
-    } else {
-      return false
+
+  _confirmBulkSearch() {
+    let bulkSearchCount = store.getState().search.bulkSearchCount
+    let totalCost = .032 * parseInt(bulkSearchCount)
+     {
+      return {
+        text: `WARNING: Please confirm you execute ${bulkSearchCount} calls to the Google Places Api.` +
+        ` for a projected total cost of $${totalCost}.`,
+        type: 'Confirmation'
+      }
     }
+    return false
   }
+
+  // _confirmBulkSearch(args) {
+  //   console.log(args)
+  //   let { searchQty, totalCost } = args
+  //   let selection = window.confirm(
+  //     `WARNING: Please confirm you execute ${searchQty} calls to the Google Places Api.` +
+  //     ` for a projected total cost of $${totalCost}.`
+  //   )
+  //   if (selection) {
+  //     return true
+  //   } else {
+  //     return false
+  //   }
+  // }
 
 }
 
