@@ -7,7 +7,7 @@ import { Editor, DrawPolygonMode, EditingMode } from 'react-map-gl-draw';
 import { getFeatureStyle, getEditHandleStyle } from '../../style';
 import { mapActions, deletePolygon } from './mapSlice'
 import { SearchInterface } from '../search/SearchInterface'
-import { debounce, initializeSearch, nearbySearch, loadStateFromFile, setPriorSearch } from '../search/searchSlice'
+import { debounce, initializeSearch, nearbySearch, loadStateFromFile, setPriorSearch, bulkSearch } from '../search/searchSlice'
 import { modalDialog, alertDialog, confirmationDialog } from '../modal/modalSlice'
 import { ModalBuilder } from '../modal/ModalBuilder'
 // import { fileData } from '../loadFile/loadFileSlice'
@@ -39,6 +39,7 @@ export const MapComponent = React.forwardRef((props, ref) => {
   const sliceSearchedAreas = mapData.searchedAreas
   const searchActive = useSelector(state => state.search.searchActive)
   const priorSearch = useSelector(state => state.search.priorSearch)
+  const unsearchedCoords = useSelector(state => state.search.unsearchedCoords)
   const bulkSearchCount = useSelector(state => state.search.bulkSearchCount)
   // const count = useSelector((state) => state.map.value)
   // console.log(searchActive)
@@ -86,16 +87,28 @@ export const MapComponent = React.forwardRef((props, ref) => {
 
   useEffect(() => {
     if (editorRef.current) {
-      let removalQ = []
+      // let removalQ = []
+      // let addQ = []
+      let removalQ = new Set()
+      let mapPolygonsSet = new Set(mapPolygons)
       editorRef.current.getFeatures().forEach((item, i) => {
         if (!mapPolygons.includes(item)) {
-          removalQ.push(i)
+          removalQ.add(i)
         }
+
       });
 
-      editorRef.current.deleteFeatures(removalQ)
+      editorRef.current.deleteFeatures(Array.from(removalQ))
     }
   }, [mapPolygons])
+
+  // useEffect(() => {
+  //   if (editorRef.current) {
+  //
+  //     editorRef.current.addFeatures(Array.from(mapPolygons))
+  //   }
+  // }, [fileData])
+
 
   function onDelete() {
     dispatch(deletePolygon())
@@ -134,9 +147,9 @@ export const MapComponent = React.forwardRef((props, ref) => {
     modalBuilder.alertKey = 'loadFile'
     modalBuilder.callback = (result) => {
         console.log("resolve callback run")
-        dispatch(loadStateFromFile(fileData))
         editorRef.current.state.featureCollection.featureCollection.features = []
         editorRef.current.addFeatures(fileData.mapPolygons)
+        dispatch(loadStateFromFile(fileData))
       }
     modalBuilder.errorback = (error) => {
         console.log("reject callback run")
@@ -175,6 +188,23 @@ export const MapComponent = React.forwardRef((props, ref) => {
       }
     modalBuilder.run()
   }
+
+
+  // function bulkSearch() {
+  //   let modalBuilder = new ModalBuilder()
+  //   modalBuilder.alertKey = 'bulkSearch'
+  //   modalBuilder.callback = async () => {
+  //     for (let i = 0; i < bulkSearchCount; i++) {
+  //       await dispatch(nearbySearch())
+  //     }
+  //   }
+  //
+  //   modalBuilder.errorback = (error) => {
+  //       console.log("reject callback run")
+  //       console.log(error)
+  //     }
+  //   modalBuilder.run()
+  // }
 
   function debouncedBulkSearch() {
     dispatch(debounce(bulkSearch))
