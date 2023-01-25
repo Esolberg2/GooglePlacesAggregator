@@ -25,6 +25,10 @@ export function SearchInterface(props) {
   const mapPolygons = useSelector(state => state.map.mapPolygons)
   const polygonCoordinates = useSelector(state => state.map.polygonCoordinates)
 
+  // function buildSearch() {
+  //   initializeSearch(dispatch)
+  // }
+
   function onChangeBulkQtyInput(e) {
     dispatch(setBulkSearchCount(e.target.value))
   }
