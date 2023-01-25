@@ -74,9 +74,12 @@ export const initializeSearch = createAsyncThunk('search/initializeSearch',(a, b
 })
 
 
+
 // nearby search
 export const nearbySearch = createAsyncThunk('search/nearbySearch', async (a, b) => {
+
   console.log("calling google")
+
   let rawGoogleData = await googlePlacesApiManager.nearbySearch()
   console.log(rawGoogleData)
   console.log("google called")

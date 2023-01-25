@@ -61,7 +61,7 @@ export const mapSlice = createSlice({
       let file = action.payload
       console.log("map slice loadStateFromFile")
       console.log(file)
-      console.log(file.searchedCoords)
+      // console.log(file.searchedCoords)
       state.polygonCoordinates = file.polygonCoordinates
       state.mapPolygons = file.mapPolygons
       state.searchedAreas = file.searchedAreas
@@ -77,6 +77,7 @@ export const mapSlice = createSlice({
       let coords = action.payload.map(currentElement => currentElement.geometry.coordinates[0]);
       state.polygonCoordinates = coords
       state.mapPolygons = action.payload
+      state.selectedFeatureIndex = null
     }
   },
 

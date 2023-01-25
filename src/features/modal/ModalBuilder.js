@@ -22,24 +22,42 @@ export class ModalBuilder {
     }
   }
 
- run() {
-  console.log("modalBuilder run")
-  let modal = store.dispatch(modalDialog({
-    "alertKey": this.alertKey,
-    "data": this.data
-  }))
+//  run() {
+//   let modal = store.dispatch(modalDialog({
+//     "alertKey": this.alertKey,
+//     "data": this.data
+//   }))
+//
+//   .then(unwrapResult)
+//   .then((result) => {
+//     this.callback(result)
+//   })
+//   .catch((error) => {
+//     this.errorback(error)
+//   })
+// }
 
-  .then(unwrapResult)
-  .then((result) => {
-    console.log("running unwrapped")
-    this.callback(result)
+run() {
+  return new Promise((resolve, reject) => {
+    let modal = store.dispatch(modalDialog({
+      "alertKey": this.alertKey,
+      "data": this.data
+    }))
+
+    .then(unwrapResult)
+    .then((result) => {
+      this.callback(result)
+      // resolve()
+    })
+    .then(() => resolve())
+    .catch((error) => {
+      this.errorback(error)
+      reject()
+    })
   })
-  .catch((error) => {
-    console.log("error unwrapped")
-    console.log(error)
-    this.errorback(error)
-  })
+
 }
+
 }
 
 // export default connect(null, { modalDialog })(ModalBuilder)

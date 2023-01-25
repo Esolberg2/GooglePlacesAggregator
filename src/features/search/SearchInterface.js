@@ -80,14 +80,6 @@ export function SearchInterface(props) {
                 </button>
             </div>
 
-            <button onClick={() => {
-              console.log(mapPolygons)
-              console.log(polygonCoordinates)
-              console.log(editorRef.current)
-              console.log(editorRef.current.getFeatures())
-            }} >
-            mapPolygons
-            </button>
             <div style={{display: 'flex', flexDirection: 'column'}}>
               <button
                 onClick={bulkSearch}

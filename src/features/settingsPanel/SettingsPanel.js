@@ -270,7 +270,7 @@ function renderTypeOptions() {
   <div style={{display: 'flex', flexDirection: 'row'}}>
     <SettingsTextContainer
       title={'Test Without Google Key'}
-      description={'This setting will replace Google API calls with a dummy call, and produce dummy data.'}
+      description={'Use dummy data to try out the tool.'}
       style={{display: 'flex', flex: '1'}}
       >
         <ToggleSlider
