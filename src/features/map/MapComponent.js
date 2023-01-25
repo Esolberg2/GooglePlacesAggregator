@@ -1,17 +1,16 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import MapGL, {GeolocateControl, Source, Layer } from 'react-map-gl'
-import DeckGL, { GeoJsonLayer } from "deck.gl";
+import MapGL, {Source, Layer } from 'react-map-gl'
 import Geocoder from "react-map-gl-geocoder";
-import { Editor, DrawPolygonMode, EditingMode } from 'react-map-gl-draw';
+import { Editor, EditingMode } from 'react-map-gl-draw';
 import { getFeatureStyle, getEditHandleStyle } from '../../style';
 import { mapActions, deletePolygon } from './mapSlice'
 import { SearchInterface } from '../search/SearchInterface'
-import { debounce, initializeSearch, nearbySearch, loadStateFromFile, setPriorSearch, bulkSearch } from '../search/searchSlice'
-import { modalDialog, alertDialog, confirmationDialog } from '../modal/modalSlice'
-import { ModalBuilder } from '../modal/ModalBuilder'
-// import { fileData } from '../loadFile/loadFileSlice'
 import { unwrapResult } from '@reduxjs/toolkit'
+import { debouncedBuildSearch } from '../../functions/buildSearch'
+import { debouncedBulkSearch } from '../../functions/bulkSearch'
+import { debouncedSingleSearch } from '../../functions/singleSearch'
+import { buildFromFile } from '../../functions/buildFromFile'
 
 const searchedAreaStyle = {
   id: 'searchedAreaLayers',
@@ -23,7 +22,6 @@ const searchedAreaStyle = {
         }
   }
 
-// React.forwardRef((props, ref) => {})
 export const MapComponent = React.forwardRef((props, ref) => {
   const polygons = useSelector(state => state.map.polygonCoordinates)
   const TOKEN='pk.eyJ1IjoiZXNvbGJlcmc3NyIsImEiOiJja3l1ZmpqYWgwYzAxMnRxa3MxeHlvanVpIn0.co7_t1mXkXPRE8BOnOHJXQ'
@@ -39,17 +37,13 @@ export const MapComponent = React.forwardRef((props, ref) => {
   const sliceSearchedAreas = mapData.searchedAreas
   const searchActive = useSelector(state => state.search.searchActive)
   const priorSearch = useSelector(state => state.search.priorSearch)
-  const unsearchedCoords = useSelector(state => state.search.unsearchedCoords)
-  const bulkSearchCount = useSelector(state => state.search.bulkSearchCount)
-  // const count = useSelector((state) => state.map.value)
-  // console.log(searchActive)
+
   // refs
   const mapRef = useRef();
   const editorRef = useRef();
 
   // local state
   const [mode, setMode] = useState(undefined);
-  // const [selectedFeatureIndex, setSelectedFeatureIndex] = useState(null);
   const [viewport, setViewPort] = useState({
     width: "100%",
     height: 900,
@@ -62,64 +56,25 @@ export const MapComponent = React.forwardRef((props, ref) => {
   // callbacks
   const _onViewportChange = viewport => setViewPort({...viewport, transitionDuration: 0 })
 
-  // const onSelect = useCallback(options => {
-  //   setSelectedFeatureIndex(options && options.selectedFeatureIndex);
-  // }, []);
-
   const onSelect = useCallback(options => {
     dispatch(setSelectedFeatureIndex(options && options.selectedFeatureIndex))
-    // setSelectedFeatureIndex(options && options.selectedFeatureIndex);
   }, []);
-
-  // const onDelete = useCallback( async () => {
-  //   if (selectedFeatureIndex !== null && selectedFeatureIndex >= 0) {
-  //     // delete search polygon from Editor object
-  //     await editorRef.current.deleteFeatures(selectedFeatureIndex);
-  //     setSelectedFeatureIndex(null)
-  //
-  //     // filter remaining polygons in Editor to aggregate GEOJson only
-  //     let data = editorRef.current.getFeatures()
-  //     // let result = data.map(currentElement => currentElement.geometry.coordinates[0]);
-  //
-  //     dispatch(mapActions.setPolygonCoordinates(data))
-  //   }
-  // }, [selectedFeatureIndex]);
 
   useEffect(() => {
     if (editorRef.current) {
-      // let removalQ = []
-      // let addQ = []
-      let removalQ = new Set()
-      let mapPolygonsSet = new Set(mapPolygons)
-      editorRef.current.getFeatures().forEach((item, i) => {
-        if (!mapPolygons.includes(item)) {
-          removalQ.add(i)
-        }
-
-      });
-
-      editorRef.current.deleteFeatures(Array.from(removalQ))
+      editorRef.current.state.featureCollection.featureCollection.features = []
+      editorRef.current.addFeatures(mapPolygons)
     }
-  }, [mapPolygons])
-
-  // useEffect(() => {
-  //   if (editorRef.current) {
-  //
-  //     editorRef.current.addFeatures(Array.from(mapPolygons))
-  //   }
-  // }, [fileData])
+  }, [fileData, mapPolygons])
 
 
   function onDelete() {
     dispatch(deletePolygon())
   }
 
-
   const onUpdate = useCallback(({editType}) => {
     if (editType === 'addFeature') {
-      console.log("adding to polygons")
       let data = editorRef.current.getFeatures()
-      // let result = data.map(currentElement => currentElement.geometry.coordinates[0]);
       dispatch(mapActions.setPolygonCoordinates(data))
       setMode(new EditingMode());
     }
@@ -133,7 +88,6 @@ export const MapComponent = React.forwardRef((props, ref) => {
   const handleGeocoderViewportChange = useCallback(
     (newViewport) => {
       const geocoderDefaultOverrides = { transitionDuration: 1000 };
-
       return handleViewportChange({
         ...newViewport,
         ...geocoderDefaultOverrides
@@ -141,91 +95,6 @@ export const MapComponent = React.forwardRef((props, ref) => {
     },
     [handleViewportChange]
   );
-
-  function buildFromFile() {
-    let modalBuilder = new ModalBuilder()
-    modalBuilder.alertKey = 'loadFile'
-    modalBuilder.callback = (result) => {
-        console.log("resolve callback run")
-        editorRef.current.state.featureCollection.featureCollection.features = []
-        editorRef.current.addFeatures(fileData.mapPolygons)
-        dispatch(loadStateFromFile(fileData))
-      }
-    modalBuilder.errorback = (error) => {
-        console.log("reject callback run")
-        console.log(error)
-      }
-    modalBuilder.run()
-  }
-
-  function search() {
-    let modalBuilder = new ModalBuilder()
-    modalBuilder.alertKey = 'search'
-    modalBuilder.callback = () => {dispatch(nearbySearch())}
-    modalBuilder.errorback = (error) => {
-        console.log("reject callback run")
-        console.log(error)
-      }
-    modalBuilder.run()
-  }
-
-  function debouncedSearch() {
-    dispatch(debounce(search))
-  }
-
-  function bulkSearch() {
-    let modalBuilder = new ModalBuilder()
-    modalBuilder.alertKey = 'bulkSearch'
-    modalBuilder.callback = async () => {
-      for (let i = 0; i < bulkSearchCount; i++) {
-        await dispatch(nearbySearch())
-      }
-    }
-
-    modalBuilder.errorback = (error) => {
-        console.log("reject callback run")
-        console.log(error)
-      }
-    modalBuilder.run()
-  }
-
-
-  // function bulkSearch() {
-  //   let modalBuilder = new ModalBuilder()
-  //   modalBuilder.alertKey = 'bulkSearch'
-  //   modalBuilder.callback = async () => {
-  //     for (let i = 0; i < bulkSearchCount; i++) {
-  //       await dispatch(nearbySearch())
-  //     }
-  //   }
-  //
-  //   modalBuilder.errorback = (error) => {
-  //       console.log("reject callback run")
-  //       console.log(error)
-  //     }
-  //   modalBuilder.run()
-  // }
-
-  function debouncedBulkSearch() {
-    dispatch(debounce(bulkSearch))
-  }
-
-
-  function buildSearch() {
-    let modalBuilder = new ModalBuilder()
-    modalBuilder.alertKey = 'buildSearch'
-    modalBuilder.callback = () => {dispatch(initializeSearch())}
-    modalBuilder.errorback = (error) => {
-        console.log("reject callback run")
-        console.log(error)
-      }
-    modalBuilder.run()
-  }
-
-  function debouncedBuildSearch() {
-    dispatch(debounce(buildSearch))
-  }
-
 
   return (
     <div style={{display: 'flex', height: '100%', flexDirection: 'column'}}>
@@ -271,7 +140,7 @@ export const MapComponent = React.forwardRef((props, ref) => {
         setMode={setMode}
         onDelete={onDelete}
         initializeSearch={debouncedBuildSearch}
-        nearbySearch={debouncedSearch}
+        nearbySearch={debouncedSingleSearch}
         buildFromFile={buildFromFile}
         editorRef={editorRef}
         searchActive={searchActive}
