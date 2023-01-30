@@ -9,6 +9,7 @@ const initialState = {
   userSearchKey: '',
   apiKey: '',
   apiKeyStale: false,
+  googlePlacesLibLoading: false,
   bulkSearchMode: false,
   testMode: true,
 
@@ -56,7 +57,8 @@ export const settingsPanelSlice = createSlice({
       console.log(action.payload)
       state.apiKey = action.payload
     },
-    setApiKeyStale: (state, action) => {state.apiKeyStale = action.payload}
+    setApiKeyStale: (state, action) => {state.apiKeyStale = action.payload},
+    setGooglePlacesLibLoading: (state, action) => {state.googlePlacesLibLoading = action.payload}
   },
 
 })

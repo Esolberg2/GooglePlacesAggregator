@@ -20,6 +20,7 @@ export function SettingsPanel(props) {
   const settingsData = useSelector((state) => state.settingsPanel)
   const mapData = useSelector(state => state.map)
 
+
   const {
   priorSearch
   } = searchData
@@ -32,7 +33,8 @@ export function SettingsPanel(props) {
     searchEntityType,
     userSearchKey,
     apiKey,
-    apiKeyStale
+    apiKeyStale,
+    googlePlacesLibLoading
   } = settingsData
 
   const {
@@ -41,7 +43,8 @@ export function SettingsPanel(props) {
     setBudget,
     setTestMode,
     setApiKey,
-    setApiKeyStale
+    setApiKeyStale,
+    setGooglePlacesLibLoading
   } = settingsPanelActions
 
 const downloadFile = ({ data, fileName, fileType }) => {
@@ -316,6 +319,7 @@ function renderTypeOptions() {
               buttonStyle={{backgroundColor: apiKeyStale ? '#fde0e0' : 'none'}}
               buttonKey={apiKeyStale}
               disabled={testMode}
+              loading = {googlePlacesLibLoading}
               >
               {apiKeyStale ? 'Set Key' : 'Key Set'}
             </SpinnerButton>
