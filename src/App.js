@@ -82,8 +82,8 @@ const coordinateStyle = {
 const App = () => {
   // console.log(MapComponent.editorRef)
   let service = useRef(undefined);
-  const [apiKey, setApiKey] = useState('')
-  const [apiKeyStale, setApiKeyStale] = useState(false)
+  // const [apiKey, setApiKey] = useState('')
+  // const [apiKeyStale, setApiKeyStale] = useState(false)
 
 
   const dispatch = useDispatch()
@@ -122,11 +122,11 @@ const App = () => {
   //   "polygons": useSelector((state) => state.map.polygons),
   // }
 
-  useEffect(() => {
-    if (!apiKeyStale) {
-      setApiKeyStale(true)
-    }
-  }, [apiKey])
+  // useEffect(() => {
+  //   if (!apiKeyStale) {
+  //     setApiKeyStale(true)
+  //   }
+  // }, [apiKey])
 
 
   window.gm_authFailure = function(error) {
@@ -828,9 +828,9 @@ const App = () => {
     dispatch(setBulkSearchCount(e.target.value))
   }
 
-  function onChangeAPIkeyInput(e) {
-    setApiKey(e.target.value)
-  }
+  // function onChangeAPIkeyInput(e) {
+  //   setApiKey(e.target.value)
+  // }
 
   function onChangeUserKey(e) {
     setUserSearchKey(e.target.value)
@@ -908,245 +908,6 @@ const App = () => {
     )
   }
 
-  function commonSettings() {
-    return (
-        <div style={{display: 'flex', flexDirection: 'row'}}>
-          <SettingsTextContainer
-            title={'Test Without Google Key'}
-            description={'This setting will replace Google API calls with a dummy call, and produce dummy data.'}
-            style={{display: 'flex', flex: '1'}}
-            >
-              <ToggleSlider
-                onToggle={() => {dispatch(settingsPanelActions.setTestMode(!testMode))}}
-                active={testMode}
-                barWidth={75}
-                />
-          </SettingsTextContainer>
-
-          <SettingsTextContainer
-            title={'Enter Google API Key'}
-            description={'The Key will not be saved and is only used to call the google places API directly.'}
-            >
-              <div style={{ flex: '1', display: 'flex', flexDirection: 'row', alignItems: 'flex-end'}}>
-                <input
-                  value={apiKey}
-                  onChange={(e) => onChangeAPIkeyInput(e)}
-                  style={{ marginLeft: '5px', height: '15px', paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}
-                  placeholder="Google API Key"
-                  disabled={testMode}
-                  />
-
-                  <SpinnerButton
-                    func={googlePlacesApiManager.updateGoogleApi}
-                    funcArgs={[apiKey]}
-                    height='15px'
-                    width='47px'
-                    onClick={() => setApiKeyStale(false)}
-                    buttonStyle={{backgroundColor: apiKeyStale ? '#fde0e0' : 'none'}}
-                    buttonKey={apiKeyStale}
-                    disabled={testMode}
-                    >
-                    {apiKeyStale ? 'Set Key' : 'Key Set'}
-                  </SpinnerButton>
-              </div>
-          </SettingsTextContainer>
-
-          <SettingsTextContainer
-            title={'Search Entity Type'}
-            description={'These types are dictated by Google, and are limited to one type per search.'}
-            >
-              <select key={searchEntityType} disabled={newSearch ? false : true} value={searchEntityType} onChange={handleSelectChange} id="typeSelect" style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}>
-                {renderTypeOptions()}
-              </select>
-          </SettingsTextContainer>
-
-          <SettingsTextContainer
-            title={'Budget'}
-            description={'Enter -1 for unlimited budget: use this option with care.'}
-            >
-              <CurrencyInput
-                prefix="$"
-                id="input-example"
-                name="input-name"
-                placeholder="Enter a max budget"
-                defaultValue={budget}
-                value={budget}
-                decimalsLimit={2}
-                onValueChange={(value) => handleBudgetChange(value)}
-                style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '20px', marginBottom: '5px', height: '15px'}}
-                />
-              <SettingsTextContainer title={'Budget Used'}>
-                  <CurrencyInput
-                    prefix="$"
-                    id="input-example"
-                    name="input-name"
-                    placeholder="Enter a max budget"
-                    value={budgetUsed}
-                    disabled={true}
-                    decimalsLimit={4}
-                    style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', height: '15px'}}
-                    />
-              </SettingsTextContainer>
-          </SettingsTextContainer>
-
-          <SettingsTextContainer
-            title={'User Key'}
-            description={'This key is anything you want, and is used to organize your search data.'}
-            >
-              <input
-                value={userSearchKey}
-                onChange={(e) => onChangeUserKey(e)}
-                style={{ paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}
-                placeholder="Custom User Key"
-                />
-          </SettingsTextContainer>
-
-          <SettingsTextContainer
-          title={'Search Resolution'}
-          description={'This is the spacing between search coordinates within the search region. The minimum resolution is 0.1 miles.'}
-          >
-          {renderSearchResolution()}
-          </SettingsTextContainer>
-        </div>
-      )
-    }
-
-  function loadSearchTools() {
-    if (!newSearch) {
-      return (
-        <div style={{flex: '1', flexDirection: 'row'}}>
-
-          <div
-            style={
-              {padding: '10px',
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'flex-star',
-              alignItems: 'flex-end'
-              }}
-            >
-
-            <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'}}>
-              <FilePicker
-                onChange={e => loadFile(e)}
-                filename={fileNameText}
-                disabled={searchBuilt}
-                />
-            </div>
-
-            <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'}}>
-              <button
-                onClick={() => buildFromFile()}
-                style={{padding: '5px', margin: '5px', width: '150px'}}
-                disabled={searchBuilt}
-                >
-                Build Search From File
-                </button>
-
-              <button
-                onClick={() => setCallType('singleSearch')}
-                style={{padding: '5px', margin: '5px', width: '150px'}}
-                >
-                Single Search
-                </button>
-            </div>
-
-            <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'}}>
-              <button
-                onClick={() => console.log("bulkSearch()")}
-                style={{padding: '5px', margin: '5px', width: '150px'}}
-                >
-                Bulk Search
-                </button>
-              <input
-                type="number"
-                value={bulkSearchCount == 0 ? false : bulkSearchCount}
-                min="0"
-                onKeyDown={ (evt) => ['e', '.', '-'].includes(evt.key) && evt.preventDefault() }
-                onChange={(e) => onChangeBulkQtyInput(e)} style={{ padding: '5px', margin: '5px', textAlign: 'center'}}
-                placeholder="Bulk Search Qty"
-                />
-            </div>
-          </div>
-        </div>
-      )
-    }
-    return null
-  }
-
-  function newSearchTools() {
-    if (newSearch) {
-      return (
-        <div style={{flex: '1', flexDirection: 'row'}}>
-          <div
-            style={
-              {padding: '10px',
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'flex-star',
-              alignItems: 'flex-end'
-              }}
-            >
-
-            <div style={{display: 'flex', flexDirection: 'column'}}>
-              <button
-                onClick={() => setMode(new DrawPolygonMode())}
-                style={{padding: '5px', margin: '5px', width: '150px'}}
-                disabled={searchBuilt}
-                >
-                Select Search Area
-                </button>
-
-                <button
-                  title="Delete"
-                  onClick={onDelete}
-                  style={{padding: '5px', margin: '5px', width: '150px'}}
-                  >
-                  Delete Search Area
-                  </button>
-            </div>
-
-            <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'}}>
-              <button
-                onClick={() => dispatch(initializeSearchSlice())}
-                style={{padding: '5px', margin: '5px', width: '150px'}}
-                disabled={unsearchedData.current != undefined}
-                >
-                Build Search
-                </button>
-
-              <button
-                onClick={() => setCallType('singleSearch')}
-                style={{padding: '5px', margin: '5px', width: '150px'}}
-                >
-                Single Search
-                </button>
-            </div>
-
-            <div style={{display: 'flex', flexDirection: 'column'}}>
-              <button
-                onClick={() => console.log("bulkSearch()")}
-                style={{padding: '5px', margin: '5px', width: '150px'}}
-                >
-                Bulk Search
-                </button>
-
-                <input
-                  type="number"
-                  value={bulkSearchCount == 0 ? "Bulk Search Qty" : bulkSearchCount}
-                  min="0"
-                  onKeyDown={ (evt) => ['e', '.', '-'].includes(evt.key) && evt.preventDefault() }
-                  onChange={(e) => onChangeBulkQtyInput(e)}
-                  style={{ padding: '5px', margin: '5px', textAlign: 'center'}}
-                  placeholder="Bulk Search Qty"
-                  />
-            </div>
-          </div>
-        </div>
-      )
-    }
-    return null
-  }
 
 
   function existingDataWarning() {
@@ -1188,11 +949,6 @@ const App = () => {
       });
   }
 
-  function selectNewSearch(val) {
-    // if (existingDataWarning())
-
-    setNewSearch((prev) => val)
-    }
 
   const exportToJson = e => {
     e.preventDefault()
@@ -1290,8 +1046,7 @@ const handleShow = () => setShow(true);
           >
           About
         </div>
-        <SettingsPanel
-        />
+        <SettingsPanel/>
         <div style={{marginTop: '10px', height: '2px', backgroundColor: 'black', flex: '1'}} />
         <div style={{display: 'flex', height: '100%', flexDirection: 'column'}}>
           <MapComponent ref={editorRef}/>

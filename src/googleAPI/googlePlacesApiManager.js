@@ -12,6 +12,12 @@ class GooglePlacesApiManager {
     this.tag = undefined;
     this.loading = false;
 
+		let callBackScript = document.createElement('script');
+		callBackScript.text = function callback() {console.log(window.google)}
+		callBackScript.async = false;
+		callBackScript.defer = false;
+		document.body.appendChild(callBackScript);
+
     this.observer = new MutationObserver((mutations, obs) => {
       if (window.google !== undefined) {
         const service = new window.google.maps.places.PlacesService(document.createElement('div'));
@@ -52,6 +58,7 @@ class GooglePlacesApiManager {
 	    };
 			console.log("google search complete")
 			console.log(rawData)
+
 	    return rawData
 		}
     catch (error) {
@@ -65,12 +72,24 @@ class GooglePlacesApiManager {
       console.log("already loading")
       return;
     };
+
+
+
+		// this.tag = document.createElement('script');
+    // this.tag.type = 'text/javascript';
+    // this.tag.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDrk3576gQUVtPrX92lpQgPUUfJoR6W6BM&libraries=places&callback=callback`;
+    // this.tag.id = 'googleMaps';
+    // this.tag.async = false;
+    // this.tag.defer = false;
+    // document.body.appendChild(this.tag);
+
+
     this.loading = true;
     console.log("      loading:", this.loading)
     this.removeGoogle();
     this.tag = document.createElement('script');
     this.tag.type = 'text/javascript';
-    this.tag.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=places`;
+    this.tag.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=places&callback=callback`;
     this.tag.id = 'googleMaps';
     this.tag.async = false;
     this.tag.defer = false;

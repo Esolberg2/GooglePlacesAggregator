@@ -30,17 +30,19 @@ export function SettingsPanel(props) {
     searchResolution,
     testMode,
     searchEntityType,
-    userSearchKey
+    userSearchKey,
+    apiKey,
+    apiKeyStale
   } = settingsData
 
-const {
-  existingDataWarning,
-  apiKey,
-  onChangeAPIkeyInput,
-  setApiKeyStale,
-  apiKeyStale,
-  onChangeUserKey,
-} = props
+  const {
+    setSearchEntityType,
+    setSearchResolution,
+    setBudget,
+    setTestMode,
+    setApiKey,
+    setApiKeyStale
+  } = settingsPanelActions
 
 const downloadFile = ({ data, fileName, fileType }) => {
   const blob = new Blob([data], { type: fileType })
@@ -125,20 +127,20 @@ const exportToJson = e => {
 }
 
 function handleSelectChange(event) {
-  dispatch(settingsPanelActions.setSearchEntityType(event.target.value))
+  dispatch(setSearchEntityType(event.target.value))
 }
 
 function handleBudgetChange(value) {
   let cleanValue = isNaN(value) ? 0 : parseFloat(value)
   if (cleanValue < -1) {
       // setBudget(-1)
-      dispatch(settingsPanelActions.setBudget(-1))
+      dispatch(setBudget(-1))
     } else {
-      dispatch(settingsPanelActions.setBudget(value))}
+      dispatch(setBudget(value))}
   }
 
 function handleResolutionChange(value) {
-  dispatch(settingsPanelActions.setSearchResolution(value))
+  dispatch(setSearchResolution(value))
 }
 
 function resolutionInputColor() {
@@ -166,6 +168,15 @@ function togglePriorSearch(val) {
   // ))
 }
 
+// useEffect(() => {
+//   if (!apiKeyStale) {
+//     setApiKeyStale(true)
+//   }
+// }, [apiKey])
+
+function onChangeAPIkeyInput(e) {
+  setApiKey(e.target.value)
+}
 
 function renderSearchResolution() {
   if (!priorSearch) {
@@ -275,7 +286,7 @@ function renderTypeOptions() {
       >
         <ToggleSlider
           onToggle={() => {
-            dispatch(settingsPanelActions.setTestMode(!testMode))
+            dispatch(setTestMode(!testMode))
           }
           }
           active={testMode}
@@ -290,7 +301,7 @@ function renderTypeOptions() {
         <div style={{ flex: '1', display: 'flex', flexDirection: 'row', alignItems: 'flex-end'}}>
           <input
             value={apiKey}
-            onChange={(e) => onChangeAPIkeyInput(e)}
+            onChange={(e) => dispatch(setApiKey(e.target.value))}
             style={{ marginLeft: '5px', height: '15px', paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}
             placeholder="Google API Key"
             disabled={testMode}
@@ -301,7 +312,7 @@ function renderTypeOptions() {
               funcArgs={[apiKey]}
               height='15px'
               width='47px'
-              onClick={() => setApiKeyStale(false)}
+              onClick={() => dispatch(setApiKeyStale(false))}
               buttonStyle={{backgroundColor: apiKeyStale ? '#fde0e0' : 'none'}}
               buttonKey={apiKeyStale}
               disabled={testMode}
