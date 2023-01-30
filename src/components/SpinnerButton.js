@@ -1,23 +1,42 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useDispatch } from "react";
 import { googlePlacesApiManager } from '../googleAPI/googlePlacesApiManager'
 import { TailSpin } from  'react-loader-spinner'
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
+import { settingsPanelActions } from '../features/settingsPanel/settingsPanelSlice'
+
 
 const SpinnerButton = (props) => {
-  const [spinner, setSpinner] = useState(false);
-  const [loading, setLoading] = useState(false);
+  // const dispatch = useDispatch()
+  // const googlePlacesLibLoading = useSelector(state => state.settingsPanel)
+  // const setGooglePlacesLibLoading = settingsPanelActions.settingsPanelActions
+  //
+  // const [spinner, setSpinner] = useState(false);
+  // const [loading, setLoading] = useState(false);
   // const prevLoading = usePrevious(loading);
+  //
+  // const text = props.text
+  // const textStyle = props.textStyle
+  // const buttonStyle = props.buttonStyle
+  // const spinnerStyle = props.spinnerStyle
+  // const height = props.height
+  // const width = props.width
+  // const children = props.children
+  //
+  // const func = props.func
+  // const funcArgs = props.funcArgs
 
-  const text = props.text
-  const textStyle = props.textStyle
-  const buttonStyle = props.buttonStyle
-  const spinnerStyle = props.spinnerStyle
-  const height = props.height
-  const width = props.width
-  const children = props.children
-
-  const func = props.func
-  const funcArgs = props.funcArgs
+  const {
+    text,
+    textStyle,
+    buttonStyle,
+    spinnerStyle,
+    height,
+    width,
+    children,
+    func,
+    funcArgs,
+    loading
+  } = props
 
   const [inputUpdated, setInputUpdated] = useState(false)
 
