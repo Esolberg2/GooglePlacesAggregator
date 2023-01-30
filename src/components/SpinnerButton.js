@@ -68,9 +68,13 @@ const SpinnerButton = (props) => {
         key={props.buttonKey}
         onClick={() => {
           // setLoading(true)
-          googlePlacesApiManager.updateGoogleApi(funcArgs[0]).then((res) => {
-            console.log("done loading")
-          })
+
+          // googlePlacesApiManager.updateGoogleApi(funcArgs[0]).then((res) => {
+          //   console.log("done loading")
+          // })
+
+          googlePlacesApiManager.updateGoogleApi(funcArgs[0])
+
         }}
         style={{...{padding: '5px', margin: '5px', whiteSpace: 'nowrap'}, ...buttonStyle}}
         disabled={props.disabled}

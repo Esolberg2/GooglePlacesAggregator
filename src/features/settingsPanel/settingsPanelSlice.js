@@ -52,7 +52,11 @@ export const settingsPanelSlice = createSlice({
     setTestMode: (state, action) => {state.testMode = action.payload},
     setBulkSearchMode: (state, action) => {state.bulkSearchMode = action.payload},
     setUserSearchKey: (state, action) => {state.userSearchKey = action.payload},
-    setApiKey: (state, action) => {state.apiKey = action.payload},
+    setApiKey: (state, action) => {
+      console.log(action.payload)
+      state.apiKey = action.payload
+    },
+    setApiKeyStale: (state, action) => {state.apiKeyStale = action.payload}
   },
 
 })
