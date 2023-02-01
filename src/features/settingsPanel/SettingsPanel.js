@@ -9,6 +9,8 @@ import SpinnerButton from '../../components/SpinnerButton'
 import CurrencyInput from 'react-currency-input-field';
 import { setPriorSearch } from '../search/searchSlice'
 import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager'
+// import { googlePlacesApiManager2 } from '../../googleAPI/googlePlacesApiManagerWeb'
+
 import { settingsPanelActions } from './settingsPanelSlice'
 import { alertDialog, confirmationDialog } from '../modal/modalSlice'
 import { ModalBuilder } from '../modal/ModalBuilder'
@@ -311,11 +313,9 @@ function renderTypeOptions() {
             />
 
             <SpinnerButton
-              func={googlePlacesApiManager.updateGoogleApi}
-              funcArgs={[apiKey]}
               height='15px'
               width='47px'
-              onClick={() => dispatch(setApiKeyStale(false))}
+              onClick={() => {googlePlacesApiManager.updateGoogleApi(apiKey)}}
               buttonStyle={{backgroundColor: apiKeyStale ? '#fde0e0' : 'none'}}
               buttonKey={apiKeyStale}
               disabled={testMode}

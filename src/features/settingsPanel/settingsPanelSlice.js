@@ -33,7 +33,12 @@ export const settingsPanelSlice = createSlice({
       let randomKey = makeid(18)
       state.userSearchKey = randomKey
     },
-    ["search/nearbySearch/fulfilled"]: (state) => {state.budgetUsed += .032},
+    // ["search/nearbySearch/fulfilled"]: (state) => {state.budgetUsed += .032},
+    ["searchSlice/setSearchData"]: (state) => {
+      console.log("setSearchData from settingsPanelSlice")
+      state.budgetUsed += .032
+    },
+
     ["searchSlice/loadStateFromFile"]: (state, action) => {
       let file = action.payload
 

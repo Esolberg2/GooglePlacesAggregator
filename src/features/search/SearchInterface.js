@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { DrawPolygonMode } from 'react-map-gl-draw';
 import { FilePicker } from '../../components/FilePicker.js'
-import { setBulkSearchCount } from './searchSlice'
+import { setBulkSearchCount, getData } from './searchSlice'
+import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager'
 
 export function SearchInterface(props) {
   const dispatch = useDispatch()
@@ -81,6 +82,20 @@ export function SearchInterface(props) {
                 style={{padding: '5px', margin: '5px', width: '150px'}}
                 >
                 Single Search
+                </button>
+
+              <button
+                onClick={() => {googlePlacesApiManager.nearbySearch()}}
+                style={{padding: '5px', margin: '5px', width: '150px'}}
+                >
+                Single Search new
+                </button>
+
+              <button
+                onClick={() => console.log(window.google)}
+                style={{padding: '5px', margin: '5px', width: '150px'}}
+                >
+                Window.google
                 </button>
             </div>
 

@@ -1,55 +1,34 @@
-
 import * as turf from '@turf/turf'
 import { store } from '../store'
 import { dummyGoogleCall } from './dummyCall.js'
 import { settingsPanelActions } from '../features/settingsPanel/settingsPanelSlice'
 import { nearbySearch as nearbySearchThunk } from '../features/search/searchSlice'
 
-
-function testOutput(data) {
-	console.log(data)
-}
-
-
 class GooglePlacesApiManager {
 
 	constructor() {
-		this.tag = undefined
-		this.map = undefined
+    // this.service = undefined;
+    this.tag = undefined;
 		this.service = undefined
 
-		// create library callBackScript
-		this.callBackScript = document.createElement('script');
-		this.callBackScript.text = function callback(results, status) {
+		let mapElement = document.createElement('div')
+		mapElement.id = "map"
+		document.body.appendChild(mapElement);
+
+
+		let callBackScript = document.createElement('script');
+		callBackScript.text = function callback(results, status) {
 			console.log("callback")
 		}
-		this.callBackScript.async = false;
-		this.callBackScript.defer = false;
-		document.body.appendChild(this.callBackScript);
+		callBackScript.async = false;
+		callBackScript.defer = false;
+		document.body.appendChild(callBackScript);
+	};
 
-	}
-
-	createMap() {
-		// remove existing map.
-		if (this.map) {
-			this.map.parentNode.removeChild(this.map)
-      this.map = null
-    }
-
-		// create map element
-		this.mapElement = document.createElement('div')
-		this.mapElement.id = "map"
-		this.mapElement.async = false;
-    this.mapElement.defer = false;
-		document.body.appendChild(this.mapElement);
-
-	}
-
-	async nearbySearch() {
+  async nearbySearch() {
 		console.log("running nearbySearch")
 		try {
 			let coords = store.getState().search.nextCenter;
-			console.log(coords)
 	    let searchType = store.getState().settingsPanel.searchEntityType;
 	    let testMode = store.getState().settingsPanel.testMode;
 
@@ -57,52 +36,44 @@ class GooglePlacesApiManager {
 	    	let rawData = dummyGoogleCall()
 				return rawData
 	    }
-
-			let origin = {lat: coords[1], lng: coords[0]};
-			let request = {
-	      location: origin,
+	    let request = {
+	      location: new window.google.maps.LatLng(coords[1],coords[0]),
 	      rankBy: window.google.maps.places.RankBy.DISTANCE,
 	      type: searchType
 	      };
 
-			function dataHandler(results) {
-					results.forEach((item, i) => {
-						delete item.opening_hours
-						delete item.permanently_closed
-					});
+			// let service = new window.google.maps.places.PlacesService(document.getElementById('map'));
 
-					results = JSON.parse(JSON.stringify(results))
-
-	        let lastLat = results[results.length-1].geometry.location.lat
-	        let lastLon = results[results.length-1].geometry.location.lng
+			function callback(results) {
+				console.log(results)
+	        let lastLat = results[results.length-1].geometry.location.lat()
+	        let lastLon = results[results.length-1].geometry.location.lng()
 	        let from = turf.point(coords);
 	        let to = turf.point([lastLon, lastLat]);
 	        let options = {units: 'miles'};
 	        let distance = turf.distance(from, to, options);
 	        let data =  {"radius": distance, "googleData": results}
-					// store.dispatch(nearbySearchThunk(data))
-					console.log(data)
-					testOutput(data)
+					store.dispatch(nearbySearchThunk(data))
 	        }
-
-			console.log(this.service.nearbySearch(request, dataHandler));
+			console.log('running nearby search')
+			this.service.nearbySearch(request, callback);
 		}
 		catch (error) {
 			console.log(error)
 		}
 	}
 
-	updateGoogleApi(apiKey) {
+
+  updateGoogleApi(apiKey) {
 		if (store.getState().settingsPanel.googlePlacesLibLoading) {
       return;
     };
 
 		store.dispatch(settingsPanelActions.setGooglePlacesLibLoading(true))
-
     this.removeGoogle();
     this.tag = document.createElement('script');
     this.tag.type = 'text/javascript';
-    this.tag.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=places&callback=callback`;
+    this.tag.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=places&callback=callback&fields=[business_status]`;
     this.tag.id = 'googleMaps';
     this.tag.async = false;
     this.tag.defer = false;
@@ -111,9 +82,6 @@ class GooglePlacesApiManager {
 			this.service = new window.google.maps.places.PlacesService(document.getElementById('map'));
 		}
     document.body.appendChild(this.tag);
-
-		// rebuild the map and service
-		this.createMap();
   }
 
   async removeGoogle() {
@@ -121,8 +89,7 @@ class GooglePlacesApiManager {
       await delete window.google
     }
     if (this.tag) {
-			this.tag.parentNode.removeChild(this.tag)
-      // this.tag.remove()
+      this.tag.remove()
       this.tag = null
     }
   }
