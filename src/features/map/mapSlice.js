@@ -48,8 +48,13 @@ export const mapSlice = createSlice({
   name: 'map',
   initialState,
   extraReducers: {
-    ["search/nearbySearch/fulfilled"]: (state, action) => {
+    // ["search/nearbySearch/fulfilled"]: (state, action) => {
+    //   console.log(action.payload)
+    //   state.searchedAreas.features = [...state.searchedAreas.features, buildCoordJSON(action.payload.lastSearchPerimeter)]
+    // },
+    ["searchSlice/setSearchData"]: (state, action) => {
       console.log(action.payload)
+      console.log("setSearchData from mapSlice")
       state.searchedAreas.features = [...state.searchedAreas.features, buildCoordJSON(action.payload.lastSearchPerimeter)]
     },
     ["loadStateFromFile"]: (state, action) => {

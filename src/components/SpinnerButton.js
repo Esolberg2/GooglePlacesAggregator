@@ -35,7 +35,8 @@ const SpinnerButton = (props) => {
     children,
     func,
     funcArgs,
-    loading
+    loading,
+    onClick
   } = props
 
   const [inputUpdated, setInputUpdated] = useState(false)
@@ -85,16 +86,7 @@ const SpinnerButton = (props) => {
     <div style={{}}>
       <button
         key={props.buttonKey}
-        onClick={() => {
-          // setLoading(true)
-
-          // googlePlacesApiManager.updateGoogleApi(funcArgs[0]).then((res) => {
-          //   console.log("done loading")
-          // })
-
-          googlePlacesApiManager.updateGoogleApi(funcArgs[0])
-
-        }}
+        onClick={onClick}
         style={{...{padding: '5px', margin: '5px', whiteSpace: 'nowrap'}, ...buttonStyle}}
         disabled={props.disabled}
         >

@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import * as turf from '@turf/turf'
 import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager'
+import { dummyGoogleCall } from '../../googleAPI/dummyCall.js'
+
 import { checksumManager } from '../../data/checksumManager'
 import { callbackDict, confirmPromise } from '../modal/modalSlice'
 import axios from 'axios'
@@ -14,6 +16,7 @@ const initialState = {
 
 // == api data ==
   searchID: '',
+  // lon lat
   nextCenter: null,
   lastSearchRadius: null,
   searchedCoords: [],
@@ -27,23 +30,6 @@ const initialState = {
   bulkSearchCount: 0,
 }
 
-
-// ============= Thunks ==================
-
-// export const setPriorSearch = createAsyncThunk('search/setPriorSearch',(args, b) => {
-//
-//   if (b.getState().map.polygons.length > 0 || b.getState().search.googleData.length != 0 || b.getState().search.searchedCoords.length != 0 || b.getState().search.unsearchedCoords.length != 0) {
-//
-//   }
-//   if (b.getState().search.loading) {
-//     console.log("aborted")
-//     b.abort()
-//   } else {
-//     console.log("allowed")
-//     target()
-//   }
-// })
-
 export const debounce = createAsyncThunk('search/debounce',(target, b) => {
   if (b.getState().search.loading) {
     console.log("aborted")
@@ -56,10 +42,7 @@ export const debounce = createAsyncThunk('search/debounce',(target, b) => {
 
 export const initializeSearch = createAsyncThunk('search/initializeSearch',(a, b) => {
   const polygonCoordinates = b.getState().map.polygonCoordinates
-  console.log(polygonCoordinates)
-
   const searchResolution = b.getState().settingsPanel.searchResolution
-  console.log(searchResolution)
 
   return axios
     .post(`/api/searchSession`, {
@@ -73,66 +56,119 @@ export const initializeSearch = createAsyncThunk('search/initializeSearch',(a, b
     })
 })
 
+function searchCallback(results, status, thunkAPI) {
+  let testMode = thunkAPI.getState().settingsPanel.testMode
+  if (testMode || status == window.google.maps.places.PlacesServiceStatus.OK) {
+    console.log(results)
+    results.forEach((item, i) => {
+      delete item.opening_hours
+      delete item.permanently_closed
+    });
 
+    results = JSON.parse(JSON.stringify(results))
+    let testRadius = Math.random() * (1.5 - .1) + .1;
+    let center = thunkAPI.getState().search.nextCenter
+    let searchID = thunkAPI.getState().search.searchID
+    let lastLat = results[results.length-1].geometry.location.lat
+    let lastLon = results[results.length-1].geometry.location.lng
 
-// nearby search
-export const nearbySearch = createAsyncThunk('search/nearbySearch', async (a, b) => {
+    let from = turf.point(center);
+    let to = turf.point([lastLon, lastLat]);
+    let options = {units: 'miles'};
 
-  console.log("calling google")
+    let radius = testMode ? testRadius : turf.distance(from, to, options);
 
-  let rawGoogleData = await googlePlacesApiManager.nearbySearch()
-  console.log(rawGoogleData)
-  console.log("google called")
-  try {
-    const center = b.getState().search.nextCenter
-    const searchID = b.getState().search.searchID
-    let options = {
-      steps: 20,
-      units: 'miles',
-      options: {}
-    };
-    console.log(center)
-    console.log(rawGoogleData)
-    let polygon = turf.circle(center, rawGoogleData["radius"], options);
+    let polygon = turf.circle(center, radius, options);
     let searchPerimeter = polygon.geometry.coordinates[0];
-    console.log("sent nearby search")
-    console.log({
-      "circleCoordinates": searchPerimeter,
-      "searchID": searchID,
-      "checksum": checksumManager.dataChecksum()
-      })
-    console.log("data bundle done")
 
-    let data = await axios
+    processGoogleData(searchID, searchPerimeter)
+      .then((apiData) => {
+        thunkAPI.dispatch(setSearchData(
+          {
+            "lastSearchPerimeter": searchPerimeter,
+            "googleData": results,
+            "apiData": apiData.data
+          }
+        ))
+      })
+      .then(() => {thunkAPI.fulfillWithValue(true)})
+      .catch( async (error) => {
+        console.log(error)
+        if (error.response.status == 409) {
+          await thunkAPI.dispatch(syncBackend())
+        }
+        console.log("FAILED TO SYNC")
+        thunkAPI.abort()
+        return false
+      })
+    }
+  }
+
+
+function processGoogleData(searchID, searchPerimeter) {
+  let options = {
+    steps: 20,
+    units: 'miles',
+    options: {}
+  };
+  return axios
     .put(`/api/searchSession`, {
       "circleCoordinates": searchPerimeter,
       "searchID": searchID,
       "checksum": checksumManager.dataChecksum()
-      })
-      .then((result) => {
-        return {
-          "lastSearchPerimeter": searchPerimeter,
-          "googleData": rawGoogleData.googleData,
-          "apiData": result.data
-        }
-        return result
-      })
-      .catch((error) => {
-        console.log("put catch")
-        if (error.response.status == 409) {
-          b.dispatch(syncBackend())
-        } else {
-
-        }
-        b.abort()
-        return false
-      })
-
-      return data
+    })
   }
-  catch (error) {
-    console.log(error)
+
+export const searchPlaces = createAsyncThunk('search/searchPlaces', async (a, b) => {
+
+  let coords = b.getState().search.nextCenter;
+  let searchType = b.getState().settingsPanel.searchEntityType;
+
+  if (b.getState().settingsPanel.testMode) {
+    searchCallback(dummyGoogleCall(), null, b)
   }
+  else {
+    let origin = {lat: coords[1], lng: coords[0]};
+    let request = {
+      location: origin,
+      rankBy: window.google.maps.places.RankBy.DISTANCE,
+      type: searchType
+      };
+    let service = googlePlacesApiManager.service
+    service.nearbySearch(request, (result, status) => searchCallback(result, status, b));
+  }
+})
+
+
+export const bulkSearch = createAsyncThunk('search/bulkSearch', async (a, b) => {
+  let i = 0;
+
+  while (i < b.getState().search.bulkSearchCount && b.getState().search.unsearchedCoords.length != 0) {
+    let coords = b.getState().search.nextCenter;
+    let searchType = b.getState().settingsPanel.searchEntityType;
+
+    if (b.getState().settingsPanel.testMode) {
+      await searchCallback(dummyGoogleCall(), null, b)
+    }
+    else {
+      let origin = {lat: coords[1], lng: coords[0]};
+      let request = {
+        location: origin,
+        rankBy: window.google.maps.places.RankBy.DISTANCE,
+        type: searchType
+        };
+      let service = googlePlacesApiManager.service
+      service.nearbySearch(request, async (result, status) => await searchCallback(result, status, b));
+    }
+    i += 1
+  }
+})
+
+
+
+
+export const nearbySearch = createAsyncThunk('search/nearbySearch', async (rawGoogleData, b) => {
+  console.log("placeholder")
 })
 
 // load search
@@ -166,8 +202,18 @@ export const searchSlice = createSlice({
   name: 'searchSlice',
   initialState,
   extraReducers: (builder) => {
-    // initialize search
-        //pending
+    builder.addCase(searchPlaces.pending, (state, action) => {
+      state.loading = true
+      state.error = ''
+    })
+    builder.addCase(searchPlaces.fulfilled, (state, action) => {
+      console.log(action.payload)
+      state.error = ''
+    })
+    builder.addCase(searchPlaces.rejected, (state, action) => {
+      state.loading = false
+      state.error = action.error.message
+    })
     builder.addCase(initializeSearch.pending, (state) => {
       state.loading = true
       state.searchActive = true
@@ -217,15 +263,17 @@ export const searchSlice = createSlice({
     //load search
         //pending
     builder.addCase(syncBackend.pending, (state, action) => {
-      state.loading = true
+      console.log("syncBackend started")
     })
         //success
     builder.addCase(syncBackend.fulfilled, (state, action) => {
+      console.log("syncBackend fulfilled")
       state.loading = false
       state.error = ''
     })
         //fail
     builder.addCase(syncBackend.rejected, (state, action) => {
+      console.log("syncBackend rejected")
       state.loading = false
       state.error = action.error.message
     })
@@ -252,6 +300,15 @@ export const searchSlice = createSlice({
     setSearchComplete: (state, action) => {state.searchComplete = action.payload},
     setBulkSearchCount: (state, action) => {state.bulkSearchCount = action.payload},
     setBulkSearchMode: (state, action) => {state.bulkSearchMode = action.payload},
+    setSearchData: (state, action) => {
+      console.log("setSearchData complete")
+      console.log(action.payload)
+      state.loading = false
+      state.nextCenter = action.payload.apiData.center
+      state.searchedCoords = action.payload.apiData.searched
+      state.unsearchedCoords = action.payload.apiData.unsearched
+      state.googleData = [...state.googleData, ...action.payload.googleData]
+    }
   },
 })
 
@@ -264,5 +321,6 @@ export const {
   setBulkSearchMode,
   loadStateFromFile,
   setPriorSearch,
+  setSearchData
 } = searchSlice.actions
 export default searchSlice.reducer

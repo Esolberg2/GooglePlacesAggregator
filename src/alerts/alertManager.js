@@ -125,14 +125,14 @@ class AlertManager {
   };
 
   _googleInitError(args) {
-    if (!store.getState().settingsPanel.testMode) {
-      if (!window.google) {
-        return {
-          text: 'Please make sure to enter your Google API key, and load it into your search using the "Set Key" button.',
-          type: 'Alert'
-        }
-      }
-    }
+    // if (!store.getState().settingsPanel.testMode) {
+    //   if (!window.google) {
+    //     return {
+    //       text: 'Please make sure to enter your Google API key, and load it into your search using the "Set Key" button.',
+    //       type: 'Alert'
+    //     }
+    //   }
+    // }
     return false;
   };
 
