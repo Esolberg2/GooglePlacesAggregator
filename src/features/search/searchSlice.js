@@ -10,6 +10,7 @@ import axios from 'axios'
 const initialState = {
 // == api call meta ==
   loading: false,
+  nearbySearchComplete: false,
   error: '',
   searchActive: false,
   priorSearch: false,
@@ -56,7 +57,60 @@ export const initializeSearch = createAsyncThunk('search/initializeSearch',(a, b
     })
 })
 
-function searchCallback(results, status, thunkAPI) {
+// const searchCallback = (results, status, thunkAPI) => new Promise((resolve, reject) => {
+//
+//   let testMode = thunkAPI.getState().settingsPanel.testMode
+//   if (testMode || status == window.google.maps.places.PlacesServiceStatus.OK) {
+//     console.log(results)
+//     results.forEach((item, i) => {
+//       delete item.opening_hours
+//       delete item.permanently_closed
+//     });
+//
+//     results = JSON.parse(JSON.stringify(results))
+//     let testRadius = Math.random() * (1.5 - .1) + .1;
+//     let center = thunkAPI.getState().search.nextCenter
+//     let searchID = thunkAPI.getState().search.searchID
+//     let lastLat = results[results.length-1].geometry.location.lat
+//     let lastLon = results[results.length-1].geometry.location.lng
+//
+//     let from = turf.point(center);
+//     let to = turf.point([lastLon, lastLat]);
+//     let options = {units: 'miles'};
+//
+//     let radius = testMode ? testRadius : turf.distance(from, to, options);
+//
+//     let polygon = turf.circle(center, radius, options);
+//     let searchPerimeter = polygon.geometry.coordinates[0];
+//
+//     processGoogleData(searchID, searchPerimeter)
+//       .then((apiData) => {
+//         thunkAPI.dispatch(setSearchData(
+//           {
+//             "lastSearchPerimeter": searchPerimeter,
+//             "googleData": results,
+//             "apiData": apiData.data
+//           }
+//         ))
+//         resolve()
+//       })
+//       .catch((error) => {
+//         console.log(error)
+//         if (error.response.status == 409) {
+//           thunkAPI.dispatch(syncBackend())
+//         }
+//         console.log("FAILED TO SYNC")
+//         thunkAPI.abort()
+//         return false
+//       })
+//     }
+//
+// })
+//
+
+
+function searchCallback(results, status, thunkAPI, resolve){
+
   let testMode = thunkAPI.getState().settingsPanel.testMode
   if (testMode || status == window.google.maps.places.PlacesServiceStatus.OK) {
     console.log(results)
@@ -90,20 +144,20 @@ function searchCallback(results, status, thunkAPI) {
             "apiData": apiData.data
           }
         ))
+        resolve(apiData)
       })
-      .then(() => {thunkAPI.fulfillWithValue(true)})
-      .catch( async (error) => {
+      .catch((error) => {
         console.log(error)
         if (error.response.status == 409) {
-          await thunkAPI.dispatch(syncBackend())
+          thunkAPI.dispatch(syncBackend())
         }
         console.log("FAILED TO SYNC")
         thunkAPI.abort()
         return false
       })
     }
-  }
 
+}
 
 function processGoogleData(searchID, searchPerimeter) {
   let options = {
@@ -119,24 +173,31 @@ function processGoogleData(searchID, searchPerimeter) {
     })
   }
 
-export const searchPlaces = createAsyncThunk('search/searchPlaces', async (a, b) => {
-
+export const searchPlaces = createAsyncThunk('search/searchPlaces', async (finished, b) => {
+  b.dispatch(setNearbySearchComplete(false))
   let coords = b.getState().search.nextCenter;
   let searchType = b.getState().settingsPanel.searchEntityType;
+  let origin = {lat: coords[1], lng: coords[0]};
+  let request = {
+    location: origin,
+    // rankBy: window.google.maps.places.RankBy.DISTANCE,
+    rankBy: 1,
+    type: searchType
+    };
 
-  if (b.getState().settingsPanel.testMode) {
-    searchCallback(dummyGoogleCall(), null, b)
-  }
-  else {
-    let origin = {lat: coords[1], lng: coords[0]};
-    let request = {
-      location: origin,
-      rankBy: window.google.maps.places.RankBy.DISTANCE,
-      type: searchType
-      };
-    let service = googlePlacesApiManager.service
-    service.nearbySearch(request, (result, status) => searchCallback(result, status, b));
-  }
+  new Promise((resolve, reject) => {
+    if (b.getState().settingsPanel.testMode) {
+      dummyGoogleCall(request, (result, status) => searchCallback(result, status, b, resolve))
+    }
+    else {
+      let service = googlePlacesApiManager.service
+      let func = service.nearbySearch
+      service.nearbySearch(request, (result, status) => searchCallback(result, status, b, resolve));
+    }
+  }).then((out) => {
+    console.log(out)
+    finished()
+  })
 })
 
 
@@ -300,9 +361,11 @@ export const searchSlice = createSlice({
     setSearchComplete: (state, action) => {state.searchComplete = action.payload},
     setBulkSearchCount: (state, action) => {state.bulkSearchCount = action.payload},
     setBulkSearchMode: (state, action) => {state.bulkSearchMode = action.payload},
+    setNearbySearchComplete: (state, action) => {state.nearbySearchComplete = action.payload},
     setSearchData: (state, action) => {
       console.log("setSearchData complete")
       console.log(action.payload)
+      state.nearbySearchComplete = true
       state.loading = false
       state.nextCenter = action.payload.apiData.center
       state.searchedCoords = action.payload.apiData.searched
@@ -321,6 +384,7 @@ export const {
   setBulkSearchMode,
   loadStateFromFile,
   setPriorSearch,
-  setSearchData
+  setSearchData,
+  setNearbySearchComplete
 } = searchSlice.actions
 export default searchSlice.reducer

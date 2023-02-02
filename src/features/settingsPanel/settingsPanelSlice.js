@@ -34,6 +34,7 @@ export const settingsPanelSlice = createSlice({
       state.userSearchKey = randomKey
     },
     // ["search/nearbySearch/fulfilled"]: (state) => {state.budgetUsed += .032},
+    // ["search/searchPlaces/fulfilled"]: (state) => {state.budgetUsed += .032},
     ["searchSlice/setSearchData"]: (state) => {
       console.log("setSearchData from settingsPanelSlice")
       state.budgetUsed += .032
