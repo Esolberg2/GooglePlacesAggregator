@@ -21,7 +21,8 @@ class GooglePlacesApiManager {
 		// create library callBackScript
 		this.callBackScript = document.createElement('script');
 		this.callBackScript.text = function callback(results, status) {
-			console.log("callback")
+			console.log("callback results")
+			console.log(results)
 		}
 		this.callBackScript.async = false;
 		this.callBackScript.defer = false;
@@ -85,7 +86,13 @@ class GooglePlacesApiManager {
 					testOutput(data)
 	        }
 
-			console.log(this.service.nearbySearch(request, dataHandler));
+			function* callback(results) {
+			  yield new Promise((resolve, reject) => {
+			    resolve(results)
+			  })
+			} 
+
+			this.service.nearbySearch(request, callback);
 		}
 		catch (error) {
 			console.log(error)

@@ -15,5 +15,6 @@ export function singleSearch() {
 }
 
 export function debouncedSingleSearch() {
+  console.log("debounce single search")
   store.dispatch(debounce(singleSearch))
 }

@@ -52,6 +52,11 @@ export const mapSlice = createSlice({
     //   console.log(action.payload)
     //   state.searchedAreas.features = [...state.searchedAreas.features, buildCoordJSON(action.payload.lastSearchPerimeter)]
     // },
+    // ["search/searchPlaces/fulfilled"]: (state, action) => {
+    //   console.log(action.payload)
+    //   console.log("setSearchData from mapSlice")
+    //   state.searchedAreas.features = [...state.searchedAreas.features, buildCoordJSON(action.payload.lastSearchPerimeter)]
+    // },
     ["searchSlice/setSearchData"]: (state, action) => {
       console.log(action.payload)
       console.log("setSearchData from mapSlice")
