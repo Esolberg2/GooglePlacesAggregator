@@ -35,7 +35,6 @@ import { triggerAlertFor } from "./helperFunctions/arg_Checker"
 import { axiosPutPostData } from "./helperFunctions/axios_Helpers"
 import { buildSearch, nextSearch } from "./helperFunctions/server_API_Helpers"
 import { initializeSearch as initializeSearchSlice } from './features/search/searchSlice'
-import { nearbySearch as nearbySearchSlice } from './features/search/searchSlice'
 import { loadStateFromFile, setBulkSearchCount, setPriorSearch } from './features/search/searchSlice'
 import { mapActions } from './features/map/mapSlice'
 import { ConfirmationModal } from './features/modal/Confirmation'
@@ -835,79 +834,6 @@ const App = () => {
   function onChangeUserKey(e) {
     setUserSearchKey(e.target.value)
   }
-
-  function interfaceOptions() {
-    return (
-      <div style={{padding: '20px'}}>
-        <SettingsButton
-          onClick={() => {dispatch(setPriorSearch(false))}}
-          >
-          New Search
-          </SettingsButton>
-
-        <SettingsButton
-          onClick={() => {
-            if (newSearch) {dispatch(setPriorSearch(true))}}}
-          >
-          Load Prior Search
-          </SettingsButton>
-
-        <SettingsButton
-          onClick={(e) => exportToJson(e)}
-          >
-          Download Data
-          </SettingsButton>
-
-        <SettingsButton
-          onClick={(e) => existingDataWarning(e)}
-          >
-          Clear Search
-          </SettingsButton>
-
-        <SettingsButton
-          onClick={(e) => dispatch(setPolygonCoordinates(getPolygons()))}
-          >
-          getPolygons
-          </SettingsButton>
-
-        <SettingsButton
-          onClick={(e) => dispatch(initializeSearchSlice())}
-          >
-          initialize search
-          </SettingsButton>
-
-        <SettingsButton
-          onClick={() => {
-            console.log("updateGoogleApi")
-            googlePlacesApiManager.updateGoogleApi('AIzaSyBhJRgpD2FTMa8_q68645LQRb2qNVD6wlE')
-            }
-          }
-          >
-          load google service
-          </SettingsButton>
-
-        <SettingsButton
-          onClick={() => {googlePlacesApiManager.removeGoogle()}}
-          >
-          remove google
-          </SettingsButton>
-
-        <SettingsButton
-          onClick={() => {
-            dispatch(alertDialog(
-              {
-                "target": () => {dispatch(nearbySearchSlice())},
-                "alertKey": "search"
-              }))
-            }
-          }
-          >
-          nearby search
-          </SettingsButton>
-      </div>
-    )
-  }
-
 
 
   function existingDataWarning() {
