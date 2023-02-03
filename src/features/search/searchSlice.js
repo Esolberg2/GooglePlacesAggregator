@@ -113,7 +113,6 @@ function searchCallback(results, status, thunkAPI, resolve){
 
   let testMode = thunkAPI.getState().settingsPanel.testMode
   if (testMode || status == window.google.maps.places.PlacesServiceStatus.OK) {
-    console.log(results)
     results.forEach((item, i) => {
       delete item.opening_hours
       delete item.permanently_closed
@@ -156,7 +155,6 @@ function searchCallback(results, status, thunkAPI, resolve){
         return false
       })
     }
-
 }
 
 function processGoogleData(searchID, searchPerimeter) {
@@ -180,7 +178,6 @@ export const searchPlaces = createAsyncThunk('search/searchPlaces', async (finis
   let origin = {lat: coords[1], lng: coords[0]};
   let request = {
     location: origin,
-    // rankBy: window.google.maps.places.RankBy.DISTANCE,
     rankBy: 1,
     type: searchType
     };
@@ -225,12 +222,6 @@ export const bulkSearch = createAsyncThunk('search/bulkSearch', async (a, b) => 
   }
 })
 
-
-
-
-export const nearbySearch = createAsyncThunk('search/nearbySearch', async (rawGoogleData, b) => {
-  console.log("placeholder")
-})
 
 // load search
 export const syncBackend = createAsyncThunk('search/syncBackend', async (a, b) => {
@@ -297,28 +288,6 @@ export const searchSlice = createSlice({
       state.loading = false
       state.error = action.error.message
       state.searchActive = false
-    })
-
-    // nearby search
-        //pending
-    builder.addCase(nearbySearch.pending, (state) => {
-      state.loading = true
-    })
-        //success
-    builder.addCase(nearbySearch.fulfilled, (state, action) => {
-      console.log("received nearby searc")
-      console.log(action.payload)
-      state.loading = false
-      state.error = ''
-      state.nextCenter = action.payload.apiData.center
-      state.searchedCoords = action.payload.apiData.searched
-      state.unsearchedCoords = action.payload.apiData.unsearched
-      state.googleData = [...state.googleData, ...action.payload.googleData]
-    })
-        //fail
-    builder.addCase(nearbySearch.rejected, (state, action) => {
-      state.loading = false
-      state.error = action.error.message
     })
 
     //load search

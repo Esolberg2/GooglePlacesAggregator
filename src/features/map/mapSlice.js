@@ -25,13 +25,6 @@ function buildCoordJSON(coords) {
   }
 }
 
-// export const deletePolygon = createAsyncThunk('map/deletePolygon', async (editorRef, b) => {
-//   await editorRef.current.deleteFeatures(b.state.selectedFeatureIndex);
-//   b.dispatch(setSelectedFeatureIndex(null))
-//   let data = editorRef.current.getFeatures()
-//   b.dispatch(mapActions.setPolygonCoordinates(data))
-// })
-
 export const deletePolygon = createAsyncThunk('map/deletePolygon', (args, b) => {
   let polygons = b.getState().map.mapPolygons
   let index = b.getState().map.selectedFeatureIndex
