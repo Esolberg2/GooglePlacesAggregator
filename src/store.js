@@ -38,5 +38,8 @@ export const store = configureStore({
   reducer: rootReducer,
 })
 
+if (window.Cypress) {
+  window.store = store
+}
 
 export default store

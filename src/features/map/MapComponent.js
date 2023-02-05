@@ -54,7 +54,9 @@ export const MapComponent = React.forwardRef((props, ref) => {
   })
 
   // callbacks
-  const _onViewportChange = viewport => setViewPort({...viewport, transitionDuration: 0 })
+  const _onViewportChange = viewport => {
+    // console.log(viewport)
+    setViewPort({...viewport, transitionDuration: 0 })}
 
   const onSelect = useCallback(options => {
     dispatch(setSelectedFeatureIndex(options && options.selectedFeatureIndex))
@@ -66,6 +68,16 @@ export const MapComponent = React.forwardRef((props, ref) => {
       editorRef.current.addFeatures(mapPolygons)
     }
   }, [fileData, mapPolygons])
+
+  useEffect(() => {
+    setViewPort({
+        ...viewport,
+        transitionDuration: 0,
+        latitude: 42.35573177233323,
+        longitude: -71.15248312858093,
+        zoom: 10
+       })
+  }, [])
 
 
   function onDelete() {

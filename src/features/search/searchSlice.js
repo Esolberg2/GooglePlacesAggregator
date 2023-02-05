@@ -193,7 +193,7 @@ export const searchPlaces = createAsyncThunk('search/searchPlaces', async (finis
     }
   }).then((out) => {
     console.log(out)
-    finished()
+    // finished()
   })
 })
 
