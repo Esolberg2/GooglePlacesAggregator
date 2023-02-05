@@ -171,7 +171,7 @@ function processGoogleData(searchID, searchPerimeter) {
     })
   }
 
-export const searchPlaces = createAsyncThunk('search/searchPlaces', async (finished, b) => {
+export const searchPlaces = createAsyncThunk('search/searchPlaces', (finished, b) => {
   b.dispatch(setNearbySearchComplete(false))
   let coords = b.getState().search.nextCenter;
   let searchType = b.getState().settingsPanel.searchEntityType;
@@ -193,7 +193,8 @@ export const searchPlaces = createAsyncThunk('search/searchPlaces', async (finis
     }
   }).then((out) => {
     console.log(out)
-    // finished()
+    finished()
+    return
   })
 })
 
