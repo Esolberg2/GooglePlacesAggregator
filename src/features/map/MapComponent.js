@@ -147,7 +147,7 @@ export const MapComponent = React.forwardRef((props, ref) => {
       </MapGL>
       <div style={{backdropFilter: 'blur(20px)', borderBottomRightRadius: '10px', position: 'absolute', alingSelf: 'flex-start'}}>
         <div style={{fontWeight: 'bold', paddingTop: '10px', display: 'flex', justifyContent: 'center'}}>
-          test
+          {"New Search" ? !priorSearch : "Prior Search"}
         </div>
         <SearchInterface
         setMode={setMode}

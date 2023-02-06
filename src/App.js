@@ -961,17 +961,8 @@ const handleClose = () => setShow(false);
 const handleShow = () => setShow(true);
 
   return (
-      <div style={{ height: '100vh', flex: '1'}}>
+      <div style={{height: '100vh', flex: '1'}}>
         <DialogModal />
-        <div style={{flex: '1', justifyContent: 'center', display: 'flex', marginTop: '20px', fontSize: '25px', fontWeight: 'bold'}}>
-        Google Places Search Helper
-        </div>
-        <div
-          style={{flex: '1', justifyContent: 'center', display: 'flex', margin: '5px', marginBottom: '30px', fontSize: '12px', fontWeight: 'bold', color: '#0000EE', textDecorationLine: 'underline'}}
-          onClick={() => alert(infoMessages["about"])}
-          >
-          About
-        </div>
         <SettingsPanel/>
         <div style={{marginTop: '10px', height: '2px', backgroundColor: 'black', flex: '1'}} />
         <div style={{display: 'flex', height: '100%', flexDirection: 'column'}}>

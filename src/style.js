@@ -58,12 +58,19 @@ export function getFeatureStyle({feature, index, state}) {
 
 const SettingsButton = {
   width: '150px',
-  padding: '5px',
-  margin: '5px',
+  padding: '10px',
+  margin: '2px',
+  borderRadius: '20px',
+  backgroundColor: '#D2FAB8',
+  borderWidth: '0px'
 }
 
 const ButtonDisabled = {
   backgroundColor:'#cccccc'
+}
+
+const ButtonSelected = {
+  backgroundColor:'#51DE3E'
 }
 
 const SettingsDescription = {
@@ -82,11 +89,23 @@ const SettingsTextContainer = {
   flexDirection: 'column',
   alignItems: 'center',
   textAlign: 'center',
-  flex: '1', 
+  flex: '1',
   justifyContent: 'space-between',
 }
 
+const SearchInterfaceButton = {
+  width: '150px',
+  padding: '5px',
+  margin: '5px',
+  borderRadius: '20px',
+  backgroundColor: '#36B569',
+  borderWidth: '0px',
+  textColor: 'red'
+}
+
 export const styles = {
+  SearchInterfaceButton: SearchInterfaceButton,
+  ButtonSelected: ButtonSelected,
   SettingsButton: SettingsButton,
   ButtonDisabled: ButtonDisabled,
   SettingsDescription: SettingsDescription,
