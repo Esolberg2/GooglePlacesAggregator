@@ -4,7 +4,7 @@ import { styles } from '../style'
 export const SettingsTextContainer = (props) => {
   return (
     <div style={{...props.style, ...styles.SettingsTextContainer}}>
-      <div style={{fontWeight: 'bold'}}>
+      <div style={{fontWeight: 'bold', color: '#36B569'}}>
       {props.title}
       </div>
       <div style={styles.SettingsDescription}>

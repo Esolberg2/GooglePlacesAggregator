@@ -4,7 +4,7 @@ import { DrawPolygonMode } from 'react-map-gl-draw';
 import { FilePicker } from '../../components/FilePicker.js'
 import { searchPlaces, setBulkSearchCount, getData } from './searchSlice'
 import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager'
-
+import { SearchInterfaceButton } from '../../components/SearchInterfaceButton'
 export function SearchInterface(props) {
   const dispatch = useDispatch()
   const {
@@ -34,6 +34,10 @@ export function SearchInterface(props) {
     dispatch(setBulkSearchCount(e.target.value))
   }
 
+  function renderTitle(){
+    return !priorSearch  ? "New Search" : "Prior Search"
+  }
+
   function newSearchTools() {
       return (
         <div style={{flex: '1', flexDirection: 'row'}}>
@@ -48,77 +52,53 @@ export function SearchInterface(props) {
             >
 
             <div style={{display: 'flex', flexDirection: 'column'}}>
-              <button
-                onClick={() => {
-                  setMode(new DrawPolygonMode())}
-                }
-                style={{padding: '5px', margin: '5px', width: '150px'}}
-                disabled={searchActive}
-                >
-                Select Search Area
-                </button>
 
-                <button
+
+                <SearchInterfaceButton
+                  onClick={() => {
+                    setMode(new DrawPolygonMode())}
+                  }
+                  style={{padding: '5px', margin: '5px', width: '150px'}}
+                  disabled={searchActive}
+                  >
+                  Select Search Area
+                </SearchInterfaceButton>
+
+                <SearchInterfaceButton
                   title="Delete"
                   onClick={onDelete}
                   style={{padding: '5px', margin: '5px', width: '150px'}}
                   disabled={searchActive}
                   >
                   Delete Search Area
-                  </button>
+                  </SearchInterfaceButton>
             </div>
 
             <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'}}>
-              <button
+              <SearchInterfaceButton
                 onClick={initializeSearch}
                 style={{padding: '5px', margin: '5px', width: '150px'}}
                 disabled={searchActive}
                 >
                 Build Search
-                </button>
+                </SearchInterfaceButton>
 
-              <button
+              <SearchInterfaceButton
                 onClick={nearbySearch}
                 style={{padding: '5px', margin: '5px', width: '150px'}}
                 >
                 Single Search
-                </button>
+                </SearchInterfaceButton>
 
-              <button
-                onClick={() => {googlePlacesApiManager.nearbySearch()}}
-                style={{padding: '5px', margin: '5px', width: '150px'}}
-                >
-                Single Search new
-                </button>
-
-              <button
-                onClick={async () => {
-                  for (let i = 0; i < 4; i++) {
-                    console.log(i)
-                    await dispatch(searchPlaces())
-                  }
-                  // console.log(dispatch(searchPlaces()))
-                }}
-                style={{padding: '5px', margin: '5px', width: '150px'}}
-                >
-                slice searchPlaces
-                </button>
-
-              <button
-                onClick={() => console.log(window.google)}
-                style={{padding: '5px', margin: '5px', width: '150px'}}
-                >
-                Window.google
-                </button>
             </div>
 
             <div style={{display: 'flex', flexDirection: 'column'}}>
-              <button
+              <SearchInterfaceButton
                 onClick={bulkSearch}
                 style={{padding: '5px', margin: '5px', width: '150px'}}
                 >
                 Bulk Search
-                </button>
+                </SearchInterfaceButton>
 
                 <input
                   type="number"
@@ -126,7 +106,7 @@ export function SearchInterface(props) {
                   min="0"
                   onKeyDown={ (evt) => ['e', '.', '-'].includes(evt.key) && evt.preventDefault() }
                   onChange={(e) => onChangeBulkQtyInput(e)}
-                  style={{ padding: '5px', margin: '5px', textAlign: 'center'}}
+                  style={{ borderRadius: '15px', padding: '5px', margin: '5px', textAlign: 'center', borderWidth: '0px'}}
                   placeholder="Bulk Search Qty"
                   />
             </div>
@@ -156,35 +136,35 @@ export function SearchInterface(props) {
             </div>
 
             <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'}}>
-              <button
+              <SearchInterfaceButton
                 onClick={() => buildFromFile()}
                 style={{padding: '5px', margin: '5px', width: '150px'}}
                 disabled={searchActive}
                 >
-                Build Search From File
-                </button>
+                Build Search
+                </SearchInterfaceButton>
 
-              <button
+              <SearchInterfaceButton
                 onClick={nearbySearch}
                 style={{padding: '5px', margin: '5px', width: '150px'}}
                 >
                 Single Search
-                </button>
+                </SearchInterfaceButton>
             </div>
 
             <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'}}>
-              <button
+              <SearchInterfaceButton
                 onClick={() => console.log("bulkSearch()")}
                 style={{padding: '5px', margin: '5px', width: '150px'}}
                 >
                 Bulk Search
-                </button>
+                </SearchInterfaceButton>
               <input
                 type="number"
                 value={bulkSearchCount == 0 ? false : bulkSearchCount}
                 min="0"
                 onKeyDown={ (evt) => ['e', '.', '-'].includes(evt.key) && evt.preventDefault() }
-                onChange={(e) => onChangeBulkQtyInput(e)} style={{ padding: '5px', margin: '5px', textAlign: 'center'}}
+                onChange={(e) => onChangeBulkQtyInput(e)} style={{ borderRadius: '15px', padding: '5px', margin: '5px', textAlign: 'center', borderWidth: '0px'}}
                 placeholder="Bulk Search Qty"
                 />
             </div>
@@ -206,6 +186,9 @@ export function SearchInterface(props) {
   }
 
   return (
-    conditionalRender()
+    <div style={{textAlign: 'center', color: '#36B569', fontWeight: 'bold'}}>
+      {renderTitle()}
+      {conditionalRender()}
+    </div>
   )
 }

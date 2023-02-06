@@ -4,7 +4,7 @@ export const SettingsButton = (props) => {
   return (
     <button
       {...props}
-      style={props.selected ? {...styles.SettingsButton, ...styles.ButtonDisabled} : styles.SettingsButton}
+      style={props.selected ? {...styles.SettingsButton, ...styles.ButtonSelected} : styles.SettingsButton}
       >
       {props.children}
       </button>

@@ -10,11 +10,11 @@ import CurrencyInput from 'react-currency-input-field';
 import { setPriorSearch } from '../search/searchSlice'
 import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager'
 // import { googlePlacesApiManager2 } from '../../googleAPI/googlePlacesApiManagerWeb'
-
 import { settingsPanelActions } from './settingsPanelSlice'
 import { alertDialog, confirmationDialog } from '../modal/modalSlice'
 import { ModalBuilder } from '../modal/ModalBuilder'
 const placeTypes = require('../../data/placeTypes.json');
+const infoMessages = require('../../data/informationText.json');
 
 export function SettingsPanel(props) {
   const dispatch = useDispatch()
@@ -184,7 +184,6 @@ function onChangeAPIkeyInput(e) {
 }
 
 function renderSearchResolution() {
-  if (!priorSearch) {
     return (
       <CurrencyInput
         id="input-example"
@@ -192,185 +191,161 @@ function renderSearchResolution() {
         placeholder="Search Resolution"
         value={searchResolution}
         decimalsLimit={2}
+        disabled={priorSearch}
         onKeyDown = {(evt) => ['e', '-'].includes(evt.key) && evt.preventDefault() }
         onValueChange={handleResolutionChange}
         style={{backgroundColor: resolutionInputColor(), paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', height: '15px', textAlign: 'center'}}
         />
     )
-  } else {
-
-    return (
-      <input
-        type="text"
-        disabled={!priorSearch ? false : true}
-        value={searchResolution ? searchResolution : 'Loaded from File'}
-        style={{ padding: '5px', margin: '5px', textAlign: 'center'}}
-        placeholder="Prior Data File"
-        />
-    )
-  }
 }
 
 function renderTypeOptions() {
   return placeTypes.map(type => <option key={type} value={type}>{type}</option>)
 }
+
   return (
-    <div>
-  <div style={{padding: '20px'}}>
-    <SettingsButton
-      selected={!priorSearch}
-      onClick={() => {
-        // dispatch(setPriorSearch(false))
-        togglePriorSearch(false)
-      }}
-      >
-      New Search
-      </SettingsButton>
+    <div style={{}}>
+      <div style={{display: 'flex'}}>
+        <div style={{display: 'flex', padding: '20px', flexDirection: 'column'}}>
+          <SettingsButton
+            selected={!priorSearch}
+            onClick={() => {
+              // dispatch(setPriorSearch(false))
+              togglePriorSearch(false)
+            }}
+            >
+            New Search
+            </SettingsButton>
 
-    <SettingsButton
-      selected={priorSearch}
-      onClick={() => {
-        if (!priorSearch) {
-          // dispatch(setPriorSearch(true))
-          togglePriorSearch(true)
-        }}}
-      >
-      Load Prior Search
-      </SettingsButton>
+          <SettingsButton
+            selected={priorSearch}
+            onClick={() => {
+              if (!priorSearch) {
+                // dispatch(setPriorSearch(true))
+                togglePriorSearch(true)
+              }}}
+            >
+            Load Prior Search
+            </SettingsButton>
 
-    <SettingsButton
-      onClick={(e) => exportToJson(e)}
-      >
-      Download Data
-      </SettingsButton>
+          <SettingsButton
+            onClick={(e) => exportToJson(e)}
+            >
+            Download Data
+            </SettingsButton>
 
-    <SettingsButton
-      onClick={(e) =>
-        {
-          // existingDataWarning(e)
-          let modalBuilder = new ModalBuilder()
-          modalBuilder.alertKey = 'clearSearch'
-          modalBuilder.callback = (result) => {
-              // console.log("no callback set")
-              dispatch(wrapperActions.reset())
+          <SettingsButton
+            onClick={(e) =>
+              {
+                // existingDataWarning(e)
+                let modalBuilder = new ModalBuilder()
+                modalBuilder.alertKey = 'clearSearch'
+                modalBuilder.callback = (result) => {
+                    // console.log("no callback set")
+                    dispatch(wrapperActions.reset())
 
+                  }
+                modalBuilder.errorback = (error) => {
+                    console.log("reject callback run")
+                    console.log(error)
+                  }
+                modalBuilder.run()
+              }
             }
-          modalBuilder.errorback = (error) => {
-              console.log("reject callback run")
-              console.log(error)
+            >
+          Clear Search
+          </SettingsButton>
+
+        </div>
+        <div style={{flex: '1', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', display: 'flex', fontSize: '25px'}}>
+          Google Places Data Helper
+          <div
+            style={{ margin: '5px', marginBottom: '30px', fontSize: '12px', fontWeight: 'bold', color: '#0000EE', textDecorationLine: 'underline'}}
+            onClick={() => alert(infoMessages["about"])}
+            >
+            About
+          </div>
+        </div>
+    </div>
+
+    <div style={{display: 'flex', flexDirection: 'row'}}>
+      <SettingsTextContainer
+        title={'Test Mode'}
+        description={'Test out the tool without needing a Google API key.  All data generated in Test Mode is complete nonsense.'}
+        style={{display: 'flex', flex: '1'}}
+        >
+          <ToggleSlider
+            onToggle={() => {
+              dispatch(setTestMode(!testMode))
             }
-          modalBuilder.run()
-        }
-      }
-      >
-      Clear Search
-      </SettingsButton>
+            }
+            barBackgroundColorActive={'#40E6AE'}
+            active={testMode}
+            barWidth={75}
+            />
+      </SettingsTextContainer>
 
-    <SettingsButton
-      onClick={() => {
-        console.log("updateGoogleApi")
-        googlePlacesApiManager.updateGoogleApi('AIzaSyBhJRgpD2FTMa8_q68645LQRb2qNVD6wlE')
-        }
-      }
-      >
-      load google service
-      </SettingsButton>
+      <SettingsTextContainer
+        title={'Enter Google API Key'}
+        description={'This API key will need permissoins to Google Maps API and Google Places API.  Your API key is used to make requests directly to the Google API and will not be saved by any component of this website.'}
+        >
+          <div style={{ flex: '1', display: 'flex', flexDirection: 'row', alignItems: 'flex-end'}}>
+            <input
+              value={apiKey}
+              onChange={(e) => dispatch(setApiKey(e.target.value))}
+              style={{ marginLeft: '5px', height: '15px', paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}
+              placeholder="Google API Key"
+              disabled={testMode}
+              />
 
-    <SettingsButton
-      onClick={() => {googlePlacesApiManager.removeGoogle()}}
-      >
-      remove google
-      </SettingsButton>
-  </div>
+              <SpinnerButton
+                height='15px'
+                width='47px'
+                onClick={() => {googlePlacesApiManager.updateGoogleApi(apiKey)}}
+                buttonStyle={{backgroundColor: apiKeyStale ? '#fde0e0' : 'none'}}
+                buttonKey={apiKeyStale}
+                disabled={testMode}
+                loading = {googlePlacesLibLoading}
+                >
+                {apiKeyStale ? 'Set Key' : 'Key Set'}
+              </SpinnerButton>
+          </div>
+      </SettingsTextContainer>
 
-  <div style={{display: 'flex', flexDirection: 'row'}}>
-    <SettingsTextContainer
-      title={'Test Without Google Key'}
-      description={'Use dummy data to try out the tool.'}
-      style={{display: 'flex', flex: '1'}}
-      >
-        <ToggleSlider
-          onToggle={() => {
-            dispatch(setTestMode(!testMode))
-          }
-          }
-          active={testMode}
-          barWidth={75}
-          />
-    </SettingsTextContainer>
+      <SettingsTextContainer
+        title={'Search Entity Type'}
+        description={'These types are dictated by Google, and are limited to one type per search.'}
+        >
+          <select key={searchEntityType} disabled={!priorSearch ? false : true} value={searchEntityType} onChange={handleSelectChange} id="typeSelect" style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}>
+            {renderTypeOptions()}
+          </select>
+      </SettingsTextContainer>
 
-    <SettingsTextContainer
-      title={'Enter Google API Key'}
-      description={'The Key will not be saved and is only used to call the google places API directly.'}
-      >
-        <div style={{ flex: '1', display: 'flex', flexDirection: 'row', alignItems: 'flex-end'}}>
-          <input
-            value={apiKey}
-            onChange={(e) => dispatch(setApiKey(e.target.value))}
-            style={{ marginLeft: '5px', height: '15px', paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}
-            placeholder="Google API Key"
-            disabled={testMode}
+      <SettingsTextContainer
+        title={'Budget'}
+        description={'Use this setting to limit your expenses.  It is also wise to set billing quotas within the Google Cloud Console to ensure no unexpected expenditures are encountered. Enter -1 for unlimited budged: Use this option with EXTREME care'}
+        >
+          <CurrencyInput
+            prefix="$"
+            id="input-example"
+            name="input-name"
+            placeholder="Enter a max budget"
+            defaultValue={budget}
+            value={budget}
+            decimalsLimit={2}
+            onValueChange={(value) => handleBudgetChange(value)}
+            style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '20px', marginBottom: '5px', height: '15px', textAlign: 'center'}}
             />
 
-            <SpinnerButton
-              height='15px'
-              width='47px'
-              onClick={() => {googlePlacesApiManager.updateGoogleApi(apiKey)}}
-              buttonStyle={{backgroundColor: apiKeyStale ? '#fde0e0' : 'none'}}
-              buttonKey={apiKeyStale}
-              disabled={testMode}
-              loading = {googlePlacesLibLoading}
-              >
-              {apiKeyStale ? 'Set Key' : 'Key Set'}
-            </SpinnerButton>
-        </div>
-    </SettingsTextContainer>
+      </SettingsTextContainer>
 
-    <SettingsTextContainer
-      title={'Search Entity Type'}
-      description={'These types are dictated by Google, and are limited to one type per search.'}
+      <SettingsTextContainer
+      title={'Search Resolution'}
+      description={'This is the spacing between search coordinates within the search region. The minimum resolution is 0.1 miles.'}
       >
-        <select key={searchEntityType} disabled={!priorSearch ? false : true} value={searchEntityType} onChange={handleSelectChange} id="typeSelect" style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}>
-          {renderTypeOptions()}
-        </select>
-    </SettingsTextContainer>
-
-    <SettingsTextContainer
-      title={'Budget'}
-      description={'Enter -1 for unlimited budget: use this option with care.'}
-      >
-        <CurrencyInput
-          prefix="$"
-          id="input-example"
-          name="input-name"
-          placeholder="Enter a max budget"
-          defaultValue={budget}
-          value={budget}
-          decimalsLimit={2}
-          onValueChange={(value) => handleBudgetChange(value)}
-          style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '20px', marginBottom: '5px', height: '15px', textAlign: 'center'}}
-          />
-        <SettingsTextContainer title={'Budget Used'}>
-            <CurrencyInput
-              prefix="$"
-              id="input-example"
-              name="input-name"
-              placeholder="0"
-              value={budgetUsed}
-              disabled={true}
-              decimalsLimit={4}
-              style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', height: '15px', textAlign: 'center'}}
-              />
-        </SettingsTextContainer>
-    </SettingsTextContainer>
-
-    <SettingsTextContainer
-    title={'Search Resolution'}
-    description={'This is the spacing between search coordinates within the search region. The minimum resolution is 0.1 miles.'}
-    >
-    {renderSearchResolution()}
-    </SettingsTextContainer>
-  </div>
+      {renderSearchResolution()}
+      </SettingsTextContainer>
+    </div>
   </div>
 )
 
