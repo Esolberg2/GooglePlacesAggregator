@@ -1,22 +1,32 @@
 var md5 = require('md5');
 
+
 // top and bottom scroll positions
 const top = [686, 107]
 const bottom = [546, 961]
 
-it('Build search area, testMode, bulkSearch', { scrollBehavior: false }, () => {
+it('Build search area, live, bulkSearch', { scrollBehavior: false }, () => {
   // load page
 
-  // cy.intercept('PUT', '/api/searchSession').as('routes');
+  cy.intercept('GET', 'https://maps.googleapis.com/maps/api/*').as('mapLibrary');
   cy.intercept({ method: 'PUT', url: ' http://localhost:3000/api/searchSession' }).as("routes");
 
   cy.visit('http://localhost:3000') // change URL to match your dev URL
 
-  // wait for map to initialize defualt location (Boston)
+  cy.get('[style="transition: all 100ms ease 0s; padding-top: 4px; padding-left: 52px;"]').click()
+
+  cy.get('[style="flex: 1 1 0%; display: flex; flex-direction: row; align-items: flex-end;"] > input').type('AIzaSyDrk3576gQUVtPrX92lpQgPUUfJoR6W6BM')
+
   cy.wait(500)
+  cy.get('[style="width: 47px; height: 15px; visibility: visible;"]').click()
+
+  // wait for map to initialize defualt location (Boston)
+  cy.wait('@mapLibrary')
+
+  cy.window().should('have.attr', 'google')
 
   // select an entity type
-  cy.get('#typeSelect').select(4)
+  cy.get('#typeSelect').select(75)
 
   // scroll page to fully expose map
   cy.scrollTo(bottom[0], bottom[1])
@@ -68,4 +78,5 @@ it('Build search area, testMode, bulkSearch', { scrollBehavior: false }, () => {
     cy.get('@coordsSet').should('have.length', 4)
 
     })
+
 })
