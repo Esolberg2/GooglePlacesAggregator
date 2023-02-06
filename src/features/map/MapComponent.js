@@ -12,6 +12,7 @@ import { debouncedBulkSearch } from '../../functions/bulkSearch'
 import { debouncedSingleSearch } from '../../functions/singleSearch'
 import { buildFromFile } from '../../functions/buildFromFile'
 
+
 const searchedAreaStyle = {
   id: 'searchedAreaLayers',
   type: 'fill',

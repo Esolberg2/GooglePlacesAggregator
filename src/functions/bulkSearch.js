@@ -10,7 +10,7 @@ function bulkSearch() {
   let modalBuilder = new ModalBuilder()
   modalBuilder.alertKey = 'bulkSearch'
   modalBuilder.callback = async () => {
-    for (let i=0; i < 3; i++) {
+    for (let i=0; i < store.getState().search.bulkSearchCount; i++) {
       await synchronizedCall()
     }
   }
