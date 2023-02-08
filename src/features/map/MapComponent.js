@@ -41,6 +41,7 @@ export const MapComponent = React.forwardRef((props, ref) => {
 
   // refs
   const mapRef = useRef();
+  const geocoderContainerRef = useRef();
   const editorRef = useRef();
 
   // local state
@@ -124,6 +125,7 @@ export const MapComponent = React.forwardRef((props, ref) => {
 
        <Geocoder
           mapRef={mapRef}
+          containerRef={geocoderContainerRef}
           onViewportChange={handleGeocoderViewportChange}
           mapboxApiAccessToken={TOKEN}
           position='top-right'

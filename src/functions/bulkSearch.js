@@ -3,16 +3,15 @@ import { searchPlaces, bulkSearch as bulkSearchThunk, nearbySearch, debounce } f
 import { store } from '../store'
 
 const synchronizedCall = () => new Promise((resolve, reject) => {
-  store.dispatch(searchPlaces(resolve))
+  store.dispatch(bulkSearchThunk(resolve))
 })
 
 function bulkSearch() {
   let modalBuilder = new ModalBuilder()
   modalBuilder.alertKey = 'bulkSearch'
-  modalBuilder.callback = async () => {
-    for (let i=0; i < store.getState().search.bulkSearchCount; i++) {
-      await synchronizedCall()
-    }
+
+  modalBuilder.callback = () => {
+    store.dispatch(bulkSearchThunk())
   }
   modalBuilder.errorback = (error) => {
       console.log("reject callback run")
@@ -22,5 +21,10 @@ function bulkSearch() {
 }
 
 export function debouncedBulkSearch() {
-  bulkSearch()
+  if (store.getState().search.bulkSearchRunning) {
+    console.log("abort bulk search")
+  } else {
+    bulkSearch()
+  }
+  // store.dispatch(debounce(bulkSearch()))
 }

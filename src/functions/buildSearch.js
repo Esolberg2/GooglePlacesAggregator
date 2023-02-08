@@ -1,5 +1,5 @@
 import { ModalBuilder } from '../features/modal/ModalBuilder'
-import { debounce, initializeSearch } from '../features/search/searchSlice'
+import { initializeSearch } from '../features/search/searchSlice'
 import { store } from '../store'
 
 
@@ -15,5 +15,9 @@ function buildSearch() {
 }
 
 export function debouncedBuildSearch() {
-  store.dispatch(debounce(buildSearch))
+  if (store.getState().search.loading) {
+    console.log("abort build search")
+  } else {
+    store.dispatch(buildSearch)
+  }
 }

@@ -4,15 +4,19 @@ import { mapActions } from '../map/mapSlice'
 import { wrapperActions } from '../stateWrapper/wrapperSlice'
 import { SettingsButton } from '../../components/SettingsButton'
 import { SettingsTextContainer } from '../../components/SettingsTextContainer'
-import { ToggleSlider }  from "react-toggle-slider";
+import Switch from "react-switch";
 import SpinnerButton from '../../components/SpinnerButton'
 import CurrencyInput from 'react-currency-input-field';
-import { setPriorSearch } from '../search/searchSlice'
+import { loadStateFromFile, setPriorSearch } from '../search/searchSlice'
 import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager'
 // import { googlePlacesApiManager2 } from '../../googleAPI/googlePlacesApiManagerWeb'
 import { settingsPanelActions } from './settingsPanelSlice'
 import { alertDialog, confirmationDialog } from '../modal/modalSlice'
 import { ModalBuilder } from '../modal/ModalBuilder'
+import {
+  setFileData,
+  setFileName
+} from '../loadFile/loadFileSlice'
 const placeTypes = require('../../data/placeTypes.json');
 const infoMessages = require('../../data/informationText.json');
 
@@ -20,11 +24,14 @@ export function SettingsPanel(props) {
   const dispatch = useDispatch()
   const searchData = useSelector((state) => state.search)
   const settingsData = useSelector((state) => state.settingsPanel)
-  const mapData = useSelector(state => state.map)
+  const mapData = useSelector((state) => state.map)
+  const inputRef = useRef();
+  const fileData = useSelector((state) => state.loadFile.fileData)
 
 
   const {
-  priorSearch
+  priorSearch,
+  searchActive
   } = searchData
 
   const {
@@ -131,6 +138,7 @@ const exportToJson = e => {
   })
 }
 
+
 function handleSelectChange(event) {
   dispatch(setSearchEntityType(event.target.value))
 }
@@ -138,7 +146,6 @@ function handleSelectChange(event) {
 function handleBudgetChange(value) {
   let cleanValue = isNaN(value) ? 0 : parseFloat(value)
   if (cleanValue < -1) {
-      // setBudget(-1)
       dispatch(setBudget(-1))
     } else {
       dispatch(setBudget(value))}
@@ -161,16 +168,46 @@ function resolutionInputColor() {
 }
 
 function togglePriorSearch(val) {
-  dispatch(setPriorSearch(val))
-  // dispatch(confirmationDialog(
-  //   {
-  //     "target": () => {
-  //       // dispatch(resetState())
-  //       dispatch(setPriorSearch(val))
-  //     },
-  //     "alertKey": "changeSearchType"
-  //   }
-  // ))
+    if (val == true || val != priorSearch) {
+      console.log(inputRef)
+      let modalBuilder = new ModalBuilder()
+      modalBuilder.alertKey = 'clearSearch'
+      modalBuilder.callback = (result) => {
+          dispatch(wrapperActions.reset())
+          dispatch(setPriorSearch(val))
+          if (val == true) {
+            inputRef.current.click()
+          }
+        }
+      modalBuilder.errorback = (error) => {
+          console.log("reject callback run")
+          console.log(error)
+        }
+      modalBuilder.run()
+    }
+    // else if (val == true) {
+    //   inputRef.current.click()
+    // }
+
+
+
+
+  // if (!priorSearch) {
+  //     let modalBuilder = new ModalBuilder()
+  //     modalBuilder.alertKey = 'clearSearch'
+  //     modalBuilder.callback = (result) => {
+  //         dispatch(wrapperActions.reset())
+  //         dispatch(setPriorSearch(true))
+  //         inputRef.current.click()
+  //       }
+  //     modalBuilder.errorback = (error) => {
+  //         console.log("reject callback run")
+  //         console.log(error)
+  //       }
+  //     modalBuilder.run()
+  // } else {
+  //   inputRef.current.click()
+  // }
 }
 
 // useEffect(() => {
@@ -199,18 +236,59 @@ function renderSearchResolution() {
     )
 }
 
+function loadFile(value) {
+  console.log("---- LOAD FILE-----")
+  let fileReader = new FileReader();
+  fileReader.onloadend = (e) => {
+    const content = fileReader.result;
+    dispatch(loadStateFromFile(JSON.parse(content)))
+  };
+
+  if (value.target.files) {
+    fileReader.readAsText(value.target.files[0]);
+  }
+
+}
+
+// function setNewSearch() {
+//   if (priorSearch) {
+//       let modalBuilder = new ModalBuilder()
+//       modalBuilder.alertKey = 'clearSearch'
+//       modalBuilder.callback = (result) => {
+//           dispatch(wrapperActions.reset())
+//           dispatch(setPriorSearch(false))
+//         }
+//       modalBuilder.errorback = (error) => {
+//           console.log("reject callback run")
+//           console.log(error)
+//         }
+//       modalBuilder.run()
+//   }
+// }
+
 function renderTypeOptions() {
   return placeTypes.map(type => <option key={type} value={type}>{type}</option>)
 }
 
   return (
     <div style={{}}>
+      <input
+        ref={inputRef}
+        onChange={e => loadFile(e)}
+        onClick={(event)=> {
+                 event.target.value = null
+            }}
+        multiple={false}
+        type="file"
+        accept='.json'
+        hidden
+      />
       <div style={{display: 'flex'}}>
         <div style={{display: 'flex', padding: '20px', flexDirection: 'column'}}>
           <SettingsButton
             selected={!priorSearch}
             onClick={() => {
-              // dispatch(setPriorSearch(false))
+              // togglePriorSearch()
               togglePriorSearch(false)
             }}
             >
@@ -219,11 +297,11 @@ function renderTypeOptions() {
 
           <SettingsButton
             selected={priorSearch}
-            onClick={() => {
-              if (!priorSearch) {
-                // dispatch(setPriorSearch(true))
-                togglePriorSearch(true)
-              }}}
+            onClick={(e) => {
+              togglePriorSearch(true)
+            }
+          }
+
             >
             Load Prior Search
             </SettingsButton>
@@ -274,15 +352,19 @@ function renderTypeOptions() {
         description={'Test out the tool without needing a Google API key.  All data generated in Test Mode is complete nonsense.'}
         style={{display: 'flex', flex: '1'}}
         >
-          <ToggleSlider
-            onToggle={() => {
+          <div style={{ paddingBottom: '5px' }}>
+          <Switch
+            onChange={() => {
               dispatch(setTestMode(!testMode))
-            }
-            }
-            barBackgroundColorActive={'#40E6AE'}
-            active={testMode}
-            barWidth={75}
+            }}
+            checked={testMode}
+            disabled={searchActive}
+            uncheckedIcon={false}
+            checkedIcon={false}
+            width={75}
+            id="test-mode-switch"
             />
+          </div>
       </SettingsTextContainer>
 
       <SettingsTextContainer
@@ -323,7 +405,7 @@ function renderTypeOptions() {
 
       <SettingsTextContainer
         title={'Budget'}
-        description={'Use this setting to limit your expenses.  It is also wise to set billing quotas within the Google Cloud Console to ensure no unexpected expenditures are encountered. Enter -1 for unlimited budged: Use this option with EXTREME care'}
+        description={'Use this setting to limit your expenses.  It is also wise to set billing quotas within the Google Cloud Console to ensure no unexpected expenditures are encountered. Enter -1 for unlimited budged: Use this option with EXTREME care.'}
         >
           <CurrencyInput
             prefix="$"
