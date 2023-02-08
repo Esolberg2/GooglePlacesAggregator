@@ -103,7 +103,12 @@ const SearchInterfaceButton = {
   textColor: 'red'
 }
 
+const SearchInterfaceButtonDisabled = {
+  backgroundColor: '#CCC',
+}
+
 export const styles = {
+  SearchInterfaceButtonDisabled: SearchInterfaceButtonDisabled,
   SearchInterfaceButton: SearchInterfaceButton,
   ButtonSelected: ButtonSelected,
   SettingsButton: SettingsButton,

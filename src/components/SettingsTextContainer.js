@@ -11,7 +11,9 @@ export const SettingsTextContainer = (props) => {
         {props.description}
       </div>
       <div style={{ flexGrow: '1'}}/>
+      <div style={{ display: 'flex', justifyContent: 'center'}}>
       {props.children}
+      </div>
     </div>
     )
 }
