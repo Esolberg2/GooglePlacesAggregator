@@ -4,27 +4,39 @@ import { store } from '../store'
 import { googlePlacesApiManager } from '../googleAPI/googlePlacesApiManager'
 
 
-const synchronizedCall = () => new Promise((resolve, reject) => {
-  store.dispatch(searchPlaces(resolve))
-})
+// const synchronizedCall = () => new Promise((resolve, reject) => {
+//   store.dispatch(searchPlaces(resolve))
+// })
 
-export function singleSearch() {
+export async function singleSearch() {
+  console.log("single search local")
   let modalBuilder = new ModalBuilder()
   modalBuilder.alertKey = 'search'
-  modalBuilder.callback = () => {
-    store.dispatch(singleSearchThunk())
+  modalBuilder.callback = async () => {
+    let result = await store.dispatch(singleSearchThunk())
+    // await store.dispatch(singleSearchThunk())
+    console.log("result", result)
   }
   modalBuilder.errorback = (error) => {
     console.log("reject callback run")
     console.log(error)
     }
-  modalBuilder.run()
+
+  let modalResponse = await modalBuilder.run()
+
+
+
+  console.log(modalResponse)
+  return modalResponse
 }
 
-export function debouncedSingleSearch() {
+export async function debouncedSingleSearch() {
   if (store.getState().search.loading) {
     console.log("abort single search")
   } else {
-    store.dispatch(singleSearch())
+    let data = await singleSearch()
+    console.log(data)
+    return data
+    // store.dispatch(singleSearch())
   }
 }

@@ -29,19 +29,20 @@ export const settingsPanelSlice = createSlice({
   name: 'settingsPanel',
   initialState,
   extraReducers: {
-    ["search/initializeSearch/fulfilled"]: (state) => {
+    ["searchSlice/initializeSearch/fulfilled"]: (state) => {
       let randomKey = makeid(18)
       state.userSearchKey = randomKey
     },
     // ["search/searchPlaces/fulfilled"]: (state) => {state.budgetUsed += .032},
-    ["searchSlice/setSearchData"]: (state) => {
-      console.log("setSearchData from settingsPanelSlice")
+    // ["searchSlice/setSearchData"]: (state) => {
+    ["searchSlice/singleSearch/fulfilled"]: (state) => {
+      console.log("singleSearch from searcgSlice")
       state.budgetUsed += .032
     },
 
     ["searchSlice/loadStateFromFile"]: (state, action) => {
       let file = action.payload
-
+      state.testMode = file.testMode
       state.budget = file.budget
       state.budgetUsed = file.budgetUsed
       state.searchResolution = file.searchResolution
