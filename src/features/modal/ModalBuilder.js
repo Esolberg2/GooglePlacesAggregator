@@ -44,15 +44,21 @@ run() {
       "data": this.data
     }))
 
-    .then(unwrapResult)
-    .then((result) => {
-      this.callback(result)
+    .then((unwrapResult) => {
+      console.log(unwrapResult)
+    })
+    .then(async (result) => {
+      await this.callback(result)
+      resolve()
       // resolve()
     })
-    .then(() => resolve())
+    // .then((output) => {
+    //   console.log(output)
+    //   resolve(output)
+    // })
     .catch((error) => {
       this.errorback(error)
-      reject()
+      reject(error)
     })
   })
 

@@ -20,7 +20,6 @@ import Geocoder from "react-map-gl-geocoder";
 import { Editor, DrawPolygonMode, EditingMode } from 'react-map-gl-draw';
 import { getFeatureStyle, getEditHandleStyle } from './style';
 import * as turf from '@turf/turf'
-import { ToggleSlider }  from "react-toggle-slider";
 import CurrencyInput from 'react-currency-input-field';
 import { FilePicker } from './components/FilePicker.js'
 import { SettingsButton } from './components/SettingsButton.js'
