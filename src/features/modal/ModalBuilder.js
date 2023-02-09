@@ -43,12 +43,15 @@ run() {
       "alertKey": this.alertKey,
       "data": this.data
     }))
-
-    .then((unwrapResult) => {
-      console.log(unwrapResult)
+    console.log(modal)
+    // console.log(modal.unwrap())
+    modal.unwrap()
+    .then((unwrapResults) => {
+      console.log(unwrapResults)
     })
     .then(async (result) => {
-      await this.callback(result)
+      console.log(result)
+      await this.callback()
       resolve()
       // resolve()
     })
