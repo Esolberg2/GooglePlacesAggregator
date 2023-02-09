@@ -11,57 +11,24 @@ function bulkSearch() {
   let modalBuilder = new ModalBuilder()
   modalBuilder.alertKey = 'bulkSearch'
 
-  // modalBuilder.callback = () => {
-  //   store.dispatch(bulkSearchThunk())
-  // }
   modalBuilder.callback = async () => {
-    console.log("bulk search confirm")
-    // for (let i=0; i < store.getState().search.bulkSearchCount; i++) {
-    //   console.log(i)
-    //   let data = await singleSearch()
-    //   console.log(data)
-    // }
+    await store.dispatch(bulkSearchThunk())
   }
   modalBuilder.errorback = (error) => {
       console.log("reject callback run")
       console.log(error)
     }
-  modalBuilder.run()
+  let data = modalBuilder.run()
+  console.log(data)
+  return data
 }
 
-// export function debouncedBulkSearch() {
-//   if (store.getState().search.bulkSearchRunning) {
-//     console.log("abort bulk search")
-//   } else {
-//     bulkSearch()
-//   }
-//   // store.dispatch(debounce(bulkSearch()))
-// }
-
-// export async function debouncedBulkSearch() {
-//
-//   if (store.getState().search.bulkSearchRunning) {
-//     console.log("abort single search")
-//   }
-//   else {
-//     store.dispatch(setBulkSearchRunning(true))
-//     for (let i=0; i < store.getState().search.bulkSearchCount; i++) {
-//       console.log(i)
-//       let data = await singleSearch()
-//       console.log(data)
-//     }
-//     store.dispatch(setBulkSearchRunning(false))
-//   }
-// }
-
 export async function debouncedBulkSearch() {
-
+  console.log(store.getState().search.bulkSearchRunning)
   if (store.getState().search.bulkSearchRunning) {
-    console.log("abort single search")
+    console.log("abort bulk search")
   }
   else {
-    store.dispatch(setBulkSearchRunning(true))
-    await bulkSearch()
-    store.dispatch(setBulkSearchRunning(false))
-  }
+    bulkSearch()
+}
 }

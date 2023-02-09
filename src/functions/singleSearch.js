@@ -14,7 +14,6 @@ export async function singleSearch() {
   modalBuilder.alertKey = 'search'
   modalBuilder.callback = async () => {
     let result = await store.dispatch(singleSearchThunk())
-    // await store.dispatch(singleSearchThunk())
     console.log("result", result)
   }
   modalBuilder.errorback = (error) => {
@@ -23,9 +22,6 @@ export async function singleSearch() {
     }
 
   let modalResponse = await modalBuilder.run()
-
-
-
   console.log(modalResponse)
   return modalResponse
 }

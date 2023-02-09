@@ -6,7 +6,7 @@ import { dummyGoogleCall } from '../../googleAPI/dummyCall.js'
 import { checksumManager } from '../../data/checksumManager'
 import { callbackDict, confirmPromise } from '../modal/modalSlice'
 import axios from 'axios'
-
+import { singleSearch as modalSingleSearch } from '../../functions/singleSearch'
 const initialState = {
 // == api call meta ==
   loading: false,
@@ -109,6 +109,7 @@ function processGoogleData(searchID, searchPerimeter) {
   }
 
 export const searchPlaces = createAsyncThunk('searchSlice/searchPlaces', (a, b) => {
+  console.log(b)
   const outerResolve = a.resolve
   const outerReject = a.reject
   let coords = b.getState().search.nextCenter;
@@ -132,12 +133,12 @@ export const searchPlaces = createAsyncThunk('searchSlice/searchPlaces', (a, b) 
   })
   .then((out) => {
     console.log(out)
-    console.log(b)
     outerResolve(out)
   })
   .catch((error) => {
     console.log(error)
     outerReject(error)
+    b.abort()
   })
 })
 
@@ -152,13 +153,24 @@ export const singleSearch = createAsyncThunk('searchSlice/singleSearch', async (
   return synchronizedCall(searchPlaces, b.dispatch)
 })
 
-export const bulkSearch = createAsyncThunk('searchSlice/bulkSearch', async (a, b) => {
-  console.log('bulkSearch thunk run')
-  for (let i=0; i < b.getState().search.bulkSearchCount; i++) {
-    await synchronizedCall(searchPlaces, b.dispatch)
-  }
-})
+// export const bulkSearch = createAsyncThunk('searchSlice/bulkSearch', async (a, b) => {
+//   console.log('bulkSearch thunk run')
+//   for (let i=0; i < b.getState().search.bulkSearchCount; i++) {
+//     await synchronizedCall(searchPlaces, b.dispatch)
+//   }
+// })
 
+export const bulkSearch = createAsyncThunk('searchSlice/bulkSearch', async (a, b) => {
+  for (let i=0; i < b.getState().search.bulkSearchCount; i++) {
+        modalSingleSearch()
+        .then(() => {})
+        .catch(() => {
+          console.log("cascading reject")
+          b.abort()
+        })
+        console.log("    single search done")
+      }
+})
 
 // load search
 export const syncBackend = createAsyncThunk('searchSlice/syncBackend', async (a, b) => {

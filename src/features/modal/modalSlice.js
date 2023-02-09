@@ -44,6 +44,7 @@ export const confirmationDialog = createAsyncThunk('modal/confirmPromise', async
     console.log(args)
 
     try {
+      console.log("try block")
       target()
     }
     catch (error) {
@@ -56,15 +57,18 @@ export const confirmationDialog = createAsyncThunk('modal/confirmPromise', async
 
 
 export const modalDialog = createAsyncThunk('modal/modalPromise', async (args, b) => {
+  console.log("modalDialog")
   let { alertKey, data } = args
   let alert = alertManager.hasAlert(alertKey, data)
-
+  console.log(data)
+  console.log(alert)
   if (alert) {
     b.dispatch(setMessage(alert.text))
     b.dispatch(setDialogType(alert.type))
     b.dispatch(setVisible(true))
+    console.log("building promise")
 
-    const promise = await new Promise(function(resolve, reject){
+    const promise = new Promise(function(resolve, reject){
       callbackDict["resolve"] = () => {
         console.log("resolving from modal")
         resolve()
@@ -74,6 +78,7 @@ export const modalDialog = createAsyncThunk('modal/modalPromise', async (args, b
         reject()
       }
     })
+
     console.log("alert processed, returning modal results")
     return promise
 

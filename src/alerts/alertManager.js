@@ -221,14 +221,11 @@ class AlertManager {
   _confirmBulkSearch() {
     let bulkSearchCount = store.getState().search.bulkSearchCount
     let totalCost = 0.017 * parseInt(bulkSearchCount)
-     {
-      return {
-        text: `WARNING: Please confirm you execute ${bulkSearchCount} calls to the Google Places Api.` +
-        ` for a projected total cost of $${totalCost}.`,
-        type: 'Confirmation'
-      }
+    return {
+      text: `WARNING: Please confirm you execute ${bulkSearchCount} calls to the Google Places Api.` +
+      ` for a projected total cost of $${totalCost}.`,
+      type: 'Confirmation'
     }
-    return false
   }
 
   // _confirmBulkSearch(args) {
