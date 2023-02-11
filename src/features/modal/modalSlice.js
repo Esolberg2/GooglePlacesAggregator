@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { useSelector, useDispatch } from 'react-redux'
 import { alertManager } from '../../alerts/alertManager'
 import { unwrapResult } from '@reduxjs/toolkit'
+import { store } from '../../store'
 
 const initialState = {
   visible: false,
@@ -12,49 +13,54 @@ const initialState = {
   promise: ''
 }
 
+class ModalFunctionStore {
+  constructor() {
+    this.resolve = undefined
+  }
+}
+
+export const modalFunctionStore = new ModalFunctionStore()
+
 export const callbackDict = {}
 
+export async function buildModal(kwargs) {
 
-export const confirmationDialog = createAsyncThunk('modal/confirmPromise', async (args, b) => {
-  let { target, alertKey, data } = args
+  let {
+    alertKey,
+    data,
+    confirmCallback,
+    denyCallback,
+  } = kwargs
+
   let alert = alertManager.hasAlert(alertKey, data)
-  console.log(alert)
+  console.log("alert status", alert)
+
+  const promise = new Promise(function(resolve, reject){
+    modalFunctionStore.resolve = (bool) => {
+      console.log("store resolve")
+      store.dispatch(setMessage(''))
+      store.dispatch(setDialogType(false))
+      store.dispatch(setVisible(false))
+      let returnFunc = bool ? confirmCallback : denyCallback
+      console.log(returnFunc)
+      resolve(returnFunc)
+    }
+  })
+  console.log("promises set")
+
+  let output;
 
   if (alert) {
-
-    b.dispatch(setMessage(alert.text))
-    b.dispatch(setDialogType(alert.type))
-    b.dispatch(setVisible(true))
-    // try {
-    const promise = await new Promise(function(resolve, reject){
-      callbackDict["resolve"] = resolve;
-      callbackDict["reject"] = reject;
-    })
-    .then((res) => {
-      console.log(res)
-      target()
-    })
-    .catch((error) => {
-      console.log(error)
-    })
+    store.dispatch(setMessage(alert.text))
+    store.dispatch(setDialogType(alert.type))
+    store.dispatch(setVisible(true))
   }
 
   else {
-    console.log("should forward to action")
-    console.log(args)
-
-    try {
-      console.log("try block")
-      target()
-    }
-    catch (error) {
-      console.log(error)
-    }
-
-    // b.dispatch(target())
+    modalFunctionStore.resolve(true)
   }
-})
-
+  return promise
+}
 
 export const modalDialog = createAsyncThunk('modal/modalPromise', async (args, b) => {
   console.log("modalDialog")
@@ -69,14 +75,8 @@ export const modalDialog = createAsyncThunk('modal/modalPromise', async (args, b
     console.log("building promise")
 
     const promise = new Promise(function(resolve, reject){
-      callbackDict["resolve"] = () => {
-        console.log("resolving from modal")
-        resolve()
-      }
-      callbackDict["reject"] = () => {
-        console.log("rejecting from modal")
-        reject()
-      }
+      modalFunctionStore.resolve = resolve()
+      callbackDict.reject = reject()
     })
 
     console.log("alert processed, returning modal results")
@@ -88,52 +88,20 @@ export const modalDialog = createAsyncThunk('modal/modalPromise', async (args, b
   }
 })
 
-
-export const alertDialog = createAsyncThunk('modal/alertPromise', async (args, b) => {
-  let { target, alertKey, data } = args
-  let alert = alertManager.hasAlert(alertKey, data)
-  if (alert) {
-    b.dispatch(setMessage(alert.text))
-    b.dispatch(setDialogType(alert.type))
-    b.dispatch(setVisible(true))
-    const promise = await new Promise(function(resolve, reject){
-      callbackDict["resolve"] = () => {resolve(true)};
-    });
-    return true
-  } else {
-    console.log("should forward to action")
-    console.log(args)
-    try {
-      target()
-    }
-    catch (error) {
-      console.log(error)
-    }
-
-    // b.dispatch(target())
-  }
-})
-
-
 export const modalSlice = createSlice({
   name: 'modal',
   initialState,
   extraReducers: (builder) => {
-    builder.addCase(alertDialog.fulfilled, (state, action) => {
-      state.visible = false
-      state.message = ''
-      state.dialogType = ''
-    })
-    builder.addCase(confirmationDialog.fulfilled, (state, action) => {
-      state.visible = false
-      state.message = ''
-      state.dialogType = ''
-    })
-    builder.addCase(confirmationDialog.rejected, (state, action) => {
-      state.visible = false
-      state.message = ''
-      state.dialogType = ''
-    })
+    // builder.addCase(buildModal.fulfilled, (state, action) => {
+    //   state.visible = false
+    //   state.message = ''
+    //   state.dialogType = ''
+    // })
+    // builder.addCase(buildModal.rejected, (state, action) => {
+    //   state.visible = false
+    //   state.message = ''
+    //   state.dialogType = ''
+    // })
     builder.addCase(modalDialog.fulfilled, (state, action) => {
       state.visible = false
       state.message = ''

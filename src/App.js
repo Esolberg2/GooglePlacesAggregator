@@ -5,7 +5,7 @@ import { settingsPanelActions } from './features/settingsPanel/settingsPanelSlic
 import { MapComponent } from './features/map/MapComponent'
 import { styles } from './style'
 import { SettingsPanel } from './features/settingsPanel/SettingsPanel'
-
+// import { DynamicModal } from './components/Modal'
 // import { SearchInterface } from './features/search/SearchInterface'
 // import { TestComponent } from './features/search/TestComponent'
 
@@ -21,7 +21,7 @@ import { Editor, DrawPolygonMode, EditingMode } from 'react-map-gl-draw';
 import { getFeatureStyle, getEditHandleStyle } from './style';
 import * as turf from '@turf/turf'
 import CurrencyInput from 'react-currency-input-field';
-import { FilePicker } from './components/FilePicker.js'
+// import { FilePicker } from './components/FilePicker.js'
 import { SettingsButton } from './components/SettingsButton.js'
 import { SettingsTextContainer } from './components/SettingsTextContainer.js'
 import SpinnerButton from './components/SpinnerButton.js'
@@ -39,7 +39,6 @@ import { mapActions } from './features/map/mapSlice'
 import { ConfirmationModal } from './features/modal/Confirmation'
 import { AlertModal } from './features/modal/Alert'
 import { DialogModal } from './features/modal/Modal'
-import { alertDialog, confirmationDialog } from './features/modal/modalSlice'
 const CryptoJS = require("crypto-js");
 const placeTypes = require('./data/placeTypes.json');
 const infoMessages = require('./data/informationText.json');
@@ -171,7 +170,7 @@ const App = () => {
   const googleScript = useRef(undefined)
   const googleData = useRef([]);
   const dataFile = useRef(undefined)
-  const filePickerRef = useRef()
+  // const filePickerRef = useRef()
   const searchID = useRef(undefined);
   const searchComplete = useRef(false)
 
@@ -722,54 +721,54 @@ const App = () => {
     dispatch(settingsPanelActions.setSearchResolution(value))
   }
 
-  function buildFromFile() {
-    // editorRef.current.addFeatures(data["searchBorders"])
-
-    let alert = dispatch(alertDialog({
-      "target": () => {dispatch(loadStateFromFile(fileData))},
-      "alertKey": "loadFile",
-    }))
-
-
-
-    // let alertArgs = [
-    //   ['fileLoaded', [dataFile]],
-    //   ['fileError', [dataFile]]
-    // ]
-    //
-    // // same
-    // let alertPresent = triggerAlertFor(alertArgs)
-    //
-    // if (alertPresent) {
-    //   return
-    // }
-    //
-    // try {
-    //   let data = JSON.parse(dataFile.current)
-    //   googleData.current = data["googleData"]
-    //   setSearchType(data["searchType"])
-    //   searchID.current = data["searchID"]
-    //   searchCentroid.current = data["searchCentroid"]
-    //   circleCoordinates.current = data["circleCoordinates"]
-    //   searchedData.current = data["searchedData"]
-    //   unsearchedData.current = data["unsearchedData"]
-    //   nextCenter.current = data["nextCenter"]
-    //   setUserSearchKey(data["userSearchKey"])
-    //
-    //   setBudgetUsed(data["budgetUsed"])
-    //   setBudgetOld(data["budget"])
-    //   editorRef.current.addFeatures(data["searchBorders"])
-    //   addCoordinates(unsearchedData.current, coordinatesFeatures, setCoordinatesFeatures)
-    //   // addCoordinates(searchedData.current, searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
-    //   setSearchedAreas(data["searchedAreas"])
-    //   setSearchResolution(data["resolution"])
-    //   findOrigin(...data["searchCentroid"])
-    //   setSearchBuilt(true)
-    //
-    // } catch(error){
-    //   console.log(error)
-    //   }
-    }
+  // function buildFromFile() {
+  //   // editorRef.current.addFeatures(data["searchBorders"])
+  //
+  //   // let alert = dispatch(alertDialog({
+  //   //   "target": () => {dispatch(loadStateFromFile(fileData))},
+  //   //   "alertKey": "loadFile",
+  //   // }))
+  //
+  //
+  //
+  //   // let alertArgs = [
+  //   //   ['fileLoaded', [dataFile]],
+  //   //   ['fileError', [dataFile]]
+  //   // ]
+  //   //
+  //   // // same
+  //   // let alertPresent = triggerAlertFor(alertArgs)
+  //   //
+  //   // if (alertPresent) {
+  //   //   return
+  //   // }
+  //   //
+  //   // try {
+  //   //   let data = JSON.parse(dataFile.current)
+  //   //   googleData.current = data["googleData"]
+  //   //   setSearchType(data["searchType"])
+  //   //   searchID.current = data["searchID"]
+  //   //   searchCentroid.current = data["searchCentroid"]
+  //   //   circleCoordinates.current = data["circleCoordinates"]
+  //   //   searchedData.current = data["searchedData"]
+  //   //   unsearchedData.current = data["unsearchedData"]
+  //   //   nextCenter.current = data["nextCenter"]
+  //   //   setUserSearchKey(data["userSearchKey"])
+  //   //
+  //   //   setBudgetUsed(data["budgetUsed"])
+  //   //   setBudgetOld(data["budget"])
+  //   //   editorRef.current.addFeatures(data["searchBorders"])
+  //   //   addCoordinates(unsearchedData.current, coordinatesFeatures, setCoordinatesFeatures)
+  //   //   // addCoordinates(searchedData.current, searchedCoordinatesFeatures, setSearchedCoordinatesFeatures)
+  //   //   setSearchedAreas(data["searchedAreas"])
+  //   //   setSearchResolution(data["resolution"])
+  //   //   findOrigin(...data["searchCentroid"])
+  //   //   setSearchBuilt(true)
+  //   //
+  //   // } catch(error){
+  //   //   console.log(error)
+  //   //   }
+  //   }
 
 
   function renderTypeOptions() {

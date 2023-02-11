@@ -41,11 +41,19 @@ export const mapSlice = createSlice({
   name: 'map',
   initialState,
   extraReducers: {
-    ["searchSlice/singleSearch/fulfilled"]: (state, action) => {
+
+    ["searchSlice/searchPlaces/fulfilled"]: (state, action) => {
       console.log(action.payload)
-      console.log("singleSearch from searchSlice")
+      console.log("searchPlaces from searchSlice")
       state.searchedAreas.features = [...state.searchedAreas.features, buildCoordJSON(action.payload.lastSearchPerimeter)]
     },
+
+    // ["searchSlice/singleSearch/fulfilled"]: (state, action) => {
+    //   console.log(action.payload)
+    //   console.log("singleSearch from searchSlice")
+    //   state.searchedAreas.features = [...state.searchedAreas.features, buildCoordJSON(action.payload.lastSearchPerimeter)]
+    // },
+
     ["loadStateFromFile"]: (state, action) => {
       let file = action.payload
       console.log("map slice loadStateFromFile2")

@@ -33,12 +33,16 @@ export const settingsPanelSlice = createSlice({
       let randomKey = makeid(18)
       state.userSearchKey = randomKey
     },
-    // ["search/searchPlaces/fulfilled"]: (state) => {state.budgetUsed += .032},
-    // ["searchSlice/setSearchData"]: (state) => {
-    ["searchSlice/singleSearch/fulfilled"]: (state) => {
+    ["searchSlice/searchPlaces/fulfilled"]: (state) => {
       console.log("singleSearch from searcgSlice")
       state.budgetUsed += .032
     },
+    // ["search/searchPlaces/fulfilled"]: (state) => {state.budgetUsed += .032},
+    // ["searchSlice/setSearchData"]: (state) => {
+    // ["searchSlice/singleSearch/fulfilled"]: (state) => {
+    //   console.log("singleSearch from searcgSlice")
+    //   state.budgetUsed += .032
+    // },
 
     ["searchSlice/loadStateFromFile"]: (state, action) => {
       let file = action.payload

@@ -2,6 +2,8 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import * as turf from '@turf/turf'
 import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager'
 import { dummyGoogleCall } from '../../googleAPI/dummyCall.js'
+// import { ModalBuilder } from '../modal/ModalBuilder'
+import { store } from '../../store'
 
 import { checksumManager } from '../../data/checksumManager'
 import { callbackDict, confirmPromise } from '../modal/modalSlice'
@@ -49,9 +51,62 @@ export const initializeSearch = createAsyncThunk('searchSlice/initializeSearch',
 })
 
 
-function searchCallback(results, status, thunkAPI, resolve){
+// function searchCallback(results, status, thunkAPI, resolve){
+//
+//   let testMode = thunkAPI.getState().settingsPanel.testMode
+//   if (testMode || status == window.google.maps.places.PlacesServiceStatus.OK) {
+//     results.forEach((item, i) => {
+//       delete item.opening_hours
+//       delete item.permanently_closed
+//     });
+//
+//     results = JSON.parse(JSON.stringify(results))
+//     let testRadius = Math.random() * (1.5 - .1) + .1;
+//     let center = thunkAPI.getState().search.nextCenter
+//     let searchID = thunkAPI.getState().search.searchID
+//     let lastLat = results[results.length-1].geometry.location.lat
+//     let lastLon = results[results.length-1].geometry.location.lng
+//
+//     let from = turf.point(center);
+//     let to = turf.point([lastLon, lastLat]);
+//     let options = {units: 'miles'};
+//
+//     let radius = testMode ? testRadius : turf.distance(from, to, options);
+//
+//     let polygon = turf.circle(center, radius, options);
+//     let searchPerimeter = polygon.geometry.coordinates[0];
+//
+//     processGoogleData(searchID, searchPerimeter)
+//       .then((apiData) => {
+//         resolve({
+//           "lastSearchPerimeter": searchPerimeter,
+//           "googleData": results,
+//           "apiData": apiData.data
+//         })
+//       })
+//       .catch((error) => {
+//         console.log(error)
+//         if (error.response.status == 409) {
+//           thunkAPI.dispatch(syncBackend())
+//         }
+//         console.log("FAILED TO SYNC")
+//         thunkAPI.abort()
+//         return false
+//       })
+//     }
+// }
 
-  let testMode = thunkAPI.getState().settingsPanel.testMode
+// results, status, thunkAPI, resolve
+
+function searchCallback(results, status, kwargs){
+const {
+  testMode,
+  nextCenter,
+  searchID,
+  resolve,
+  reject
+} = kwargs
+
   if (testMode || status == window.google.maps.places.PlacesServiceStatus.OK) {
     results.forEach((item, i) => {
       delete item.opening_hours
@@ -60,21 +115,18 @@ function searchCallback(results, status, thunkAPI, resolve){
 
     results = JSON.parse(JSON.stringify(results))
     let testRadius = Math.random() * (1.5 - .1) + .1;
-    let center = thunkAPI.getState().search.nextCenter
-    let searchID = thunkAPI.getState().search.searchID
     let lastLat = results[results.length-1].geometry.location.lat
     let lastLon = results[results.length-1].geometry.location.lng
 
-    let from = turf.point(center);
+    let from = turf.point(nextCenter);
     let to = turf.point([lastLon, lastLat]);
     let options = {units: 'miles'};
-
     let radius = testMode ? testRadius : turf.distance(from, to, options);
-
-    let polygon = turf.circle(center, radius, options);
+    let polygon = turf.circle(nextCenter, radius, options);
     let searchPerimeter = polygon.geometry.coordinates[0];
 
     processGoogleData(searchID, searchPerimeter)
+    // processGoogleDataForceMismatch(searchID, searchPerimeter)
       .then((apiData) => {
         resolve({
           "lastSearchPerimeter": searchPerimeter,
@@ -83,13 +135,7 @@ function searchCallback(results, status, thunkAPI, resolve){
         })
       })
       .catch((error) => {
-        console.log(error)
-        if (error.response.status == 409) {
-          thunkAPI.dispatch(syncBackend())
-        }
-        console.log("FAILED TO SYNC")
-        thunkAPI.abort()
-        return false
+        reject(error)
       })
     }
 }
@@ -108,50 +154,273 @@ function processGoogleData(searchID, searchPerimeter) {
     })
   }
 
+function processGoogleDataForceMismatch(searchID, searchPerimeter) {
+    let options = {
+      steps: 20,
+      units: 'miles',
+      options: {}
+    };
+    return axios
+      .put(`/api/searchSession`, {
+        "circleCoordinates": searchPerimeter,
+        "searchID": searchID,
+        "checksum": '9999999'
+      })
+    }
+
+// export const searchPlaces = createAsyncThunk('searchSlice/searchPlaces', (a, b) => {
+//   console.log(b)
+//   const outerResolve = a.resolve
+//   const outerReject = a.reject
+//   let coords = b.getState().search.nextCenter;
+//   let searchType = b.getState().settingsPanel.searchEntityType;
+//   let origin = {lat: coords[1], lng: coords[0]};
+//   let request = {
+//     location: origin,
+//     rankBy: 1,
+//     type: searchType
+//     };
+//
+//   new Promise((resolve, reject) => {
+//     if (b.getState().settingsPanel.testMode) {
+//       dummyGoogleCall(request, (result, status) => searchCallback(result, status, b, resolve))
+//     }
+//     else {
+//       let service = googlePlacesApiManager.service
+//       let func = service.nearbySearch
+//       service.nearbySearch(request, (result, status) => searchCallback(result, status, b, resolve));
+//     }
+//   })
+//   .then((out) => {
+//     console.log(out)
+//     outerResolve(out)
+//   })
+//   .catch((error) => {
+//     console.log(error)
+//     outerReject(error)
+//     b.abort()
+//   })
+// })
+
+// export const searchPlaces = (kwargs) => new Promise ((resolve, reject) => {
+//
+//   kwargs['resolve'] = resolve
+//   kwargs['reject'] = reject
+//
+//   const {
+//     coords,
+//     testMode,
+//     nextCenter,
+//     searchID,
+//     searchType,
+//   } = kwargs
+//
+//   console.log(kwargs)
+//
+//   let origin = {lat: coords[1], lng: coords[0]};
+//   let request = {
+//     location: origin,
+//     rankBy: 1,
+//     type: searchType
+//     };
+//
+//
+//   if (testMode) {
+//     dummyGoogleCall(request, (result, status) => searchCallback(result, status, kwargs))
+//   }
+//   else {
+//     let service = googlePlacesApiManager.service
+//     let func = service.nearbySearch
+//     service.nearbySearch(request, (result, status) => searchCallback(result, status, kwargs));
+//   }
+// })
+
+
 export const searchPlaces = createAsyncThunk('searchSlice/searchPlaces', (a, b) => {
-  console.log(b)
-  const outerResolve = a.resolve
-  const outerReject = a.reject
-  let coords = b.getState().search.nextCenter;
-  let searchType = b.getState().settingsPanel.searchEntityType;
-  let origin = {lat: coords[1], lng: coords[0]};
+
+  let kwargs = {
+    coords: b.getState().search.nextCenter,
+    searchType: b.getState().settingsPanel.searchEntityType,
+    testMode: b.getState().settingsPanel.testMode,
+    nextCenter: b.getState().search.nextCenter,
+    searchID: b.getState().search.searchID,
+  }
+
+  let origin = {lat: kwargs.coords[1], lng: kwargs.coords[0]};
   let request = {
     location: origin,
     rankBy: 1,
-    type: searchType
+    type: kwargs.searchType
     };
 
-  new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
+    kwargs['resolve'] = resolve
+    kwargs['reject'] = reject
+
     if (b.getState().settingsPanel.testMode) {
-      dummyGoogleCall(request, (result, status) => searchCallback(result, status, b, resolve))
+      dummyGoogleCall(request, (result, status) => searchCallback(result, status, kwargs))
     }
     else {
       let service = googlePlacesApiManager.service
       let func = service.nearbySearch
-      service.nearbySearch(request, (result, status) => searchCallback(result, status, b, resolve));
+      service.nearbySearch(request, (result, status) => searchCallback(result, status, kwargs));
     }
   })
-  .then((out) => {
-    console.log(out)
-    outerResolve(out)
-  })
-  .catch((error) => {
-    console.log(error)
-    outerReject(error)
-    b.abort()
-  })
+  // .then((out) => {
+  //   console.log(out)
+  //   outerResolve(out)
+  // })
+  // .catch((error) => {
+  //   console.log(error)
+  //   outerReject(error)
+  //   b.abort()
+  // })
 })
 
 
-const synchronizedCall = (target, dispatch) => new Promise(async (resolve, reject) => {
-  await dispatch(target({resolve: resolve, reject: reject}))
-})
+// thunk should contain searchPlaces
 
-export const singleSearch = createAsyncThunk('searchSlice/singleSearch', async (a, b) => {
-  // let data = await synchronizedCall(searchPlaces, b.dispatch)
-  // return data
-  return synchronizedCall(searchPlaces, b.dispatch)
-})
+// const synchronizedCall = (target, dispatch) => new Promise(async (resolve, reject) => {
+//   console.log("synchronizedCall")
+//   await dispatch(target({resolve: resolve, reject: reject}))
+// })
+
+
+// export async function search(count=1) {
+//   for (let i=0; i < count; i++) {
+//     let modalBuilder = new ModalBuilder()
+//     modalBuilder.alertKey = 'search'
+//
+//     modalBuilder.callback = () => {
+//       console.log("singleSearch modal callback")
+//       store.dispatch(searchPlaces())
+//       .unwrap()
+//       .then((results) => {
+//         console.log(i, "singleSearch callback result")
+//         console.log(results)
+//       })
+//       .catch((error) => {
+//         console.log("singleSearch callback error")
+//         console.log(error)
+//         if (error.message == "Request failed with status code 409") {
+//           store.dispatch(syncBackend())
+//         }
+//       })
+//     }
+//
+//     modalBuilder.errorback = (error) => {
+//       console.log("singleSearch modal error")
+//       console.log(error)
+//       }
+//
+//     let modalBuilderRun = await modalBuilder.run()
+//
+//     console.log(i, "should run after singleSearch callback")
+//   }
+// }
+
+
+// export async function search(count=1) {
+//   for (let i=0; i < count; i++) {
+//     let modalBuilder = new ModalBuilder()
+//     modalBuilder.alertKey = 'search'
+//
+//     modalBuilder.callback = () => {
+//       console.log("singleSearch modal callback")
+//       store.dispatch(searchPlaces())
+//     }
+//
+//     modalBuilder.errorback = (error) => {
+//       console.log("singleSearch modal error")
+//       console.log(error)
+//       }
+//
+//     let modalBuilderRun = modalBuilder.run()
+//     console.log(modalBuilderRun)
+//     // .then((results) => {
+//     //   console.log(i, "singleSearch callback result")
+//     //   console.log(results)
+//     // })
+//     // .catch((error) => {
+//     //   console.log("singleSearch callback error")
+//     //   console.log(error)
+//     //   if (error.message == "Request failed with status code 409") {
+//     //     store.dispatch(syncBackend())
+//     //   }
+//     // })
+//
+//     console.log(i, "should run after singleSearch callback")
+//   }
+// }
+
+// export const search = () => {
+//   let modalBuilder = new ModalBuilder()
+//   modalBuilder.alertKey = 'search'
+//
+//   modalBuilder.callback = () => {
+//     console.log("singleSearch modal callback")
+//     store.dispatch(searchPlaces())
+//     .unwrap()
+//     .then((results) => {
+//       console.log("singleSearch callback result")
+//       console.log(results)
+//     })
+//     .catch((error) => {
+//       console.log("singleSearch callback error")
+//       console.log(error)
+//       if (error.message == "Request failed with status code 409") {
+//         store.dispatch(syncBackend())
+//       }
+//     })
+//   }
+//
+//   modalBuilder.errorback = (error) => {
+//     console.log("singleSearch modal error")
+//     console.log(error)
+//     }
+//
+//   let modalBuilderRun = modalBuilder.run()
+//   console.log("modalBuilderRun")
+//   console.log(modalBuilderRun)
+// }
+
+
+// export const singleSearch = createAsyncThunk('searchSlice/singleSearch', async (a, b) => {
+//   console.log("singleSearch")
+//   let kwargs = {
+//     coords: b.getState().search.nextCenter,
+//     searchType: b.getState().settingsPanel.searchEntityType,
+//     testMode: b.getState().settingsPanel.testMode,
+//     nextCenter: b.getState().search.nextCenter,
+//     searchID: b.getState().search.searchID,
+//   }
+//
+//   let modalBuilder = new ModalBuilder()
+//   modalBuilder.alertKey = 'search'
+//   modalBuilder.callback = () => {
+//     console.log("singleSearch modal callback")
+//     searchPlaces(kwargs)
+//     .then((results) => {
+//       console.log("singleSearch callback result")
+//       console.log(results)
+//       b.fulfillWithValue(results)
+//     })
+//     .catch((error) => {
+//       console.log("singleSearch callback error")
+//       console.log(error)
+//       b.rejectWithValue(error)
+//     })
+//   }
+//   modalBuilder.errorback = (error) => {
+//     console.log("singleSearch modal error")
+//     console.log(error)
+//     }
+//
+//   let modalBuilderRun = await modalBuilder.run()
+//   console.log("modalBuilderRun")
+//   console.log(modalBuilderRun)
+//
+// })
 
 // export const bulkSearch = createAsyncThunk('searchSlice/bulkSearch', async (a, b) => {
 //   console.log('bulkSearch thunk run')
@@ -160,17 +429,17 @@ export const singleSearch = createAsyncThunk('searchSlice/singleSearch', async (
 //   }
 // })
 
-export const bulkSearch = createAsyncThunk('searchSlice/bulkSearch', async (a, b) => {
-  for (let i=0; i < b.getState().search.bulkSearchCount; i++) {
-        modalSingleSearch()
-        .then(() => {})
-        .catch(() => {
-          console.log("cascading reject")
-          b.abort()
-        })
-        console.log("    single search done")
-      }
-})
+// export const bulkSearch = createAsyncThunk('searchSlice/bulkSearch', async (a, b) => {
+//   for (let i=0; i < b.getState().search.bulkSearchCount; i++) {
+//         modalSingleSearch()
+//         .then(() => {})
+//         .catch(() => {
+//           console.log("cascading reject")
+//           b.abort()
+//         })
+//         console.log("    single search done")
+//       }
+// })
 
 // load search
 export const syncBackend = createAsyncThunk('searchSlice/syncBackend', async (a, b) => {
@@ -203,23 +472,23 @@ export const searchSlice = createSlice({
   name: 'searchSlice',
   initialState,
   extraReducers: (builder) => {
-    builder.addCase(bulkSearch.pending, (state, action) => {
-      state.bulkSearchRunning = true
-    })
-    builder.addCase(bulkSearch.fulfilled, (state, action) => {
-      state.bulkSearchRunning = false
-    })
-    builder.addCase(bulkSearch.rejected, (state, action) => {
-      state.bulkSearchRunning = false
-    })
+    // builder.addCase(bulkSearch.pending, (state, action) => {
+    //   state.bulkSearchRunning = true
+    // })
+    // builder.addCase(bulkSearch.fulfilled, (state, action) => {
+    //   state.bulkSearchRunning = false
+    // })
+    // builder.addCase(bulkSearch.rejected, (state, action) => {
+    //   state.bulkSearchRunning = false
+    // })
 
-    builder.addCase(singleSearch.pending, (state, action) => {
+    builder.addCase(searchPlaces.pending, (state, action) => {
       state.loading = true
       state.error = ''
     })
 
     // used to be searchPlaces
-    builder.addCase(singleSearch.fulfilled, (state, action) => {
+    builder.addCase(searchPlaces.fulfilled, (state, action) => {
       console.log(action.payload)
       state.loading = false
       state.error = ''
@@ -231,10 +500,34 @@ export const searchSlice = createSlice({
       state.googleData = [...state.googleData, ...action.payload.googleData]
 
     })
-    builder.addCase(singleSearch.rejected, (state, action) => {
+    builder.addCase(searchPlaces.rejected, (state, action) => {
       state.loading = false
       state.error = action.error.message
     })
+
+    // builder.addCase(singleSearch.pending, (state, action) => {
+    //   state.loading = true
+    //   state.error = ''
+    // })
+    //
+    // // used to be searchPlaces
+    // builder.addCase(singleSearch.fulfilled, (state, action) => {
+    //   console.log(action.payload)
+    //   state.loading = false
+    //   state.error = ''
+    //
+    //   state.nearbySearchComplete = true
+    //   state.nextCenter = action.payload.apiData.center
+    //   state.searchedCoords = action.payload.apiData.searched
+    //   state.unsearchedCoords = action.payload.apiData.unsearched
+    //   state.googleData = [...state.googleData, ...action.payload.googleData]
+    //
+    // })
+    // builder.addCase(singleSearch.rejected, (state, action) => {
+    //   state.loading = false
+    //   state.error = action.error.message
+    // })
+
     builder.addCase(initializeSearch.pending, (state) => {
       state.loading = true
       state.searchActive = true
