@@ -8,12 +8,9 @@ import {
   setFileName
 } from '../features/loadFile/loadFileSlice'
 import { alertManager } from '../alerts/alertManager'
-import { alertDialog } from '../features/modal/modalSlice'
 import { ModalBuilder } from '../features/modal/ModalBuilder'
 
-// let searchActions;
-// let alertManager;
-// let alertDialog;
+
 
 export const FilePickerHidden = (props) => {
   const inputRef = useRef();

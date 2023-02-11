@@ -11,8 +11,8 @@ import { loadStateFromFile, setPriorSearch } from '../search/searchSlice'
 import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager'
 // import { googlePlacesApiManager2 } from '../../googleAPI/googlePlacesApiManagerWeb'
 import { settingsPanelActions } from './settingsPanelSlice'
-import { alertDialog, confirmationDialog } from '../modal/modalSlice'
-import { ModalBuilder } from '../modal/ModalBuilder'
+// import { ModalBuilder } from '../modal/ModalBuilder'
+import { buildModal } from '../modal/modalSlice'
 import {
   setFileData,
   setFileName
@@ -169,48 +169,73 @@ function resolutionInputColor() {
   }
 }
 
-function togglePriorSearch(val) {
+
+async function togglePriorSearch(val) {
     if (val == true || val != priorSearch) {
-      console.log(inputRef)
-      let modalBuilder = new ModalBuilder()
-      modalBuilder.alertKey = 'clearSearch'
-      modalBuilder.callback = (result) => {
-          dispatch(wrapperActions.reset())
-          dispatch(setPriorSearch(val))
-          if (val == true) {
-            inputRef.current.click()
-          }
-        }
-      modalBuilder.errorback = (error) => {
-          console.log("reject callback run")
+
+      let selectedAction = await buildModal({
+        "alertKey": 'clearSearch',
+        "data": null,
+        "confirmCallback": (result) => {
+            dispatch(wrapperActions.reset())
+            dispatch(setPriorSearch(val))
+            if (val == true) {
+              inputRef.current.click()
+            }
+          },
+        "denyCallback": (error) => {
           console.log(error)
-        }
-      modalBuilder.run()
+          }
+      })
+      selectedAction()
     }
     // else if (val == true) {
     //   inputRef.current.click()
     // }
+  }
 
-
-
-
-  // if (!priorSearch) {
-  //     let modalBuilder = new ModalBuilder()
-  //     modalBuilder.alertKey = 'clearSearch'
-  //     modalBuilder.callback = (result) => {
-  //         dispatch(wrapperActions.reset())
-  //         dispatch(setPriorSearch(true))
-  //         inputRef.current.click()
-  //       }
-  //     modalBuilder.errorback = (error) => {
-  //         console.log("reject callback run")
-  //         console.log(error)
-  //       }
-  //     modalBuilder.run()
-  // } else {
-  //   inputRef.current.click()
-  // }
-}
+// function togglePriorSearch(val) {
+//     if (val == true || val != priorSearch) {
+//       console.log(inputRef)
+//       let modalBuilder = new ModalBuilder()
+//       modalBuilder.alertKey = 'clearSearch'
+//       modalBuilder.callback = (result) => {
+//           dispatch(wrapperActions.reset())
+//           dispatch(setPriorSearch(val))
+//           if (val == true) {
+//             inputRef.current.click()
+//           }
+//         }
+//       modalBuilder.errorback = (error) => {
+//           console.log("reject callback run")
+//           console.log(error)
+//         }
+//       modalBuilder.run()
+//     }
+//     // else if (val == true) {
+//     //   inputRef.current.click()
+//     // }
+//
+//
+//
+//
+//   // if (!priorSearch) {
+//   //     let modalBuilder = new ModalBuilder()
+//   //     modalBuilder.alertKey = 'clearSearch'
+//   //     modalBuilder.callback = (result) => {
+//   //         dispatch(wrapperActions.reset())
+//   //         dispatch(setPriorSearch(true))
+//   //         inputRef.current.click()
+//   //       }
+//   //     modalBuilder.errorback = (error) => {
+//   //         console.log("reject callback run")
+//   //         console.log(error)
+//   //       }
+//   //     modalBuilder.run()
+//   // } else {
+//   //   inputRef.current.click()
+//   // }
+// }
 
 // useEffect(() => {
 //   if (!apiKeyStale) {
@@ -315,25 +340,54 @@ function renderTypeOptions() {
             </SettingsButton>
 
           <SettingsButton
-            onClick={(e) =>
-              {
-                // existingDataWarning(e)
-                let modalBuilder = new ModalBuilder()
-                modalBuilder.alertKey = 'clearSearch'
-                modalBuilder.callback = (result) => {
-                    // console.log("no callback set")
-                    dispatch(wrapperActions.reset())
+            onClick={async (e) =>
 
-                  }
-                modalBuilder.errorback = (error) => {
-                    console.log("reject callback run")
+              {
+                let selectedAction = await buildModal({
+                  "alertKey": 'clearSearch',
+                  "data": null,
+                  "confirmCallback": () => {
+                    dispatch(wrapperActions.reset())
+                  },
+                  "denyCallback": (error) => {
                     console.log(error)
-                  }
-                modalBuilder.run()
+                    }
+                })
+                selectedAction()
               }
+              // {
+              //   let modalBuilder = new ModalBuilder()
+              //   modalBuilder.alertKey = 'clearSearch'
+              //   modalBuilder.callback = (result) => {
+              //       dispatch(wrapperActions.reset())
+              //
+              //     }
+              //   modalBuilder.errorback = (error) => {
+              //       console.log("reject callback run")
+              //       console.log(error)
+              //     }
+              //   modalBuilder.run()
+              // }
             }
             >
           Clear Search
+          </SettingsButton>
+
+          <SettingsButton
+            onClick={async (e) =>
+              {
+
+                let selectedAction = await buildModal({
+                  "alertKey": 'clearSearch',
+                  "data": null,
+                  "confirmCallback": () => {console.log("confirm callback")},
+                  "denyCallback": () => {console.log("deny callback")}
+                })
+                console.log(selectedAction)
+              }
+            }
+            >
+          Modal Test
           </SettingsButton>
 
         </div>

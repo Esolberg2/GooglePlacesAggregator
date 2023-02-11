@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { setVisible, callbackDict } from './modalSlice'
+import { modalFunctionStore, setVisible, callbackDict } from './modalSlice'
 import Modal from 'react-modal';
 Modal.setAppElement('body')
 
@@ -20,21 +20,24 @@ const customStyles = {
 
 export const ConfirmationModal = React.memo(props => {
   const visible = useSelector((state) => state.modal.visible)
-  const resolveCallback = callbackDict.resolve
-  const rejectCallback = callbackDict.reject
+  // const resolve = callbackDict.resolve
+  // const reject = callbackDict.reject
   const message = useSelector((state) => state.modal.message)
+  const resolve = modalFunctionStore.resolve
+  // const reject = modalFunctionStore.reject
 
 
   function onConfirm() {
     console.log("confirming")
-    resolveCallback(true)
-    return true
+    resolve(true)
+    // return true
   }
 
   function onDeny() {
     console.log("rejecting")
-    rejectCallback(false)
-    return false
+    // reject(false)
+    // return false
+    resolve(false)
   }
 
   return (
@@ -46,6 +49,7 @@ export const ConfirmationModal = React.memo(props => {
       >
         <button onClick={onConfirm}>confirm</button>
         <button onClick={onDeny}>deny</button>
+        <button onClick={() => {console.log(modalFunctionStore)}}>store</button>
         <div>{message}</div>
       </Modal>
     </div>

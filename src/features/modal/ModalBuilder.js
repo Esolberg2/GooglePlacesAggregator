@@ -9,6 +9,13 @@ export class ModalBuilder {
 
   constructor(alertKey = null, data = null, callback = null, errorback = null) {
 
+    this.resolve = undefined
+    this.reject = undefined
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = resolve
+      this.reject = reject
+    })
+
     this.data = data
 
     this.alertKey = alertKey
@@ -37,35 +44,45 @@ export class ModalBuilder {
 //   })
 // }
 
+// run() {
+//   return new Promise((resolve, reject) => {
+//     let modal = store.dispatch(modalDialog({
+//       "alertKey": this.alertKey,
+//       "data": this.data
+//     }))
+//     modal.unwrap()
+//     .then(async (result) => {
+//       await this.callback()
+//       resolve()
+//     })
+//     .catch((error) => {
+//       this.errorback(error)
+//       reject(error)
+//     })
+//   })
+// }
+
+
+// wherever run() is called, run will be either the
+// function associated with "confirm" or "deny"
+// based on the user selection.
 run() {
-  return new Promise((resolve, reject) => {
     let modal = store.dispatch(modalDialog({
       "alertKey": this.alertKey,
       "data": this.data
     }))
-    console.log(modal)
-    // console.log(modal.unwrap())
-    modal.unwrap()
-    .then((unwrapResults) => {
-      console.log(unwrapResults)
-    })
-    .then(async (result) => {
-      console.log(result)
-      await this.callback()
-      resolve()
-      // resolve()
-    })
-    // .then((output) => {
-    //   console.log(output)
-    //   resolve(output)
-    // })
-    .catch((error) => {
-      this.errorback(error)
-      reject(error)
-    })
-  })
 
-}
+    console.log(modal)
+    // modal.unwrap()
+    // .then((result) => {
+    //   console.log(result)
+    //   console.log(this.callback())
+    //   // return this.callback()
+    // })
+    // .catch((error) => {
+    //   return this.errorback(error)
+    // })
+  }
 
 }
 
