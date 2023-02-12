@@ -23,10 +23,12 @@ export const AlertModal = React.memo(props => {
   const visible = useSelector((state) => state.modal.visible)
   const message = useSelector((state) => state.modal.message)
   const resolve = modalFunctionStore.resolve
+  const reject = modalFunctionStore.reject
 
-  function onConfirm() {
+
+  function onDeny() {
     console.log("confirming")
-    resolve(false)
+    reject()
   }
 
   return (
@@ -37,7 +39,7 @@ export const AlertModal = React.memo(props => {
         contentLabel="Alert Modal"
       >
         <button onClick={() => {
-          onConfirm()
+          onDeny()
         }}>ok</button>
         <div>{message}</div>
       </Modal>

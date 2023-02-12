@@ -25,9 +25,9 @@ const combinedReducer = combineReducers({
 })
 
 const rootReducer = (state, action) => {
-  console.log("root reducer action", action.type)
+  // console.log("root reducer action", action.type)
   if (action.type === 'stateWrapper/reset') {
-    console.log("root reducer reset")
+    // console.log("root reducer reset")
     state = undefined
   }
   return combinedReducer(state, action)

@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { DrawPolygonMode } from 'react-map-gl-draw';
-import { FilePickerHidden } from '../../components/FilePickerHidden.js'
 import { searchPlaces, setBulkSearchCount, getData } from './searchSlice'
 import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager'
 import { SearchInterfaceButton } from '../../components/SearchInterfaceButton'
@@ -20,10 +19,7 @@ export function SearchInterface(props) {
     bulkSearch,
   } = props
 
-  const [callType, setCallType] = useState('singleSearch')
   const bulkSearchCount = useSelector(state => state.search.bulkSearchCount)
-  const mapPolygons = useSelector(state => state.map.mapPolygons)
-  const polygonCoordinates = useSelector(state => state.map.polygonCoordinates)
 
   function onChangeBulkQtyInput(e) {
     dispatch(setBulkSearchCount(e.target.value))

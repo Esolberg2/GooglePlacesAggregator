@@ -1,5 +1,4 @@
 import { createSlice } from '@reduxjs/toolkit'
-// import { nearbySearch } from '../search/searchSlice'
 
 const initialState = {
   searchEntityType: "Select",
@@ -34,16 +33,8 @@ export const settingsPanelSlice = createSlice({
       state.userSearchKey = randomKey
     },
     ["searchSlice/searchPlaces/fulfilled"]: (state) => {
-      console.log("singleSearch from searcgSlice")
       state.budgetUsed += .032
     },
-    // ["search/searchPlaces/fulfilled"]: (state) => {state.budgetUsed += .032},
-    // ["searchSlice/setSearchData"]: (state) => {
-    // ["searchSlice/singleSearch/fulfilled"]: (state) => {
-    //   console.log("singleSearch from searcgSlice")
-    //   state.budgetUsed += .032
-    // },
-
     ["searchSlice/loadStateFromFile"]: (state, action) => {
       let file = action.payload
       state.testMode = file.testMode
@@ -64,7 +55,6 @@ export const settingsPanelSlice = createSlice({
     setBulkSearchMode: (state, action) => {state.bulkSearchMode = action.payload},
     setUserSearchKey: (state, action) => {state.userSearchKey = action.payload},
     setApiKey: (state, action) => {
-      console.log(action.payload)
       state.apiKey = action.payload
     },
     setApiKeyStale: (state, action) => {state.apiKeyStale = action.payload},

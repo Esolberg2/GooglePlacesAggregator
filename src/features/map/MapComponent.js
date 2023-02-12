@@ -6,10 +6,9 @@ import { Editor, EditingMode } from 'react-map-gl-draw';
 import { getFeatureStyle, getEditHandleStyle } from '../../style';
 import { mapActions, deletePolygon } from './mapSlice'
 import { SearchInterface } from '../search/SearchInterface'
-import { unwrapResult } from '@reduxjs/toolkit'
 import { debouncedBuildSearch } from '../../functions/buildSearch'
-import { debouncedBulkSearch } from '../../functions/bulkSearch'
-import { debouncedSingleSearch } from '../../functions/singleSearch'
+// import { debouncedBulkSearch } from '../../functions/bulkSearch'
+import { debouncedBulkSearch, debouncedSingleSearch } from '../search/searchSlice'
 import { buildFromFile } from '../../functions/buildFromFile'
 
 
@@ -34,7 +33,6 @@ export const MapComponent = React.forwardRef((props, ref) => {
   const selectedFeatureIndex = mapData.selectedFeatureIndex
   const setSelectedFeatureIndex = mapActions.setSelectedFeatureIndex
 
-  const fileData = useSelector(state => state.loadFile.fileData)
   const sliceSearchedAreas = mapData.searchedAreas
   const searchActive = useSelector(state => state.search.searchActive)
   const priorSearch = useSelector(state => state.search.priorSearch)
@@ -69,7 +67,7 @@ export const MapComponent = React.forwardRef((props, ref) => {
       editorRef.current.state.featureCollection.featureCollection.features = []
       editorRef.current.addFeatures(mapPolygons)
     }
-  }, [fileData, mapPolygons])
+  }, [mapPolygons])
 
   useEffect(() => {
     setViewPort({

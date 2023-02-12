@@ -11,7 +11,6 @@ const initialState = {
   selectedFeatureIndex: null,
   polygonCoordinates: null,
   mapPolygons: []
-  // editorRefState: undefined
 }
 
 
@@ -43,8 +42,6 @@ export const mapSlice = createSlice({
   extraReducers: {
 
     ["searchSlice/searchPlaces/fulfilled"]: (state, action) => {
-      console.log(action.payload)
-      console.log("searchPlaces from searchSlice")
       state.searchedAreas.features = [...state.searchedAreas.features, buildCoordJSON(action.payload.lastSearchPerimeter)]
     },
 
@@ -56,13 +53,9 @@ export const mapSlice = createSlice({
 
     ["loadStateFromFile"]: (state, action) => {
       let file = action.payload
-      console.log("map slice loadStateFromFile2")
-
     },
     ["searchSlice/loadStateFromFile"]: (state, action) => {
       let file = action.payload
-      console.log("map slice loadStateFromFile")
-      console.log(file)
       // console.log(file.searchedCoords)
       state.polygonCoordinates = file.polygonCoordinates
       state.mapPolygons = file.mapPolygons

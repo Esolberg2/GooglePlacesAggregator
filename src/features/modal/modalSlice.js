@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { useSelector, useDispatch } from 'react-redux'
 import { alertManager } from '../../alerts/alertManager'
-import { unwrapResult } from '@reduxjs/toolkit'
 import { store } from '../../store'
 
 const initialState = {
@@ -36,14 +35,21 @@ export async function buildModal(kwargs) {
   console.log("alert status", alert)
 
   const promise = new Promise(function(resolve, reject){
-    modalFunctionStore.resolve = (bool) => {
+    modalFunctionStore.resolve = () => {
       console.log("store resolve")
       store.dispatch(setMessage(''))
       store.dispatch(setDialogType(false))
       store.dispatch(setVisible(false))
-      let returnFunc = bool ? confirmCallback : denyCallback
-      console.log(returnFunc)
-      resolve(returnFunc)
+      console.log(confirmCallback)
+      resolve(confirmCallback)
+    }
+    modalFunctionStore.reject = () => {
+      console.log("store reject")
+      store.dispatch(setMessage(''))
+      store.dispatch(setDialogType(false))
+      store.dispatch(setVisible(false))
+      console.log(denyCallback)
+      reject(denyCallback)
     }
   })
   console.log("promises set")
@@ -57,7 +63,7 @@ export async function buildModal(kwargs) {
   }
 
   else {
-    modalFunctionStore.resolve(true)
+    modalFunctionStore.resolve()
   }
   return promise
 }
@@ -92,16 +98,6 @@ export const modalSlice = createSlice({
   name: 'modal',
   initialState,
   extraReducers: (builder) => {
-    // builder.addCase(buildModal.fulfilled, (state, action) => {
-    //   state.visible = false
-    //   state.message = ''
-    //   state.dialogType = ''
-    // })
-    // builder.addCase(buildModal.rejected, (state, action) => {
-    //   state.visible = false
-    //   state.message = ''
-    //   state.dialogType = ''
-    // })
     builder.addCase(modalDialog.fulfilled, (state, action) => {
       state.visible = false
       state.message = ''
@@ -119,7 +115,6 @@ export const modalSlice = createSlice({
   setVisible: (state, action) => {state.visible = action.payload},
 }
 })
-
 
 export const
 {
