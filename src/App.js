@@ -1,17 +1,12 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
+import { googlePlacesApiManager } from './googleAPI/googlePlacesApiManager'
+
 import { useSelector, useDispatch } from 'react-redux'
 import { setPolygonCoordinates } from './features/map/mapSlice'
 import { settingsPanelActions } from './features/settingsPanel/settingsPanelSlice'
 import { MapComponent } from './features/map/MapComponent'
 import { styles } from './style'
 import { SettingsPanel } from './features/settingsPanel/SettingsPanel'
-// import { DynamicModal } from './components/Modal'
-// import { SearchInterface } from './features/search/SearchInterface'
-// import { TestComponent } from './features/search/TestComponent'
-
-// import { MapComponent } from './features/map/MapComponent'
-// import { googleSearchManager } from './data/GoogleSearchManager'
-import { googlePlacesApiManager } from './googleAPI/googlePlacesApiManager'
 import { alertManager } from './alerts/alertManager'
 import { BsFillQuestionCircleFill } from 'react-icons/bs';
 import MapGL, {GeolocateControl, Source, Layer } from 'react-map-gl'
@@ -89,8 +84,6 @@ const App = () => {
   const mapData = useSelector(state => state.map)
 
   const testMode = settingsData.testMode
-  console.log("TEST MODE")
-  console.log(testMode)
   const budget = settingsData.budget
   const budgetUsed = settingsData.budgetUsed
   const bulkSearchCount = searchData.bulkSearchCount

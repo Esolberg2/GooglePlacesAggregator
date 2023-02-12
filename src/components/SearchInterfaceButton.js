@@ -23,9 +23,6 @@ const Button = styled.button`
 
 
 export const SearchInterfaceButton = (props) => {
-  console.log(props.children)
-  console.log(props.disabled)
-  console.log(" ")
   return (
     <Button {...props}>
       {props.children}

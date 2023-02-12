@@ -20,24 +20,17 @@ const customStyles = {
 
 export const ConfirmationModal = React.memo(props => {
   const visible = useSelector((state) => state.modal.visible)
-  // const resolve = callbackDict.resolve
-  // const reject = callbackDict.reject
   const message = useSelector((state) => state.modal.message)
   const resolve = modalFunctionStore.resolve
-  // const reject = modalFunctionStore.reject
+  const reject = modalFunctionStore.reject
 
 
   function onConfirm() {
-    console.log("confirming")
-    resolve(true)
-    // return true
+    resolve()
   }
 
   function onDeny() {
-    console.log("rejecting")
-    // reject(false)
-    // return false
-    resolve(false)
+    reject()
   }
 
   return (
@@ -49,7 +42,6 @@ export const ConfirmationModal = React.memo(props => {
       >
         <button onClick={onConfirm}>confirm</button>
         <button onClick={onDeny}>deny</button>
-        <button onClick={() => {console.log(modalFunctionStore)}}>store</button>
         <div>{message}</div>
       </Modal>
     </div>

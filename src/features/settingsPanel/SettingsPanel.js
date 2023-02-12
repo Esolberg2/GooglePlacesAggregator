@@ -9,9 +9,7 @@ import SpinnerButton from '../../components/SpinnerButton'
 import CurrencyInput from 'react-currency-input-field';
 import { loadStateFromFile, setPriorSearch } from '../search/searchSlice'
 import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager'
-// import { googlePlacesApiManager2 } from '../../googleAPI/googlePlacesApiManagerWeb'
 import { settingsPanelActions } from './settingsPanelSlice'
-// import { ModalBuilder } from '../modal/ModalBuilder'
 import { buildModal } from '../modal/modalSlice'
 import {
   setFileData,
@@ -56,246 +54,140 @@ export function SettingsPanel(props) {
     setGooglePlacesLibLoading
   } = settingsPanelActions
 
-const downloadFile = ({ data, fileName, fileType }) => {
-  const blob = new Blob([data], { type: fileType })
-  const a = document.createElement('a')
-  a.download = fileName
-  a.href = window.URL.createObjectURL(blob)
-  const clickEvt = new MouseEvent('click', {
-    view: window,
-    bubbles: true,
-    cancelable: true,
-  })
-  a.dispatchEvent(clickEvt)
-  a.remove()
-}
-
-const exportToJson = e => {
-  e.preventDefault()
-  let datetime = new Date().toLocaleString();
-
-  const searchDataObject = {
-    "searchedCoords": searchData.searchedCoords,
-    "unsearchedCoords": searchData.unsearchedCoords,
-    "searchedAreas": mapData.searchedAreas,
-    "googleData": searchData.googleData,
-    "searchEntityType": settingsData.searchEntityType,
-    "budget": settingsData.budget,
-    "budgetUsed": settingsData.budgetUsed,
-    "searchResolution": settingsData.searchResolution,
-    "userSearchKey": settingsData.userSearchKey,
-    "nextCenter": searchData.nextCenter,
-    "lastSearchRadius": searchData.lastSearchRadius,
-    "searchID": searchData.searchID,
-    "polygonCoordinates": mapData.polygonCoordinates,
-    "mapPolygons": mapData.mapPolygons,
-    "testMode": settingsData.testMode
+  const downloadFile = ({ data, fileName, fileType }) => {
+    const blob = new Blob([data], { type: fileType })
+    const a = document.createElement('a')
+    a.download = fileName
+    a.href = window.URL.createObjectURL(blob)
+    const clickEvt = new MouseEvent('click', {
+      view: window,
+      bubbles: true,
+      cancelable: true,
+    })
+    a.dispatchEvent(clickEvt)
+    a.remove()
   }
 
-  let include = [
-  // 'west',
-  // 'compound_code',
-  // 'viewport',
-  // 'width',
-  // 'types',
-  // 'icon_background_color',
-  // 'place_id',
-  // 'east',
-  // 'opening_hours',
-  // 'name',
-  // 'reference',
-  // 'photos',
-  // 'height',
-  // 'south',
-  // 'getUrl',
-  // 'north',
-  // 'rating',
-  // 'lng',
-  // 'icon',
-  // 'html_attributions',
-  // 'geometry',
-  // 'location',
-  // 'scope',
-  // 'lat',
-  // 'vicinity',
-  // 'plus_code',
-  // 'user_ratings_total',
-  // 'global_code',
-  // 'icon_mask_base_uri',
-  // 'price_level',
-  // 'business_status',
-  // 'type',
-  // 'features',
-  // 'properties',
-  // 'coordinates',
-  // 'testMode',
-  ...Object.keys(searchDataObject)
-  ]
+  const exportToJson = e => {
+    e.preventDefault()
+    let datetime = new Date().toLocaleString();
 
-  let d = JSON.stringify(searchDataObject, include)
-  downloadFile({
-    data: JSON.stringify(searchDataObject, include),
-    fileName: `${searchEntityType}_${userSearchKey}_${datetime}.json`,
-    fileType: 'text/json',
-  })
-}
+    const searchDataObject = {
+      "searchedCoords": searchData.searchedCoords,
+      "unsearchedCoords": searchData.unsearchedCoords,
+      "searchedAreas": mapData.searchedAreas,
+      "googleData": searchData.googleData,
+      "searchEntityType": settingsData.searchEntityType,
+      "budget": settingsData.budget,
+      "budgetUsed": settingsData.budgetUsed,
+      "searchResolution": settingsData.searchResolution,
+      "userSearchKey": settingsData.userSearchKey,
+      "nextCenter": searchData.nextCenter,
+      "lastSearchRadius": searchData.lastSearchRadius,
+      "searchID": searchData.searchID,
+      "polygonCoordinates": mapData.polygonCoordinates,
+      "mapPolygons": mapData.mapPolygons,
+      "testMode": settingsData.testMode
+    }
 
+    // let include = [
+    // ...Object.keys(searchDataObject)
+    // ]
 
-function handleSelectChange(event) {
-  dispatch(setSearchEntityType(event.target.value))
-}
-
-function handleBudgetChange(value) {
-  let cleanValue = isNaN(value) ? 0 : parseFloat(value)
-  if (cleanValue < -1) {
-      dispatch(setBudget(-1))
-    } else {
-      dispatch(setBudget(value))}
+    let d = JSON.stringify(searchDataObject)
+    downloadFile({
+      data: JSON.stringify(searchDataObject),
+      fileName: `${searchEntityType}_${userSearchKey}_${datetime}.json`,
+      fileType: 'text/json',
+    })
   }
 
-function handleResolutionChange(value) {
-  dispatch(setSearchResolution(value))
-}
 
-function resolutionInputColor() {
-  if (priorSearch) {
-    return '#cccccc'
-  } else {
-    if (searchResolution < 0.1) {
-      return '#fde0e0'
+  function handleSelectChange(event) {
+    dispatch(setSearchEntityType(event.target.value))
+  }
+
+  function handleBudgetChange(value) {
+    let cleanValue = isNaN(value) ? 0 : parseFloat(value)
+    if (cleanValue < -1) {
+        dispatch(setBudget(-1))
+      } else {
+        dispatch(setBudget(value))}
+    }
+
+  function handleResolutionChange(value) {
+    dispatch(setSearchResolution(value))
+  }
+
+  function resolutionInputColor() {
+    if (priorSearch) {
+      return '#cccccc'
     } else {
-      return undefined
+      if (searchResolution < 0.1) {
+        return '#fde0e0'
+      } else {
+        return undefined
+      }
     }
   }
-}
 
 
-async function togglePriorSearch(val) {
-    if (val == true || val != priorSearch) {
+  async function togglePriorSearch(val) {
+      if (val == true || val != priorSearch) {
 
-      let selectedAction = await buildModal({
-        "alertKey": 'clearSearch',
-        "data": null,
-        "confirmCallback": (result) => {
-            dispatch(wrapperActions.reset())
-            dispatch(setPriorSearch(val))
-            if (val == true) {
-              inputRef.current.click()
+        let selectedAction = await buildModal({
+          "alertKey": 'clearSearch',
+          "data": null,
+          "confirmCallback": (result) => {
+              dispatch(wrapperActions.reset())
+              dispatch(setPriorSearch(val))
+              if (val == true) {
+                inputRef.current.click()
+              }
+            },
+          "denyCallback": (error) => {
+            console.log(error)
             }
-          },
-        "denyCallback": (error) => {
-          console.log(error)
-          }
-      })
-      selectedAction()
+        })
+        selectedAction()
+      }
     }
-    // else if (val == true) {
-    //   inputRef.current.click()
-    // }
+
+  function onChangeAPIkeyInput(e) {
+    setApiKey(e.target.value)
   }
 
-// function togglePriorSearch(val) {
-//     if (val == true || val != priorSearch) {
-//       console.log(inputRef)
-//       let modalBuilder = new ModalBuilder()
-//       modalBuilder.alertKey = 'clearSearch'
-//       modalBuilder.callback = (result) => {
-//           dispatch(wrapperActions.reset())
-//           dispatch(setPriorSearch(val))
-//           if (val == true) {
-//             inputRef.current.click()
-//           }
-//         }
-//       modalBuilder.errorback = (error) => {
-//           console.log("reject callback run")
-//           console.log(error)
-//         }
-//       modalBuilder.run()
-//     }
-//     // else if (val == true) {
-//     //   inputRef.current.click()
-//     // }
-//
-//
-//
-//
-//   // if (!priorSearch) {
-//   //     let modalBuilder = new ModalBuilder()
-//   //     modalBuilder.alertKey = 'clearSearch'
-//   //     modalBuilder.callback = (result) => {
-//   //         dispatch(wrapperActions.reset())
-//   //         dispatch(setPriorSearch(true))
-//   //         inputRef.current.click()
-//   //       }
-//   //     modalBuilder.errorback = (error) => {
-//   //         console.log("reject callback run")
-//   //         console.log(error)
-//   //       }
-//   //     modalBuilder.run()
-//   // } else {
-//   //   inputRef.current.click()
-//   // }
-// }
-
-// useEffect(() => {
-//   if (!apiKeyStale) {
-//     setApiKeyStale(true)
-//   }
-// }, [apiKey])
-
-function onChangeAPIkeyInput(e) {
-  setApiKey(e.target.value)
-}
-
-function renderSearchResolution() {
-    return (
-      <CurrencyInput
-        id="input-example"
-        name="input-name"
-        placeholder="Search Resolution"
-        value={searchResolution}
-        decimalsLimit={2}
-        disabled={priorSearch}
-        onKeyDown = {(evt) => ['e', '-'].includes(evt.key) && evt.preventDefault() }
-        onValueChange={handleResolutionChange}
-        style={{backgroundColor: resolutionInputColor(), paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', height: '15px', textAlign: 'center'}}
-        />
-    )
-}
-
-function loadFile(value) {
-  console.log("---- LOAD FILE-----")
-  let fileReader = new FileReader();
-  fileReader.onloadend = (e) => {
-    const content = fileReader.result;
-    dispatch(loadStateFromFile(JSON.parse(content)))
-  };
-
-  if (value.target.files) {
-    fileReader.readAsText(value.target.files[0]);
+  function renderSearchResolution() {
+      return (
+        <CurrencyInput
+          id="input-example"
+          name="input-name"
+          placeholder="Search Resolution"
+          value={searchResolution}
+          decimalsLimit={2}
+          disabled={priorSearch}
+          onKeyDown = {(evt) => ['e', '-'].includes(evt.key) && evt.preventDefault() }
+          onValueChange={handleResolutionChange}
+          style={{backgroundColor: resolutionInputColor(), paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', height: '15px', textAlign: 'center'}}
+          />
+      )
   }
 
-}
+  function loadFile(value) {
+    let fileReader = new FileReader();
+    fileReader.onloadend = (e) => {
+      const content = fileReader.result;
+      dispatch(loadStateFromFile(JSON.parse(content)))
+    };
 
-// function setNewSearch() {
-//   if (priorSearch) {
-//       let modalBuilder = new ModalBuilder()
-//       modalBuilder.alertKey = 'clearSearch'
-//       modalBuilder.callback = (result) => {
-//           dispatch(wrapperActions.reset())
-//           dispatch(setPriorSearch(false))
-//         }
-//       modalBuilder.errorback = (error) => {
-//           console.log("reject callback run")
-//           console.log(error)
-//         }
-//       modalBuilder.run()
-//   }
-// }
+    if (value.target.files) {
+      fileReader.readAsText(value.target.files[0]);
+    }
+  }
 
-function renderTypeOptions() {
-  return placeTypes.map(type => <option key={type} value={type}>{type}</option>)
-}
+  function renderTypeOptions() {
+    return placeTypes.map(type => <option key={type} value={type}>{type}</option>)
+  }
 
   return (
     <div style={{}}>
@@ -315,7 +207,6 @@ function renderTypeOptions() {
           <SettingsButton
             selected={!priorSearch}
             onClick={() => {
-              // togglePriorSearch()
               togglePriorSearch(false)
             }}
             >
@@ -355,19 +246,6 @@ function renderTypeOptions() {
                 })
                 selectedAction()
               }
-              // {
-              //   let modalBuilder = new ModalBuilder()
-              //   modalBuilder.alertKey = 'clearSearch'
-              //   modalBuilder.callback = (result) => {
-              //       dispatch(wrapperActions.reset())
-              //
-              //     }
-              //   modalBuilder.errorback = (error) => {
-              //       console.log("reject callback run")
-              //       console.log(error)
-              //     }
-              //   modalBuilder.run()
-              // }
             }
             >
           Clear Search
@@ -485,6 +363,4 @@ function renderTypeOptions() {
       </SettingsTextContainer>
     </div>
   </div>
-)
-
-}
+)}

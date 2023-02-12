@@ -17,7 +17,6 @@ export function DialogModal() {
   if (dialogType == "Confirmation") {
     return <ConfirmationModal />
   } else {
-    console.log("fallthrough")
     return null
   }
 }
