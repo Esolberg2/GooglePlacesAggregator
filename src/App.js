@@ -24,16 +24,13 @@ import IconButton from './components/IconButton.js'
 import axios from 'axios'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import "react-map-gl-geocoder/dist/mapbox-gl-geocoder.css"
-// import {updateGoogleApi} from "./helperFunctions/google_JS_API_Helpers"
-import { triggerAlertFor } from "./helperFunctions/arg_Checker"
-import { axiosPutPostData } from "./helperFunctions/axios_Helpers"
-import { buildSearch, nextSearch } from "./helperFunctions/server_API_Helpers"
 import { initializeSearch as initializeSearchSlice } from './features/search/searchSlice'
 import { loadStateFromFile, setBulkSearchCount, setPriorSearch } from './features/search/searchSlice'
 import { mapActions } from './features/map/mapSlice'
 import { ConfirmationModal } from './features/modal/Confirmation'
 import { AlertModal } from './features/modal/Alert'
-import { DialogModal } from './features/modal/Modal'
+import { DynamicModal } from './features/modal/Modal'
+import { modalFunctionStore } from './features/modal/modalSlice'
 const CryptoJS = require("crypto-js");
 const placeTypes = require('./data/placeTypes.json');
 const infoMessages = require('./data/informationText.json');
@@ -222,11 +219,11 @@ const App = () => {
     }
   )
 
-  useEffect(() => {
-    if (editorRef.current && searchedAreas.features.length > 0) {
-      calcSearchEfficiency()
-    }
-  }, [searchedAreas])
+  // useEffect(() => {
+  //   if (editorRef.current && searchedAreas.features.length > 0) {
+  //     calcSearchEfficiency()
+  //   }
+  // }, [searchedAreas])
 
 
   function calcCoverage() {
@@ -592,40 +589,40 @@ const App = () => {
   }
 
 
-  async function syncBackend() {
-    await axiosPutPostData('PUT', `/api/loadSearch`,
-      {
-        "searched": searchedData.current,
-        "unsearched": unsearchedData.current,
-        "searchID": searchID.current,
-      })
-      }
+  // async function syncBackend() {
+  //   await axiosPutPostData('PUT', `/api/loadSearch`,
+  //     {
+  //       "searched": searchedData.current,
+  //       "unsearched": unsearchedData.current,
+  //       "searchID": searchID.current,
+  //     })
+  //     }
 
-  async function cleanPolygons() {
-    let response = await axiosPutPostData('PUT', `/api/mergePolygons`,
-      {
-        "polygons": getPolygons(),
-      })
-      return response["data"]["efficiency"]
-      }
+  // async function cleanPolygons() {
+  //   let response = await axiosPutPostData('PUT', `/api/mergePolygons`,
+  //     {
+  //       "polygons": getPolygons(),
+  //     })
+  //     return response["data"]["efficiency"]
+  //     }
 
-  async function calcSearchEfficiency() {
-    let coordinates =  searchedAreas.features.map(feature => feature.geometry.coordinates[0])
-
-    let response = await axiosPutPostData('PUT', `/api/mergePolygons`,
-      {
-        "searchedAreas": coordinates,
-        "searchRegions": getPolygons(),
-        "budgetUsed": budgetUsed
-      })
-      // return response["data"]
-      let data = response["data"]
-
-      setEfficiency(data["efficiency"])
-      setProjectedSavings(data["projectedSavings"])
-      setProjectedSearchCost(data["projectedSearchCost"])
-      return data
-      }
+  // async function calcSearchEfficiency() {
+  //   let coordinates =  searchedAreas.features.map(feature => feature.geometry.coordinates[0])
+  //
+  //   let response = await axiosPutPostData('PUT', `/api/mergePolygons`,
+  //     {
+  //       "searchedAreas": coordinates,
+  //       "searchRegions": getPolygons(),
+  //       "budgetUsed": budgetUsed
+  //     })
+  //     // return response["data"]
+  //     let data = response["data"]
+  //
+  //     setEfficiency(data["efficiency"])
+  //     setProjectedSavings(data["projectedSavings"])
+  //     setProjectedSearchCost(data["projectedSearchCost"])
+  //     return data
+  //     }
 
   function loadFile(value) {
     let fileReader;
@@ -953,7 +950,13 @@ const handleShow = () => setShow(true);
 
   return (
       <div style={{height: '100vh', flex: '1'}}>
-        <DialogModal />
+
+        <DynamicModal
+          confirmCallback={modalFunctionStore.resolve}
+          rejectCallback={modalFunctionStore.reject}
+          message={useSelector((state) => state.modal.message)}
+          visible={useSelector((state) => state.modal.visible)}
+        />
         <SettingsPanel/>
         <div style={{marginTop: '10px', height: '2px', backgroundColor: 'black', flex: '1'}} />
         <div style={{display: 'flex', height: '100%', flexDirection: 'column'}}>
