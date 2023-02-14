@@ -147,18 +147,15 @@ function searchCallback(results, status, kwargs){
     });
     let options = {units: 'miles'};
     results = JSON.parse(JSON.stringify(results))
-    let radius;
-    if (status == ok) {
-      let testRadius = Math.random() * (1.5 - .1) + .1;
-      let lastLat = results[results.length-1].geometry.location.lat
-      let lastLon = results[results.length-1].geometry.location.lng
-      let from = turf.point(nextCenter);
-      let to = turf.point([lastLon, lastLat]);
-      radius = testMode ? testRadius : turf.distance(from, to, options);
-      console.log(radius)
-    } else {
-      radius = 4
-    }
+
+    let testRadius = Math.random() * (1.5 - .1) + .1;
+    let lastLat = results[results.length-1].geometry.location.lat
+    let lastLon = results[results.length-1].geometry.location.lng
+    let from = turf.point(nextCenter);
+    let to = turf.point([lastLon, lastLat]);
+    let radius = testMode ? testRadius : turf.distance(from, to, options);
+    console.log(radius)
+
     // let options = {units: 'miles'};
     let polygon = turf.circle(nextCenter, radius, options);
     console.log(polygon)
