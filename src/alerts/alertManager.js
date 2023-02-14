@@ -1,4 +1,3 @@
-// import { useSelector, useDispatch } from 'react-redux'
 import { store } from '../store'
 
 class AlertManager {
@@ -30,33 +29,20 @@ class AlertManager {
         this._existingDataWarning
       ],
       "bulkSearch": [
-        // this._googleInitError,
-        // this._searchEntityError,
-        // this._budgetExceededError,
-        // this._searchCompleteError,
-        // this._noSearchInitializedError,
         this._confirmBulkSearch
+      ],
+      "googleApiError": [
+        this._googleApiError
       ]
     }
   }
 
-//   _noSearchInitializedError
-// _googleInitError
-
-
   hasAlert(alertKey, args) {
-    console.log(args)
     try {
-    console.log("====" + alertKey + "====")
-    console.log(alertKey in this.alertTasks)
-
     if (alertKey in this.alertTasks) {
-
       for (const func of this.alertTasks[alertKey]) {
-        console.log(func)
         let result = func(args)
         if (result != false) {
-          console.log("------", result)
           return result
         }
       }
@@ -125,22 +111,20 @@ class AlertManager {
   };
 
   _googleInitError(args) {
-    // if (!store.getState().settingsPanel.testMode) {
-    //   if (!window.google) {
-    //     return {
-    //       text: 'Please make sure to enter your Google API key, and load it into your search using the "Set Key" button.',
-    //       type: 'Alert'
-    //     }
-    //   }
-    // }
+    if (!store.getState().settingsPanel.testMode) {
+      if (!window.google || store.getState().settingsPanel.apiKey == '') {
+        return {
+          text: 'Please make sure to enter your Google API key, and load it into your search using the "Set Key" button.',
+          type: 'Alert'
+        }
+      }
+    }
     return false;
   };
 
   _polygonError(args) {
     console.log(store.getState().map.polygonCoordinates)
     if (!store.getState().map.polygonCoordinates || store.getState().map.polygonCoordinates.length == 0) {
-      // window.alert('Please use the "Select Search Area" option to choose a search region before building your search.');
-      // return true;
       return {
         text: 'Please use the "Select Search Area" option to choose a search region before building your search.',
         type: 'Alert'
@@ -151,8 +135,6 @@ class AlertManager {
 
   _resolutionError(args) {
     if (store.getState().settingsPanel.searchResolution < 0.1 || !store.getState().settingsPanel.searchResolution) {
-      // window.alert('Please enter a value for the "Search Resolution".  This is the distance in miles between each potential search coordinate that will be evaluated.');
-      // return true;
       return {
         text: 'Please enter a value for the "Search Resolution".  This is the distance in miles between each potential search coordinate that will be evaluated.',
         type: 'Alert'
@@ -165,8 +147,6 @@ class AlertManager {
   _searchEntityError(args) {
     console.log(store.getState().settingsPanel.searchEntityType)
     if (store.getState().settingsPanel.searchEntityType == "Select" || !store.getState().settingsPanel.searchEntityType) {
-      // window.alert('Please select an "Entity Type" before building your search.  This is the type of Google Places Entity that the Places API will search for.');
-      // return true;
       return {
       text: 'Please select an "Entity Type" before building your search.  This is the type of Google Places Entity that the Places API will search for.',
       type: 'Alert'
@@ -177,8 +157,6 @@ class AlertManager {
 
   _searchCompleteError(args) {
     if (store.getState().search.unsearchedCoords.length == 0 && store.getState().search.searchedCoords.length != 0) {
-      // window.alert('All coordinate points for your defined region have been searched. If any areas in your search region are unsearched, you may need to repeat the search with a lower Search Resolution value.');
-      // return true;
       return {
         text: 'All coordinate points for your defined region have been searched. If any areas in your search region are unsearched, you may need to repeat the search with a lower Search Resolution value.',
         type: 'Alert'
@@ -191,7 +169,6 @@ class AlertManager {
     console.log(store.getState().settingsPanel.budget)
     console.log(!store.getState().settingsPanel.budget >= 0)
     if (store.getState().settingsPanel.budgetUsed >= store.getState().settingsPanel.budget || store.getState().settingsPanel.budget <= 0) {
-      // window.alert('You have exhausted your set budget. To run additional searches or build a new search, please increase your budget setting.')
       return {
         text: 'You have exhausted your set budget. To run additional searches or build a new search, please increase your budget setting.',
         type: 'Alert'
@@ -228,19 +205,19 @@ class AlertManager {
     }
   }
 
-  // _confirmBulkSearch(args) {
-  //   console.log(args)
-  //   let { searchQty, totalCost } = args
-  //   let selection = window.confirm(
-  //     `WARNING: Please confirm you execute ${searchQty} calls to the Google Places Api.` +
-  //     ` for a projected total cost of $${totalCost}.`
-  //   )
-  //   if (selection) {
-  //     return true
-  //   } else {
-  //     return false
-  //   }
-  // }
+  _googleApiError() {
+    return {
+      text: 'The Google Places API has encountered a problem.' +
+        'Please check that your API key is correct' +
+        ' and that the key is authorized for Google\'s "Maps JavaScript API" and "Places API".' +
+        ' This can be done from the Google Cloud Console.' +
+        '\n \n' +
+        'Click "OK" to be taken to the instruction page for creating Google API keys and enabling the required APIs' +
+        ' at the below URL:\n \n' +
+        'https://developers.google.com/maps/documentation/javascript/get-api-key',
+      type: 'Alert'
+    }
+  }
 
 }
 

@@ -10,6 +10,7 @@ import { unwrapResult } from "@reduxjs/toolkit";
 
 const initialState = {
 // == api call meta ==
+  buildingSearch: false,
   loading: false,
   nearbySearchComplete: false,
   error: '',
@@ -89,7 +90,8 @@ export const syncBackend = createAsyncThunk('searchSlice/syncBackend', async (a,
       })
 })
 
-
+// could move then / catch from searchPlaces to here,
+// chaining off selected action?
 export const singleSearch = createAsyncThunk('searchSlice/singleSearch', async (a, b) => {
     let selectedAction = await buildModal({
       "alertKey": 'search',
@@ -103,16 +105,7 @@ export const singleSearch = createAsyncThunk('searchSlice/singleSearch', async (
         }
     })
     let returned = await selectedAction()
-    console.log("returned", returned)
-    return returned
-    // return selectedAction()
-    // selectedAction()
-    // .then((res)=> {
-    //   console.log("res", res)
-    // })
-    // .catch((error) => {
-    //   console.log("error", error)
-    // })
+    return unwrapResult(returned)
 })
 
 export const bulkSearch = createAsyncThunk('searchSlice/bulkSearch', async (a, b) => {
@@ -132,6 +125,11 @@ export const bulkSearch = createAsyncThunk('searchSlice/bulkSearch', async (a, b
 })
 
 function searchCallback(results, status, kwargs){
+  console.log("+++++ searchCallback ++++")
+  console.log(results)
+  console.log(status)
+  let zero_results = "ZERO_RESULTS"
+  let ok = "OK"
   const {
     testMode,
     nextCenter,
@@ -140,22 +138,30 @@ function searchCallback(results, status, kwargs){
     reject
   } = kwargs
 
-  if (testMode || status == window.google.maps.places.PlacesServiceStatus.OK) {
+  if (testMode
+    || status == ok
+    || status == zero_results) {
     results.forEach((item, i) => {
       delete item.opening_hours
       delete item.permanently_closed
     });
-
-    results = JSON.parse(JSON.stringify(results))
-    let testRadius = Math.random() * (1.5 - .1) + .1;
-    let lastLat = results[results.length-1].geometry.location.lat
-    let lastLon = results[results.length-1].geometry.location.lng
-
-    let from = turf.point(nextCenter);
-    let to = turf.point([lastLon, lastLat]);
     let options = {units: 'miles'};
-    let radius = testMode ? testRadius : turf.distance(from, to, options);
+    results = JSON.parse(JSON.stringify(results))
+    let radius;
+    if (status == ok) {
+      let testRadius = Math.random() * (1.5 - .1) + .1;
+      let lastLat = results[results.length-1].geometry.location.lat
+      let lastLon = results[results.length-1].geometry.location.lng
+      let from = turf.point(nextCenter);
+      let to = turf.point([lastLon, lastLat]);
+      radius = testMode ? testRadius : turf.distance(from, to, options);
+      console.log(radius)
+    } else {
+      radius = 4
+    }
+    // let options = {units: 'miles'};
     let polygon = turf.circle(nextCenter, radius, options);
+    console.log(polygon)
     let searchPerimeter = polygon.geometry.coordinates[0];
 
     processGoogleData(searchID, searchPerimeter)
@@ -170,6 +176,9 @@ function searchCallback(results, status, kwargs){
       .catch((error) => {
         reject(error)
       })
+  }
+  else {
+    console.log(results)
   }
 }
 
@@ -202,6 +211,27 @@ function processGoogleDataForceMismatch(searchID, searchPerimeter) {
       })
     }
 
+function googleAuthErrorHook(reject) {
+  window.gm_authFailure = function() {
+    googlePlacesApiManager.updateGoogleApi(store.getState().search.apiKey)
+    let selection = window.confirm(
+      'Google Maps API failed to load. Please check that your API key is correct' +
+      ' and that the key is authorized for Google\'s "Maps JavaScript API" and "Places API".' +
+      ' This can be done from the Google Cloud Console.' +
+      '\n \n' +
+      'Click "OK" to be taken to the instruction page for creating Google API keys and enabling the required APIs' +
+      ' at the below URL:\n \n' +
+      'https://developers.google.com/maps/documentation/javascript/get-api-key'
+    )
+   if (selection) {
+     reject()
+     window.open('https://developers.google.com/maps/documentation/javascript/get-api-key', '_blank', 'noopener,noreferrer');
+   } else {
+     reject()
+   }
+  }
+}
+
 export const searchPlaces = createAsyncThunk('searchSlice/searchPlaces', (a, b) => {
   let kwargs = {
     coords: b.getState().search.nextCenter,
@@ -222,21 +252,24 @@ export const searchPlaces = createAsyncThunk('searchSlice/searchPlaces', (a, b) 
     kwargs['resolve'] = resolve
     kwargs['reject'] = reject
 
+    googleAuthErrorHook(b.abort, reject)
+
     if (b.getState().settingsPanel.testMode) {
       dummyGoogleCall(request, (result, status) => searchCallback(result, status, kwargs))
     }
     else {
       let service = googlePlacesApiManager.service
       let func = service.nearbySearch
-      service.nearbySearch(request, (result, status) => searchCallback(result, status, kwargs));
+      let nbs = service.nearbySearch(request, (result, status) => searchCallback(result, status, kwargs));
     }
   })
-  .then((result) => result)
+  .then((result) => {
+    return result
+  })
   .catch((error) => {
     if (error.response.status == 409) {
       b.dispatch(syncBackend())
     }
-    console.log(error)
     return error
   })
 })
@@ -279,6 +312,7 @@ export const searchSlice = createSlice({
     })
     builder.addCase(initializeSearch.pending, (state) => {
       state.loading = true
+      state.buildingSearch = true
       state.searchActive = true
     })
     builder.addCase(initializeSearch.fulfilled, (state, action) => {
@@ -287,6 +321,7 @@ export const searchSlice = createSlice({
       console.log("received unsearched")
       console.log(action.payload.unsearchedCoords)
       state.loading = false
+      state.buildingSearch = false
       state.nextCenter = action.payload.furthestNearest
       state.searchedCoords = action.payload.searchedCoords
       state.unsearchedCoords = action.payload.unsearchedCoords
@@ -295,6 +330,7 @@ export const searchSlice = createSlice({
     })
     builder.addCase(initializeSearch.rejected, (state, action) => {
       state.loading = false
+      state.buildingSearch = false
       state.error = action.error.message
       state.searchActive = false
     })
