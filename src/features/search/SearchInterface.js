@@ -95,7 +95,7 @@ export function SearchInterface(props) {
 
                 <input
                   type="number"
-                  value={bulkSearchCount == 0 ? "Bulk Search Qty" : bulkSearchCount}
+                  value={bulkSearchCount == 0 ? "" : bulkSearchCount}
                   min="0"
                   onKeyDown={ (evt) => ['e', '.', '-'].includes(evt.key) && evt.preventDefault() }
                   onChange={(e) => onChangeBulkQtyInput(e)}

@@ -15,6 +15,7 @@ const initialState = {
 class ModalFunctionStore {
   constructor() {
     this.resolve = undefined
+    this.reject = undefined
   }
 }
 

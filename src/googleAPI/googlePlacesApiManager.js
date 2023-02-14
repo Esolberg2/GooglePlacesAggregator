@@ -90,7 +90,7 @@ class GooglePlacesApiManager {
 			  yield new Promise((resolve, reject) => {
 			    resolve(results)
 			  })
-			} 
+			}
 
 			this.service.nearbySearch(request, callback);
 		}
@@ -112,10 +112,10 @@ class GooglePlacesApiManager {
     this.tag.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=places&callback=callback`;
     this.tag.id = 'googleMaps';
     this.tag.async = false;
-    this.tag.defer = false;
+    this.tag.defer = false; 
 		this.tag.onload = () => {
-			store.dispatch(settingsPanelActions.setGooglePlacesLibLoading(false))
 			this.service = new window.google.maps.places.PlacesService(document.getElementById('map'));
+			store.dispatch(settingsPanelActions.setGooglePlacesLibLoading(false))
 		}
     document.body.appendChild(this.tag);
 

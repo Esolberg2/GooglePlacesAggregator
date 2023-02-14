@@ -252,16 +252,9 @@ export function SettingsPanel(props) {
           </SettingsButton>
 
           <SettingsButton
-            onClick={async (e) =>
+            onClick={ () =>
               {
-
-                let selectedAction = await buildModal({
-                  "alertKey": 'clearSearch',
-                  "data": null,
-                  "confirmCallback": () => {console.log("confirm callback")},
-                  "denyCallback": () => {console.log("deny callback")}
-                })
-                console.log(selectedAction)
+                console.log(window.google)
               }
             }
             >
