@@ -165,7 +165,7 @@ export function SettingsPanel(props) {
           placeholder="Search Resolution"
           value={searchResolution}
           decimalsLimit={2}
-          disabled={priorSearch}
+          disabled={searchActive}
           onKeyDown = {(evt) => ['e', '-'].includes(evt.key) && evt.preventDefault() }
           onValueChange={handleResolutionChange}
           style={{backgroundColor: resolutionInputColor(), paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', height: '15px', textAlign: 'center'}}
@@ -251,16 +251,6 @@ export function SettingsPanel(props) {
           Clear Search
           </SettingsButton>
 
-          <SettingsButton
-            onClick={ () =>
-              {
-                console.log(window.google)
-              }
-            }
-            >
-          Modal Test
-          </SettingsButton>
-
         </div>
         <div style={{flex: '1', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', display: 'flex', fontSize: '25px'}}>
           Google Places Data Helper
@@ -276,7 +266,13 @@ export function SettingsPanel(props) {
     <div style={{display: 'flex', flexDirection: 'row'}}>
       <SettingsTextContainer
         title={'Test Mode'}
-        description={'Test out the tool without needing a Google API key.  All data generated in Test Mode is complete nonsense.'}
+        popupTitle={'Test Mode'}
+        description={
+          <div>
+          <p>Test out the tool without needing a Google API key.</p>
+          <p>While in test mode, only placeholder data is generated and all searches are simulated using randomly generated search radiuses.</p>
+          </div>
+        }
         style={{display: 'flex', flex: '1'}}
         >
           <div style={{ paddingBottom: '5px' }}>
@@ -296,7 +292,14 @@ export function SettingsPanel(props) {
 
       <SettingsTextContainer
         title={'Enter Google API Key'}
-        description={'This API key will need permissoins to Google Maps API and Google Places API.  Your API key is used to make requests directly to the Google API and will not be saved by any component of this website.'}
+        popupTitle={'Google API Key'}
+        description={
+          <div>
+          <p>Enter your API key generated from the Google Cloud Console under the Google Maps Platform settings.</p>
+          <p>A Google API key is required to use this tool with live data.</p>
+          <p>Your key will not be saved and is only used to make requests directly to the Google Places API</p>
+          </div>
+        }
         >
           <div style={{ flex: '1', display: 'flex', flexDirection: 'row', alignItems: 'flex-end'}}>
             <input
@@ -323,16 +326,30 @@ export function SettingsPanel(props) {
 
       <SettingsTextContainer
         title={'Search Entity Type'}
-        description={'These types are dictated by Google, and are limited to one type per search.'}
+        popupTitle={'Search Entity Type'}
+        description={
+          <div>
+          <p>Search Entity Type is the classification of the type of venue or location that you will be querying the Google API for.</p>
+          <p>Only one Entity Type can be used per search.</p>
+          <p>The list of available Search Entity Types is set by Google. Custom types cannot be entered.</p>
+          <p>Google Places entities often are classified as multiple Entity Types.  For example, a Bar is often also classified as a Restaurant, and vice versa.</p>
+          </div>
+        }
         >
-          <select key={searchEntityType} disabled={!priorSearch ? false : true} value={searchEntityType} onChange={handleSelectChange} id="typeSelect" style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}>
+          <select key={searchEntityType} disabled={searchActive} value={searchEntityType} onChange={handleSelectChange} id="typeSelect" style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}>
             {renderTypeOptions()}
           </select>
       </SettingsTextContainer>
 
       <SettingsTextContainer
         title={'Budget'}
-        description={'Use this setting to limit your expenses.  It is also wise to set billing quotas within the Google Cloud Console to ensure no unexpected expenditures are encountered. Enter -1 for unlimited budged: Use this option with EXTREME care.'}
+        popupTitle={'Budget'}
+        description={
+          <div>
+          <p>!!! Please set quotas on your Google API key directly within the Google Cloud Console.  This will ensure that you do not accidentally accure unexpected Google API fees !!!.</p>
+          <p>This budget setting is a convenience feature to help manager your expenditures on the Google Places API, however this website is in beta, and as such all users should protect their budget limits directly within the Google Cloud Console.</p>
+          </div>
+        }
         >
           <CurrencyInput
             prefix="$"
@@ -350,7 +367,14 @@ export function SettingsPanel(props) {
 
       <SettingsTextContainer
       title={'Search Resolution'}
-      description={'This is the spacing between search coordinates within the search region. The minimum resolution is 0.1 miles.'}
+      popupTitle={'Search Resolution'}
+      description={
+        <div>
+        <p>Search Resolution is the distance between potential coordinates that this tool can use for any singular Google Places API request, measured in miles.</p>
+        <p>The smaller the resolution setting, the more likely a search will be to find all venues that match the selected Entity Type. A smaller resolution will also result in longer processing times for searches.</p>
+        <p>The smallest available resolution is 0.1 miles. </p>
+        </div>
+      }
       >
       {renderSearchResolution()}
       </SettingsTextContainer>
