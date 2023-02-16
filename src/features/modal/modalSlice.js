@@ -9,7 +9,8 @@ const initialState = {
   message: '',
   callbackKey: '',
   dialogType: '',
-  promise: ''
+  promise: '',
+  dialogTitle: ''
 }
 
 class ModalFunctionStore {
@@ -41,6 +42,7 @@ export async function buildModal(kwargs) {
       store.dispatch(setMessage(''))
       store.dispatch(setDialogType(false))
       store.dispatch(setVisible(false))
+      store.dispatch(setDialogTitle(''))
       console.log(confirmCallback)
       resolve(confirmCallback)
     }
@@ -48,6 +50,7 @@ export async function buildModal(kwargs) {
       console.log("store reject")
       store.dispatch(setMessage(''))
       store.dispatch(setDialogType(false))
+      store.dispatch(setDialogTitle(''))
       store.dispatch(setVisible(false))
       console.log(denyCallback)
       reject(denyCallback)
@@ -60,6 +63,7 @@ export async function buildModal(kwargs) {
   if (alert) {
     store.dispatch(setMessage(alert.text))
     store.dispatch(setDialogType(alert.type))
+    store.dispatch(setDialogTitle(alert.title))
     store.dispatch(setVisible(true))
   }
 
@@ -111,6 +115,7 @@ export const modalSlice = createSlice({
     })
   },
   reducers: {
+  setDialogTitle: (state, action) => {state.dialogTitle = action.payload},
   setDialogType: (state, action) => {state.dialogType = action.payload},
   setMessage: (state, action) => {state.message = action.payload},
   setVisible: (state, action) => {state.visible = action.payload},
@@ -122,6 +127,7 @@ export const
 setVisible,
 setMessage,
 setDialogType,
+setDialogTitle,
 } = modalSlice.actions
 
 export default modalSlice.reducer

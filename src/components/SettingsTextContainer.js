@@ -5,18 +5,20 @@ import { styles } from '../style'
 
 export const SettingsTextContainer = (props) => {
 
-  const [visible, setVisible] = useState(false)
+  const infoRef = useRef()
 
   return (
     <div style={{...props.style, ...styles.SettingsTextContainer}}>
       <div style={{fontWeight: 'bold', color: '#36B569', display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
       {props.title}
-      <IoInformationCircleOutline style={{ paddingLeft: '2.5px'}} onClick={() => setVisible(!visible)}/>
+      <IoInformationCircleOutline style={{ paddingLeft: '2.5px'}} onClick={() => {
+        infoRef.current.toggleVisible()
+        console.log(infoRef)
+      }}/>
       </div>
       <InfoPopup
+        ref={infoRef}
         message={props.description}
-        visible={visible}
-        setVisible={setVisible}
         title={props.popupTitle}
       />
       <div style={{ flexGrow: '1'}}/>

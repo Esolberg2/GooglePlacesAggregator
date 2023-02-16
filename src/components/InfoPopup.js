@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react'
+import React, { useEffect, useRef, useState, useCallback, useImperativeHandle } from 'react'
 import Modal from 'react-modal';
 Modal.setAppElement('body')
 
@@ -23,14 +23,26 @@ const customStyles = {
   }
 };
 
-export const InfoPopup = React.memo(props => {
-
+// export const InfoPopup = React.memo(props => {
+export const InfoPopup = React.memo(React.forwardRef((props, ref) => {
   const {
     message,
-    visible,
-    setVisible,
+    // visible,
+    // setVisible,
     title
   } = props
+
+  const [visible, setVisible] = useState(false)
+
+  function toggleVisible() {
+    setVisible(!visible)
+  }
+
+  useImperativeHandle(ref, () => ({
+        toggleVisible: () => {
+           setVisible(!visible)
+        }
+     }));
 
 
   return (
@@ -46,4 +58,4 @@ export const InfoPopup = React.memo(props => {
       </div>
     </Modal>
   )
-})
+}))

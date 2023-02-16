@@ -36,7 +36,7 @@ export const MapComponent = React.forwardRef((props, ref) => {
   const sliceSearchedAreas = mapData.searchedAreas
   const searchActive = useSelector(state => state.search.searchActive)
   const priorSearch = useSelector(state => state.search.priorSearch)
-
+  const budgetUsed = useSelector(state => state.settingsPanel.budgetUsed)
   // refs
   const mapRef = useRef();
   const geocoderContainerRef = useRef();
@@ -159,6 +159,7 @@ export const MapComponent = React.forwardRef((props, ref) => {
         searchActive={searchActive}
         priorSearch={priorSearch}
         bulkSearch={debouncedBulkSearch}
+        budgetUsed={budgetUsed}
         />
       </div>
     </div>
