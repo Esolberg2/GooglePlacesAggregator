@@ -13,7 +13,6 @@ export const SettingsTextContainer = (props) => {
       {props.title}
       <IoInformationCircleOutline style={{ paddingLeft: '2.5px'}} onClick={() => {
         infoRef.current.toggleVisible()
-        console.log(infoRef)
       }}/>
       </div>
       <InfoPopup

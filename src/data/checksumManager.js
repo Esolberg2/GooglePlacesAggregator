@@ -14,7 +14,6 @@ class ChecksumManager {
 
   checksumDataBundler() {
     let dataBundle = {"searched": this._getSearchData, "unsearched": this._getUnsearchedData};
-    console.log(dataBundle);
     return dataBundle;
   };
 
