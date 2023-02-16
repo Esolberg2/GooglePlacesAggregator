@@ -11,15 +11,9 @@ export function AlertModal(props) {
   } = props
 
   function onDeny() {
-    console.log(props)
     rejectCallback()
     return false
   }
-
-  // <div style={{ fontSize: '16px', fontWeight: 'bold', textAlign: 'center'}}> {title} </div>
-  // <div style={{ margin: '30px', textAlign: 'left'}}>
-  //   {message}
-  // </div>
 
   return (
     <div>

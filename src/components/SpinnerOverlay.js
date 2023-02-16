@@ -38,7 +38,6 @@ export function SpinnerOverlay(props) {
       />
     <button
     onClick={() => {
-      console.log(window.loadingAbort)
       window.loadingAbort()
     }}
     >

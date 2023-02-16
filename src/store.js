@@ -5,15 +5,6 @@ import searchReducer from './features/search/searchSlice'
 import modalReducer from './features/modal/modalSlice'
 import loadFileReducer from './features/loadFile/loadFileSlice'
 import stateWrapperReducer from './features/stateWrapper/wrapperSlice'
-// export const store = configureStore({
-//   reducer: {
-//     map: mapReducer,
-//     settingsPanel: settingsPanelReducer,
-//     search: searchReducer,
-//     modal: modalReducer,
-//     loadFile: loadFileReducer,
-//   },
-// })
 
 const combinedReducer = combineReducers({
   map: mapReducer,
@@ -25,9 +16,7 @@ const combinedReducer = combineReducers({
 })
 
 const rootReducer = (state, action) => {
-  // console.log("root reducer action", action.type)
   if (action.type === 'stateWrapper/reset') {
-    // console.log("root reducer reset")
     state = undefined
   }
   return combinedReducer(state, action)

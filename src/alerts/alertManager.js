@@ -101,9 +101,7 @@ class AlertManager {
   };
 
   _noSearchInitializedError(args) {
-    console.log(store.getState().search.unsearchedCoords)
     if (store.getState().search.unsearchedCoords.length == 0) {
-      console.log("_noSearchInitializedError should trigger")
       return {
         title: 'No Search Initialized',
         text: 'No coordinates are available to search.  Please make sure to "Build Search" or "Build Search From File" prior to conducting additional searches within your selected region.',
@@ -127,7 +125,6 @@ class AlertManager {
   };
 
   _polygonError(args) {
-    console.log(store.getState().map.polygonCoordinates)
     if (!store.getState().map.polygonCoordinates || store.getState().map.polygonCoordinates.length == 0) {
       return {
         title: 'No Search Area Selected',
@@ -151,7 +148,6 @@ class AlertManager {
 
 
   _searchEntityError(args) {
-    console.log(store.getState().settingsPanel.searchEntityType)
     if (store.getState().settingsPanel.searchEntityType == "Select" || !store.getState().settingsPanel.searchEntityType) {
       return {
       title: 'Search Entity Required',
@@ -174,8 +170,6 @@ class AlertManager {
   };
 
   _budgetExceededError(args) {
-    console.log(store.getState().settingsPanel.budget)
-    console.log(!store.getState().settingsPanel.budget >= 0)
     if (store.getState().settingsPanel.budgetUsed >= store.getState().settingsPanel.budget || store.getState().settingsPanel.budget <= 0) {
       return {
         title: 'Budget Has Been Exceeded',

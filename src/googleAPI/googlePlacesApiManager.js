@@ -3,7 +3,7 @@ import * as turf from '@turf/turf'
 import { store } from '../store'
 import { dummyGoogleCall } from './dummyCall.js'
 import { settingsPanelActions } from '../features/settingsPanel/settingsPanelSlice'
-import { nearbySearch as nearbySearchThunk } from '../features/search/searchSlice'
+// import { nearbySearch as nearbySearchThunk } from '../features/search/searchSlice'
 
 
 function testOutput(data) {
@@ -21,8 +21,7 @@ class GooglePlacesApiManager {
 		// create library callBackScript
 		this.callBackScript = document.createElement('script');
 		this.callBackScript.text = function callback(results, status) {
-			console.log("callback results")
-			console.log(results)
+			return
 		}
 		this.callBackScript.async = false;
 		this.callBackScript.defer = false;
@@ -46,58 +45,55 @@ class GooglePlacesApiManager {
 
 	}
 
-	async nearbySearch() {
-		console.log("running nearbySearch")
-		try {
-			let coords = store.getState().search.nextCenter;
-			console.log(coords)
-	    let searchType = store.getState().settingsPanel.searchEntityType;
-	    let testMode = store.getState().settingsPanel.testMode;
-
-			if (testMode) {
-	    	let rawData = dummyGoogleCall()
-				return rawData
-	    }
-
-			let origin = {lat: coords[1], lng: coords[0]};
-			let request = {
-	      location: origin,
-	      rankBy: window.google.maps.places.RankBy.DISTANCE,
-	      type: searchType
-	      };
-
-			function dataHandler(results) {
-					results.forEach((item, i) => {
-						delete item.opening_hours
-						delete item.permanently_closed
-					});
-
-					results = JSON.parse(JSON.stringify(results))
-
-	        let lastLat = results[results.length-1].geometry.location.lat
-	        let lastLon = results[results.length-1].geometry.location.lng
-	        let from = turf.point(coords);
-	        let to = turf.point([lastLon, lastLat]);
-	        let options = {units: 'miles'};
-	        let distance = turf.distance(from, to, options);
-	        let data =  {"radius": distance, "googleData": results}
-					// store.dispatch(nearbySearchThunk(data))
-					console.log(data)
-					testOutput(data)
-	        }
-
-			function* callback(results) {
-			  yield new Promise((resolve, reject) => {
-			    resolve(results)
-			  })
-			}
-
-			this.service.nearbySearch(request, callback);
-		}
-		catch (error) {
-			console.log(error)
-		}
-	}
+	// async nearbySearch() {
+	// 	try {
+	// 		let coords = store.getState().search.nextCenter;
+	// 		console.log(coords)
+	//     let searchType = store.getState().settingsPanel.searchEntityType;
+	//     let testMode = store.getState().settingsPanel.testMode;
+	//
+	// 		if (testMode) {
+	//     	let rawData = dummyGoogleCall()
+	// 			return rawData
+	//     }
+	//
+	// 		let origin = {lat: coords[1], lng: coords[0]};
+	// 		let request = {
+	//       location: origin,
+	//       rankBy: window.google.maps.places.RankBy.DISTANCE,
+	//       type: searchType
+	//       };
+	//
+	// 		function dataHandler(results) {
+	// 				results.forEach((item, i) => {
+	// 					delete item.opening_hours
+	// 					delete item.permanently_closed
+	// 				});
+	//
+	// 				results = JSON.parse(JSON.stringify(results))
+	//
+	//         let lastLat = results[results.length-1].geometry.location.lat
+	//         let lastLon = results[results.length-1].geometry.location.lng
+	//         let from = turf.point(coords);
+	//         let to = turf.point([lastLon, lastLat]);
+	//         let options = {units: 'miles'};
+	//         let distance = turf.distance(from, to, options);
+	//         let data =  {"radius": distance, "googleData": results}
+	// 				testOutput(data)
+	//         }
+	//
+	// 		function* callback(results) {
+	// 		  yield new Promise((resolve, reject) => {
+	// 		    resolve(results)
+	// 		  })
+	// 		}
+	//
+	// 		this.service.nearbySearch(request, callback);
+	// 	}
+	// 	catch (error) {
+	// 		console.log(error)
+	// 	}
+	// }
 
 	updateGoogleApi(apiKey) {
 		if (store.getState().settingsPanel.googlePlacesLibLoading) {
@@ -112,7 +108,7 @@ class GooglePlacesApiManager {
     this.tag.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=places&callback=callback`;
     this.tag.id = 'googleMaps';
     this.tag.async = false;
-    this.tag.defer = false; 
+    this.tag.defer = false;
 		this.tag.onload = () => {
 			this.service = new window.google.maps.places.PlacesService(document.getElementById('map'));
 			store.dispatch(settingsPanelActions.setGooglePlacesLibLoading(false))

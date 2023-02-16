@@ -34,29 +34,23 @@ export async function buildModal(kwargs) {
   } = kwargs
 
   let alert = alertManager.hasAlert(alertKey, data)
-  console.log("alert status", alert)
 
   const promise = new Promise(function(resolve, reject){
     modalFunctionStore.resolve = () => {
-      console.log("store resolve")
       store.dispatch(setMessage(''))
       store.dispatch(setDialogType(false))
       store.dispatch(setVisible(false))
       store.dispatch(setDialogTitle(''))
-      console.log(confirmCallback)
       resolve(confirmCallback)
     }
     modalFunctionStore.reject = () => {
-      console.log("store reject")
       store.dispatch(setMessage(''))
       store.dispatch(setDialogType(false))
       store.dispatch(setDialogTitle(''))
       store.dispatch(setVisible(false))
-      console.log(denyCallback)
       reject(denyCallback)
     }
   })
-  console.log("promises set")
 
   let output;
 
@@ -74,27 +68,21 @@ export async function buildModal(kwargs) {
 }
 
 export const modalDialog = createAsyncThunk('modal/modalPromise', async (args, b) => {
-  console.log("modalDialog")
   let { alertKey, data } = args
   let alert = alertManager.hasAlert(alertKey, data)
-  console.log(data)
-  console.log(alert)
   if (alert) {
     b.dispatch(setMessage(alert.text))
     b.dispatch(setDialogType(alert.type))
     b.dispatch(setVisible(true))
-    console.log("building promise")
 
     const promise = new Promise(function(resolve, reject){
       modalFunctionStore.resolve = resolve()
       callbackDict.reject = reject()
     })
 
-    console.log("alert processed, returning modal results")
     return promise
 
   } else {
-    console.log("no alert, returning")
     return
   }
 })

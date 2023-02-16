@@ -1,4 +1,3 @@
-// import { useRef } from 'react'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import * as turf from '@turf/turf'
 
@@ -45,26 +44,17 @@ export const mapSlice = createSlice({
       state.searchedAreas.features = [...state.searchedAreas.features, buildCoordJSON(action.payload.lastSearchPerimeter)]
     },
 
-    // ["searchSlice/singleSearch/fulfilled"]: (state, action) => {
-    //   console.log(action.payload)
-    //   console.log("singleSearch from searchSlice")
-    //   state.searchedAreas.features = [...state.searchedAreas.features, buildCoordJSON(action.payload.lastSearchPerimeter)]
-    // },
-
     ["loadStateFromFile"]: (state, action) => {
       let file = action.payload
     },
     ["searchSlice/loadStateFromFile"]: (state, action) => {
       let file = action.payload
-      // console.log(file.searchedCoords)
       state.polygonCoordinates = file.polygonCoordinates
       state.mapPolygons = file.mapPolygons
       state.searchedAreas = file.searchedAreas
-      // state.editorRefState.addFeatures(file.polygons)
     }
   },
   reducers: {
-    // setEditorRefState: (state, action) => {state.editorRefState = action.payload},
     setSearchedAreas: (state, action) => {state.searchedAreas.features = action.payload},
     setSelectedFeatureIndex: (state, action) => {state.selectedFeatureIndex = action.payload},
     setPolygonCoordinates: (state, action) => {
