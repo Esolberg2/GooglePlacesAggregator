@@ -17,6 +17,7 @@ export function SearchInterface(props) {
     searchActive,
     priorSearch,
     bulkSearch,
+    budgetUsed
   } = props
 
   const bulkSearchCount = useSelector(state => state.search.bulkSearchCount)
@@ -103,6 +104,10 @@ export function SearchInterface(props) {
                   placeholder="Bulk Search Qty"
                   />
             </div>
+
+          </div>
+          <div style={{ fontSize: '13px', fontWeight: '300', display: 'flex', flex: '1', justifyContent: 'center', paddingBottom: '10px'}}>
+          Budget Spent: ${budgetUsed}
           </div>
         </div>
       )

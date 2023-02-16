@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { mapActions } from '../map/mapSlice'
 import { wrapperActions } from '../stateWrapper/wrapperSlice'
 import { SettingsButton } from '../../components/SettingsButton'
+import { InfoPopup } from '../../components/InfoPopup'
 import { SettingsTextContainer } from '../../components/SettingsTextContainer'
 import Switch from "react-switch";
 import SpinnerButton from '../../components/SpinnerButton'
@@ -24,6 +25,7 @@ export function SettingsPanel(props) {
   const settingsData = useSelector((state) => state.settingsPanel)
   const mapData = useSelector((state) => state.map)
   const inputRef = useRef();
+  const infoRef = useRef();
   const fileData = useSelector((state) => state.loadFile.fileData)
 
 
@@ -90,10 +92,6 @@ export function SettingsPanel(props) {
       "testMode": settingsData.testMode
     }
 
-    // let include = [
-    // ...Object.keys(searchDataObject)
-    // ]
-
     let d = JSON.stringify(searchDataObject)
     downloadFile({
       data: JSON.stringify(searchDataObject),
@@ -101,7 +99,6 @@ export function SettingsPanel(props) {
       fileType: 'text/json',
     })
   }
-
 
   function handleSelectChange(event) {
     dispatch(setSearchEntityType(event.target.value))
@@ -165,10 +162,12 @@ export function SettingsPanel(props) {
           placeholder="Search Resolution"
           value={searchResolution}
           decimalsLimit={2}
+          suffix=" miles"
+          disableAbbreviations={true}
           disabled={searchActive}
           onKeyDown = {(evt) => ['e', '-'].includes(evt.key) && evt.preventDefault() }
           onValueChange={handleResolutionChange}
-          style={{backgroundColor: resolutionInputColor(), paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', height: '15px', textAlign: 'center'}}
+          style={{ borderWidth: '1px', borderRadius: '15px', backgroundColor: resolutionInputColor(), paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', height: '18px', textAlign: 'center'}}
           />
       )
   }
@@ -191,6 +190,11 @@ export function SettingsPanel(props) {
 
   return (
     <div style={{}}>
+      <InfoPopup
+        message={infoMessages["about"]}
+        title={"About This Tool"}
+        ref={infoRef}
+      />
       <input
         ref={inputRef}
         onChange={e => loadFile(e)}
@@ -252,11 +256,13 @@ export function SettingsPanel(props) {
           </SettingsButton>
 
         </div>
-        <div style={{flex: '1', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', display: 'flex', fontSize: '25px'}}>
+        <div style={{color: '#007018', fontWeight: '600', flex: '1', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', display: 'flex', fontSize: '30px'}}>
           Google Places Data Helper
           <div
-            style={{ margin: '5px', marginBottom: '30px', fontSize: '12px', fontWeight: 'bold', color: '#0000EE', textDecorationLine: 'underline'}}
-            onClick={() => alert(infoMessages["about"])}
+            style={{ margin: '5px', marginBottom: '30px', fontSize: '12px', fontWeight: 'bold', color: '#008800', textDecorationLine: 'underline'}}
+            onClick={() => {
+              infoRef.current.toggleVisible()
+            }}
             >
             About
           </div>
@@ -301,25 +307,25 @@ export function SettingsPanel(props) {
           </div>
         }
         >
-          <div style={{ flex: '1', display: 'flex', flexDirection: 'row', alignItems: 'flex-end'}}>
+          <div style={{ flex: '1', display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
             <input
               value={apiKey}
               onChange={(e) => dispatch(setApiKey(e.target.value))}
-              style={{ marginLeft: '5px', height: '15px', paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}
+              style={{ borderWidth: '1px', borderRadius: '15px', width: '75%', marginLeft: '5px', height: '18px', paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}
               placeholder="Google API Key"
               disabled={testMode}
               />
 
               <SpinnerButton
                 height='15px'
-                width='47px'
+                width='55px'
                 onClick={() => {googlePlacesApiManager.updateGoogleApi(apiKey)}}
                 buttonStyle={{backgroundColor: apiKeyStale ? '#fde0e0' : 'none'}}
                 buttonKey={apiKeyStale}
                 disabled={testMode}
                 loading = {googlePlacesLibLoading}
                 >
-                {apiKeyStale ? 'Set Key' : 'Key Set'}
+                Load Key
               </SpinnerButton>
           </div>
       </SettingsTextContainer>
@@ -336,7 +342,7 @@ export function SettingsPanel(props) {
           </div>
         }
         >
-          <select key={searchEntityType} disabled={searchActive} value={searchEntityType} onChange={handleSelectChange} id="typeSelect" style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}>
+          <select key={searchEntityType} disabled={searchActive} value={searchEntityType} onChange={handleSelectChange} id="typeSelect" style={{height: '30px', borderWidth: '1px', borderRadius: '15px', paddingTop: '5px', paddingBottom: '5px', marginTop: '5px', marginBottom: '5px', textAlign: 'center'}}>
             {renderTypeOptions()}
           </select>
       </SettingsTextContainer>
@@ -346,7 +352,7 @@ export function SettingsPanel(props) {
         popupTitle={'Budget'}
         description={
           <div>
-          <p>!!! Please set quotas on your Google API key directly within the Google Cloud Console.  This will ensure that you do not accidentally accure unexpected Google API fees !!!.</p>
+          <p>!!! Please set quotas on your Google API key directly within the Google Cloud Console.  This will ensure that you do not accidentally accrue unexpected Google API fees !!!.</p>
           <p>This budget setting is a convenience feature to help manager your expenditures on the Google Places API, however this website is in beta, and as such all users should protect their budget limits directly within the Google Cloud Console.</p>
           </div>
         }
@@ -360,8 +366,9 @@ export function SettingsPanel(props) {
             value={budget}
             decimalsLimit={2}
             onValueChange={(value) => handleBudgetChange(value)}
-            style={{paddingTop: '5px', paddingBottom: '5px', marginTop: '20px', marginBottom: '5px', height: '15px', textAlign: 'center'}}
+            style={{borderWidth: '1px', borderRadius: '15px', paddingTop: '5px', paddingBottom: '5px', marginTop: '20px', marginBottom: '5px', height: '18px', textAlign: 'center'}}
             />
+
 
       </SettingsTextContainer>
 

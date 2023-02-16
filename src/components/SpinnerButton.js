@@ -3,27 +3,27 @@ import { googlePlacesApiManager } from '../googleAPI/googlePlacesApiManager'
 import { TailSpin } from  'react-loader-spinner'
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 import { settingsPanelActions } from '../features/settingsPanel/settingsPanelSlice'
+import styled from 'styled-components';
 
+const Button = styled.button`
+  background-color: #36B569;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 20px;
+  border-width: 0px;
+  padding: 5px;
+  margin: 5px;
+  width: 65px;
+  color: white;
+  &:active {
+    opacity: 0.5;
+  }
+  &:disabled {
+    background-color: #ccc;
+  }
+`;
 
 const SpinnerButton = (props) => {
-  // const dispatch = useDispatch()
-  // const googlePlacesLibLoading = useSelector(state => state.settingsPanel)
-  // const setGooglePlacesLibLoading = settingsPanelActions.settingsPanelActions
-  //
-  // const [spinner, setSpinner] = useState(false);
-  // const [loading, setLoading] = useState(false);
-  // const prevLoading = usePrevious(loading);
-  //
-  // const text = props.text
-  // const textStyle = props.textStyle
-  // const buttonStyle = props.buttonStyle
-  // const spinnerStyle = props.spinnerStyle
-  // const height = props.height
-  // const width = props.width
-  // const children = props.children
-  //
-  // const func = props.func
-  // const funcArgs = props.funcArgs
 
   const {
     text,
@@ -41,50 +41,9 @@ const SpinnerButton = (props) => {
 
   const [inputUpdated, setInputUpdated] = useState(false)
 
-  // function funcWrapper(func) {
-  //   return async function(...args) {
-  //     if (spinner) {
-  //       let res = await func.call(this, ...args)
-  //       setLoading(false)
-  //     }
-  //   }
-  // }
-
-  // function onClickWrapper() {
-  //   props.onClick()
-  //   setLoading(true)
-  // }
-
-  // useEffect(() => {
-  //   const wrappedFunction = funcWrapper(func)
-  //   wrappedFunction(...funcArgs)
-  //   if (!spinner) {
-  //     props.onClick()
-  //   }
-  // }, [spinner])
-  //
-  //
-  // useEffect(() => {
-  //   if (loading && !prevLoading) {
-  //     setSpinner(true)
-  //   } else {
-  //     setSpinner(false)
-  //     // props.onClick()
-  //   }
-  // }, [loading])
-  //
-  //
-  // function usePrevious(value) {
-  //   const ref = useRef();
-  //   useEffect(() => {
-  //     ref.current = value;
-  //   }, [value]);
-  //   return ref.current;
-  // }
-
   return (
     <div style={{}}>
-      <button
+      <Button
         key={props.buttonKey}
         onClick={onClick}
         style={{...{padding: '5px', margin: '5px', whiteSpace: 'nowrap'}, ...buttonStyle}}
@@ -101,29 +60,8 @@ const SpinnerButton = (props) => {
           visible={loading ? true : false}
           style={spinnerStyle}
           />
-      </button>
+      </Button>
     </div>)
 }
 
 export default SpinnerButton
-
-
-
-// function timeout(ms) {
-//   return new Promise((resovle) => {
-//     setTimeout(resovle, ms);
-//   })
-// }
-//
-// useEffect(() => {
-//   async function funcWrap() {
-//     if (spinner) {
-//       let res = await func(...funcArgs)
-//       setLoading(false)
-//     }
-//   }
-//   // const wrappedFunction = funcWrapper(func)
-//
-//   funcWrap(...funcArgs)
-//
-// }, [spinner])

@@ -80,6 +80,7 @@ class AlertManager {
     for (let i=0; i < requiredKeys.length; i++) {
       if (!Object.keys(dataFileJson).includes(requiredKeys[i])) {
         return {
+          title: 'File Error',
           text: `Your selected file is missing required JSON key "${requiredKeys[i]}".  Please select a valid file to load.`,
           type: 'Alert'
         }
@@ -91,6 +92,7 @@ class AlertManager {
   _fileLoadedError(args) {
     if (Object.keys(store.getState().loadFile.fileData).length === 0) {
       return {
+        title: 'No File Selected',
         text: 'Please select a file to load prior to building your search.',
         type: 'Alert'
       }
@@ -103,6 +105,7 @@ class AlertManager {
     if (store.getState().search.unsearchedCoords.length == 0) {
       console.log("_noSearchInitializedError should trigger")
       return {
+        title: 'No Search Initialized',
         text: 'No coordinates are available to search.  Please make sure to "Build Search" or "Build Search From File" prior to conducting additional searches within your selected region.',
         type: 'Alert'
       }
@@ -114,6 +117,7 @@ class AlertManager {
     if (!store.getState().settingsPanel.testMode) {
       if (!window.google || store.getState().settingsPanel.apiKey == '') {
         return {
+          title: 'Google Places API Key Required',
           text: 'Please make sure to enter your Google API key, and load it into your search using the "Set Key" button.',
           type: 'Alert'
         }
@@ -126,6 +130,7 @@ class AlertManager {
     console.log(store.getState().map.polygonCoordinates)
     if (!store.getState().map.polygonCoordinates || store.getState().map.polygonCoordinates.length == 0) {
       return {
+        title: 'No Search Area Selected',
         text: 'Please use the "Select Search Area" option to choose a search region before building your search.',
         type: 'Alert'
       }
@@ -136,6 +141,7 @@ class AlertManager {
   _resolutionError(args) {
     if (store.getState().settingsPanel.searchResolution < 0.1 || !store.getState().settingsPanel.searchResolution) {
       return {
+        title: 'Resolution Setting Required',
         text: 'Please enter a value for the "Search Resolution".  This is the distance in miles between each potential search coordinate that will be evaluated.',
         type: 'Alert'
       }
@@ -148,6 +154,7 @@ class AlertManager {
     console.log(store.getState().settingsPanel.searchEntityType)
     if (store.getState().settingsPanel.searchEntityType == "Select" || !store.getState().settingsPanel.searchEntityType) {
       return {
+      title: 'Search Entity Required',
       text: 'Please select an "Entity Type" before building your search.  This is the type of Google Places Entity that the Places API will search for.',
       type: 'Alert'
       }
@@ -158,6 +165,7 @@ class AlertManager {
   _searchCompleteError(args) {
     if (store.getState().search.unsearchedCoords.length == 0 && store.getState().search.searchedCoords.length != 0) {
       return {
+        title: 'Search Complete',
         text: 'All coordinate points for your defined region have been searched. If any areas in your search region are unsearched, you may need to repeat the search with a lower Search Resolution value.',
         type: 'Alert'
       }
@@ -170,6 +178,7 @@ class AlertManager {
     console.log(!store.getState().settingsPanel.budget >= 0)
     if (store.getState().settingsPanel.budgetUsed >= store.getState().settingsPanel.budget || store.getState().settingsPanel.budget <= 0) {
       return {
+        title: 'Budget Has Been Exceeded',
         text: 'You have exhausted your set budget. To run additional searches or build a new search, please increase your budget setting.',
         type: 'Alert'
       }
@@ -185,7 +194,8 @@ class AlertManager {
       store.getState().search.searchedCoords.length != 0 ||
       store.getState().search.unsearchedCoords.length != 0)) {
       return {
-        text: "WARNING: Data is present from an in progress search session." +
+        title: 'WARNING: Data Deletion',
+        text: "Data is present from an in-progress search session." +
         " If you continue, this data will be lost.  Please use the 'Download Data'"+
         " option if you wish to keep your current data.",
         type: 'Confirmation'
@@ -199,14 +209,16 @@ class AlertManager {
     let bulkSearchCount = store.getState().search.bulkSearchCount
     let totalCost = 0.017 * parseInt(bulkSearchCount)
     return {
-      text: `WARNING: Please confirm you execute ${bulkSearchCount} calls to the Google Places Api.` +
-      ` for a projected total cost of $${totalCost}.`,
+      title: 'Bulk Search Confirmation',
+      text: `Please confirm you would like to execute ${bulkSearchCount} calls to the Google Places Api` +
+      `for a projected total cost of $${totalCost}.`,
       type: 'Confirmation'
     }
   }
 
   _googleApiError() {
     return {
+      title: 'Google API Error',
       text: 'The Google Places API has encountered a problem.' +
         'Please check that your API key is correct' +
         ' and that the key is authorized for Google\'s "Maps JavaScript API" and "Places API".' +

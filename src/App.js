@@ -49,14 +49,6 @@ const App = () => {
     }
   }, [])
 
-  function usePrevious(value) {
-    const ref = useRef();
-    useEffect(() => {
-      ref.current = value;
-    }, [value]);
-    return ref.current;
-  }
-
   const saveBeforeLeaving = e => {
     e.preventDefault()
     e.returnValue = ''
@@ -64,46 +56,8 @@ const App = () => {
 
   const editorRef = useRef(undefined);
 
-  // data
-  const [efficiency, setEfficiency] = useState(0)
-  const [projectedSavings, setProjectedSavings] = useState(0)
-  const [projectedSearchCost, setProjectedSearchCost] = useState(0)
-
-
-  // async function cleanPolygons() {
-  //   let response = await axiosPutPostData('PUT', `/api/mergePolygons`,
-  //     {
-  //       "polygons": getPolygons(),
-  //     })
-  //     return response["data"]["efficiency"]
-  //     }
-
-  // async function calcSearchEfficiency() {
-  //   let coordinates =  searchedAreas.features.map(feature => feature.geometry.coordinates[0])
-  //
-  //   let response = await axiosPutPostData('PUT', `/api/mergePolygons`,
-  //     {
-  //       "searchedAreas": coordinates,
-  //       "searchRegions": getPolygons(),
-  //       "budgetUsed": budgetUsed
-  //     })
-  //     // return response["data"]
-  //     let data = response["data"]
-  //
-  //     setEfficiency(data["efficiency"])
-  //     setProjectedSavings(data["projectedSavings"])
-  //     setProjectedSearchCost(data["projectedSearchCost"])
-  //     return data
-  //     }
-
-
-const features = editorRef.current && editorRef.current.getFeatures();
-
-const [show, setShow] = useState(false);
-const handleClose = () => setShow(false);
-const handleShow = () => setShow(true);
-const buildingSearch = useSelector((state) => state.search.buildingSearch)
-const googlePlacesLibLoading = useSelector((state) => state.search.googlePlacesLibLoading)
+  const buildingSearch = useSelector((state) => state.search.buildingSearch)
+  const googlePlacesLibLoading = useSelector((state) => state.search.googlePlacesLibLoading)
 
   return (
       <div style={{height: '100vh', flex: '1'}}>
@@ -115,6 +69,7 @@ const googlePlacesLibLoading = useSelector((state) => state.search.googlePlacesL
           rejectCallback={modalFunctionStore.reject}
           message={useSelector((state) => state.modal.message)}
           visible={useSelector((state) => state.modal.visible)}
+          title={useSelector((state) => state.modal.dialogTitle)}
         />
         <SettingsPanel/>
         <div style={{marginTop: '10px', height: '2px', backgroundColor: 'black', flex: '1'}} />
