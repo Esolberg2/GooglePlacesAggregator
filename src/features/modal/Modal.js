@@ -30,7 +30,7 @@ export const DynamicModal = React.memo(props => {
   } = props
 
   const type = useSelector((state) => state.modal.dialogType)
-  
+
   function renderModal() {
     if (type == "Alert") {
       return (

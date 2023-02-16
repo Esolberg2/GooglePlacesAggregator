@@ -36,6 +36,14 @@ export function SpinnerOverlay(props) {
       wrapperClass=""
       visible={true}
       />
+    <button
+    onClick={() => {
+      console.log(window.loadingAbort)
+      window.loadingAbort()
+    }}
+    >
+    cancel
+    </button>
     </Modal>
   );
 }

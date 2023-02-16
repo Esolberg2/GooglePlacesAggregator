@@ -1,3 +1,4 @@
+import React from 'react';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import * as turf from '@turf/turf'
 import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager'
@@ -34,6 +35,7 @@ const initialState = {
   bulkSearchCount: 0,
 }
 
+export const SearchContext = React.createContext({abort: () => {console.log("default ")}});
 
 const debounce = (target, flag) => {
   if (!flag) {
@@ -53,15 +55,20 @@ export const debouncedBulkSearch = () => {
 export const initializeSearch = createAsyncThunk('searchSlice/initializeSearch',(a, b) => {
   const polygonCoordinates = b.getState().map.polygonCoordinates
   const searchResolution = b.getState().settingsPanel.searchResolution
+  window.loadingAbort = b.abort
 
   return axios
     .post(`/api/searchSession`, {
-    "searchRegions": polygonCoordinates,
-    "searchID": null,
-    "coordinateResolution": searchResolution
+    searchRegions: polygonCoordinates,
+    searchID: null,
+    coordinateResolution: searchResolution
     })
-    .then((response) => response.data)
+    .then((response) => {
+      window.loadingAbort = () => undefined
+      return response.data
+    })
     .catch((error) => {
+      window.loadingAbort = () => undefined
       console.log(error.msg)
     })
 })
