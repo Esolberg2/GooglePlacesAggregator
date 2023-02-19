@@ -13,17 +13,18 @@ import shapely
 import shapely.speedups
 import geopy.distance
 from bisect import bisect_left
-# shapely.speedups.enable()
-
-
+from application import r
+import pickle
+import bz2
+from flask import jsonify, make_response
+import js2py
+import hashlib
 
 def latStep(resolution):
     return round((resolution/69), 15)
 
 def lonStep(resolution):
     return round((resolution/54.6), 15)
-
-
 
 def knnMapper(searchedPoints, unsearchedData):
     unsearchedPoints = np.array(unsearchedData)
@@ -48,12 +49,10 @@ def processKnnMap(knnMap):
     furthestNearest = max(knnMap.values())
     return furthestNearest
 
-
 def getDist(origin, coordinate):
     xDist = abs(origin[0] - coordinate[0])
     yDist = abs(origin[1] - coordinate[1])
     return math.sqrt(xDist + yDist)
-
 
 def binary_search(l, r, origin, coords):
     m = l + ((r-l) // 2)
@@ -72,7 +71,6 @@ def binary_search(l, r, origin, coords):
     if lDist > rDist:
         return binary_search(m, r, origin, coords)
 
-
 def circleBinarySearch(origin, perimeter):
     l = len(perimeter)
     quad = int(l / 4)
@@ -89,8 +87,6 @@ def circleBinarySearch(origin, perimeter):
     else:
         return southMost if getDist(origin, perimeter[northMostStart]) > getDist(origin, perimeter[southMost]) else northMost
 
-
-
 def knn(searchedPoints, unsearchedData):
     unsearchedPoints = np.array(unsearchedData)
     searchedPoints = np.array(searchedPoints)
@@ -99,58 +95,19 @@ def knn(searchedPoints, unsearchedData):
     K = 1
     nbrs = NearestNeighbors(n_neighbors=1, algorithm='ball_tree', n_jobs=-1).fit(searchedPoints)
     distances, indices = nbrs.kneighbors(unsearchedPoints, 1)
-
-    print("---- nbrs ----")
-    for dist, ind in zip(distances, indices):
-        print(dist, ind)
-
-    #unsearched to searched
     distMap = {i: [ind[0], distances[i][0]] for i, ind in enumerate(indices)}
-
-    print("--- ind map ----")
-    for k, v in distMap.items():
-        print(k, v)
-    # coordMap = {unsearchedPoints[i][0]: searchedPoints[ind][0] for i, ind in enumerate(indices)}
-    #
-    # j = 0
-    # for k, v in coordMap.items():
-    #     print(k, v, "   :   ", j, distMap[j])
-    #     j+= 1
-
-    # print(coordMap)
     indexes = np.where(distances == np.amax(distances))
-    print("")
-    print("dir NearestNeighbors", dir(NearestNeighbors))
-    print("---- indexes ----")
-    print("indexes[0]", indexes[0])
-    print("max distance", np.amax(distances))
-    print("distance at max index", distances[indexes[0]])
-    print("distMap value at key", indexes[0], ":", distMap[indexes[0][0]])
-    print("training index at max index", indices[indexes[0]])
 
-    print("len unsearchedPoints", len(unsearchedPoints))
-    print("len distances", len(distances))
-    print("len searched points", len(searchedPoints))
-    print("")
     nearestToFurthest = indices[indexes[0]]
     coordOfNearestToFurthest = searchedPoints[nearestToFurthest]
-    print("coordOfNearestToFurthest", coordOfNearestToFurthest)
-
-    # what i need is a dictionary of unsearched points and their nearest coordinate from searched points
-    # the dictionary should store searched coordinates as keys.
 
     unsearchedCoordIndex = indexes[0][0]
     furthestNearest = unsearchedPoints[unsearchedCoordIndex]
 
-    print("furthestNearest", furthestNearest)
-    print("")
     return furthestNearest.tolist()
 
 
 def cleanPolygons(searchRegions):
-    print("***********")
-    print(searchRegions)
-    print("***********")
     polys = [Polygon(p) for p in searchRegions]
     joinedPolys = unary_union(polys)
     return joinedPolys
@@ -183,7 +140,6 @@ def makeGrid(searchRegions, resolution):
     xx, yy = np.meshgrid(x, y)
 
     flattenedMatrix = np.transpose(np.vstack([xx.ravel(), yy.ravel()]))
-
     boundingBoxCoordinatePlane = MultiPoint(flattenedMatrix)
     unsearched = [p for p in boundingBoxCoordinatePlane if unionedPolys.contains(p)]
 
@@ -195,3 +151,30 @@ def makeGrid(searchRegions, resolution):
         "rawSearchPolygons": searchRegions,
         "shape": unionedPolys.__geo_interface__["coordinates"]
         }
+
+def redisEncode(obj):
+    pickled_object = pickle.dumps(obj)
+    bz2Obj = bz2.compress(pickled_object)
+    return bz2Obj
+
+def redisDecode(obj):
+    bz2ObjDecom = bz2.decompress(obj)
+    pickled_object_decom = pickle.loads(bz2ObjDecom)
+    return pickled_object_decom
+
+def redis_save(searchID, searched, unsearched):
+    r.set(str(searchID), redisEncode({"searched": searched, "unsearched": unsearched}))
+    return True
+
+def redis_get(searchID):
+    return redisDecode(r.get(str(searchID)))
+
+def custom_error(status_code, message):
+    return make_response(jsonify({"message": message}), status_code)
+
+def checksum(obj):
+    JSON = js2py.eval_js('JSON')
+    msg = JSON.stringify(obj);
+    msg = msg.encode(encoding='utf-8')
+    hash = hashlib.md5(msg)
+    return hash.hexdigest()
