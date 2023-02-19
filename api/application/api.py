@@ -5,6 +5,7 @@ from .models import db, SearchID
 from .utils import makeGrid, knn, cleanPolygons, redis_save, redis_get, checksum, custom_error
 from shapely.geometry import MultiPoint, mapping, shape, asShape
 from shapely.geometry.polygon import Polygon
+import json
 
 # Blueprint Configuration
 api_bp = Blueprint(
