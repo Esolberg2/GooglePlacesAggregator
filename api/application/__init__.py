@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_redis import FlaskRedis
+from config import config
 
 
 # Globally accessible libraries
@@ -10,8 +11,8 @@ r = FlaskRedis()
 
 def init_app():
     """Initialize the core application."""
-    app = Flask(__name__, instance_relative_config=False)
-    app.config.from_object('config.Config')
+    app = Flask(__name__)
+    app.config.from_object(config.get('prod'))
 
     # Initialize Plugins
     db.init_app(app)
@@ -23,9 +24,7 @@ def init_app():
 
         # Register Blueprints
         app.register_blueprint(api.api_bp)
-        # app.register_blueprint(admin.admin_bp)
 
         db.create_all()  # Create sql tables for our data models
-
 
         return app
