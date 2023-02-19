@@ -12,6 +12,8 @@ import { loadStateFromFile, setPriorSearch } from '../search/searchSlice'
 import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager'
 import { settingsPanelActions } from './settingsPanelSlice'
 import { buildModal } from '../modal/modalSlice'
+import axios from 'axios'
+
 import {
   setFileData,
   setFileName
@@ -253,6 +255,26 @@ export function SettingsPanel(props) {
             }
             >
           Clear Search
+          </SettingsButton>
+
+          <SettingsButton
+            onClick={() => {
+              console.log("running api request")
+              axios
+                .post(`/api/newSearchID`, {
+                testData: "this is test data"
+                })
+                .then((response) => {
+                  console.log(response)
+                })
+                .catch((error) => {
+                  console.log(error.msg)
+                })
+            }
+
+            }
+            >
+          test api
           </SettingsButton>
 
         </div>

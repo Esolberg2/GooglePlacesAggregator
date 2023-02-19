@@ -309,7 +309,7 @@ export const searchSlice = createSlice({
       state.nextCenter = action.payload.furthestNearest
       state.searchedCoords = action.payload.searchedCoords
       state.unsearchedCoords = action.payload.unsearchedCoords
-      state.searchID = action.payload.searchID.lastRowID
+      state.searchID = action.payload.searchID
       state.error = ''
     })
     builder.addCase(initializeSearch.rejected, (state, action) => {
