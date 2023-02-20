@@ -10,39 +10,47 @@ const customStyles = {
     bottom: 'auto',
     marginRight: '-50%',
     transform: 'translate(-50%, -50%)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center'
   },
   overlay: {
     zIndex: 9999,
   }
 };
-export function SpinnerOverlay(props) {
+
+function SpinnerOverlay(props) {
   const {
     message,
     visible
   } = props
 
   return (
-    <Modal
-      isOpen={visible}
-      style={customStyles}
-    >
-    <div> {message} </div>
-    <TailSpin
-      height="80"
-      width="80"
-      color="#4fa94d"
-      radius="1"
-      wrapperStyle={{}}
-      wrapperClass=""
-      visible={true}
-      />
-    <button
-    onClick={() => {
-      window.loadingAbort()
-    }}
-    >
-    cancel
-    </button>
-    </Modal>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <Modal
+        isOpen={visible}
+        style={customStyles}
+      >
+        <div> Loading </div>
+        <TailSpin
+          height="80"
+          width="80"
+          color="#4fa94d"
+          radius="1"
+          wrapperStyle={{padding: '20px'}}
+          wrapperClass=""
+          visible={true}
+          />
+        <button
+          onClick={() => {
+            window.loadingAbort()
+          }}
+        >
+          cancel
+        </button>
+      </Modal>
+    </div>
   );
 }
+
+export default SpinnerOverlay

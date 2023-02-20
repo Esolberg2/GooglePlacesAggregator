@@ -13,6 +13,7 @@ Deprecated==1.2.13
 faiss-cpu==1.7.2
 Fiona==1.8.21
 Flask==2.0.2
+flask-redis==0.4.0
 Flask-RESTful==0.3.9
 Flask-Session==0.4.0
 Flask-SQLAlchemy==2.5.1

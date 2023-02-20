@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { googlePlacesApiManager } from './googleAPI/googlePlacesApiManager'
-import { SpinnerOverlay } from './components/SpinnerOverlay'
+import SpinnerOverlay from './components/SpinnerOverlay'
 import { useSelector, useDispatch } from 'react-redux'
-import { MapComponent } from './features/map/MapComponent'
+import MapComponent from './features/map/MapComponent'
 import { SettingsPanel } from './features/settingsPanel/SettingsPanel'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import "react-map-gl-geocoder/dist/mapbox-gl-geocoder.css"
@@ -36,7 +36,7 @@ const App = () => {
   return (
       <div style={{height: '100vh', flex: '1'}}>
         <SpinnerOverlay
-          visible={buildingSearch || googlePlacesLibLoading}
+          visible={buildingSearch}
         />
         <DynamicModal
           confirmCallback={modalFunctionStore.resolve}

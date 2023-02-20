@@ -7,7 +7,6 @@ import { getFeatureStyle, getEditHandleStyle } from '../../style';
 import { mapActions, deletePolygon } from './mapSlice'
 import { SearchInterface } from '../search/SearchInterface'
 import { debouncedBuildSearch } from '../../functions/buildSearch'
-// import { debouncedBulkSearch } from '../../functions/bulkSearch'
 import { debouncedBulkSearch, debouncedSingleSearch } from '../search/searchSlice'
 import { buildFromFile } from '../../functions/buildFromFile'
 
@@ -22,21 +21,24 @@ const searchedAreaStyle = {
         }
   }
 
-export const MapComponent = React.forwardRef((props, ref) => {
+const MapComponent = React.forwardRef((props, ref) => {
   const polygons = useSelector(state => state.map.polygonCoordinates)
   const TOKEN='pk.eyJ1IjoiZXNvbGJlcmc3NyIsImEiOiJja3l1ZmpqYWgwYzAxMnRxa3MxeHlvanVpIn0.co7_t1mXkXPRE8BOnOHJXQ'
 
-  // redux
   const dispatch = useDispatch()
+
+  // map slice
   const mapData = useSelector(state => state.map)
   const mapPolygons = mapData.mapPolygons
   const selectedFeatureIndex = mapData.selectedFeatureIndex
   const setSelectedFeatureIndex = mapActions.setSelectedFeatureIndex
-
   const sliceSearchedAreas = mapData.searchedAreas
-  const searchActive = useSelector(state => state.search.searchActive)
-  const priorSearch = useSelector(state => state.search.priorSearch)
-  const budgetUsed = useSelector(state => state.settingsPanel.budgetUsed)
+
+  const searchData = useSelector(state => state.search)
+  const searchActive = searchData.searchActive
+  const priorSearch = searchData.priorSearch
+  const budgetUsed = searchData.budgetUsed
+
   // refs
   const mapRef = useRef();
   const geocoderContainerRef = useRef();
@@ -53,9 +55,7 @@ export const MapComponent = React.forwardRef((props, ref) => {
     transitionDuration: 100
   })
 
-  // callbacks
   const _onViewportChange = viewport => {
-    // console.log(viewport)
     setViewPort({...viewport, transitionDuration: 0 })}
 
   const onSelect = useCallback(options => {
@@ -78,7 +78,6 @@ export const MapComponent = React.forwardRef((props, ref) => {
         zoom: 10
        })
   }, [])
-
 
   function onDelete() {
     dispatch(deletePolygon())
@@ -119,15 +118,15 @@ export const MapComponent = React.forwardRef((props, ref) => {
         mapboxApiAccessToken={TOKEN}
         mapStyle="mapbox://styles/mapbox/streets-v11"
         onViewportChange={_onViewportChange}
-        >
+      >
 
-       <Geocoder
+        <Geocoder
           mapRef={mapRef}
           containerRef={geocoderContainerRef}
           onViewportChange={handleGeocoderViewportChange}
           mapboxApiAccessToken={TOKEN}
           position='top-right'
-          />
+        />
 
         <Source id="searchedAreaLayer" type="geojson" data={sliceSearchedAreas}>
           <Layer key={"2"} {...searchedAreaStyle} />
@@ -143,25 +142,27 @@ export const MapComponent = React.forwardRef((props, ref) => {
           editHandleShape={'circle'}
           featureStyle={getFeatureStyle}
           editHandleStyle={getEditHandleStyle}
-          />
+        />
       </MapGL>
       <div style={{backdropFilter: 'blur(20px)', borderBottomRightRadius: '10px', position: 'absolute', alingSelf: 'flex-start'}}>
         <div style={{fontWeight: 'bold', paddingTop: '10px', display: 'flex', justifyContent: 'center'}}>
           {"New Search" ? !priorSearch : "Prior Search"}
         </div>
         <SearchInterface
-        setMode={setMode}
-        onDelete={onDelete}
-        initializeSearch={debouncedBuildSearch}
-        nearbySearch={debouncedSingleSearch}
-        buildFromFile={buildFromFile}
-        editorRef={editorRef}
-        searchActive={searchActive}
-        priorSearch={priorSearch}
-        bulkSearch={debouncedBulkSearch}
-        budgetUsed={budgetUsed}
+          setMode={setMode}
+          onDelete={onDelete}
+          initializeSearch={debouncedBuildSearch}
+          nearbySearch={debouncedSingleSearch}
+          buildFromFile={buildFromFile}
+          editorRef={editorRef}
+          searchActive={searchActive}
+          priorSearch={priorSearch}
+          bulkSearch={debouncedBulkSearch}
+          budgetUsed={budgetUsed}
         />
       </div>
     </div>
   )
 })
+
+export default MapComponent

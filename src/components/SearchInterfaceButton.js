@@ -1,7 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
-import { styles } from '../style'
 import styled from 'styled-components';
-
 
 const Button = styled.button`
   background-color: #36B569;
@@ -21,11 +18,12 @@ const Button = styled.button`
   }
 `;
 
-
-export const SearchInterfaceButton = (props) => {
+function SearchInterfaceButton (props) {
   return (
     <Button {...props}>
       {props.children}
     </Button>
-    )
+  )
 }
+
+export default SearchInterfaceButton

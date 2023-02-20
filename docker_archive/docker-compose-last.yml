@@ -2,13 +2,13 @@ services:
   api:
     build:
       context: .
-    image: react-flask-app-api
+    image: esolberg1/client_aggregator_api
     volumes:
       - dbVol:/dbVol
   client:
     build:
       context: .
-    image: react-flask-app-client
+    image: esolberg1/client_aggregator_app
     ports:
       - "3000:80"
   redis:

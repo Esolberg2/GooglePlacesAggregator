@@ -1,7 +1,6 @@
 import { store } from '../store'
 const CryptoJS = require("crypto-js");
 
-
 class ChecksumManager {
 
   get _getSearchData() {

@@ -1,12 +1,10 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
   fileData: {},
   fileName: ''
 }
 
-
-// ============ Reducers ====================
 export const loadFileSlice = createSlice({
   name: 'loadFileSlice',
   initialState,
@@ -16,7 +14,6 @@ export const loadFileSlice = createSlice({
   },
 })
 
-// export const searchActions = loadFileSlice.actions
 export const {
   setFileData,
   setFileName

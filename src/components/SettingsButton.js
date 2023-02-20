@@ -1,6 +1,6 @@
-import React, { useRef, useState, useEffect } from "react";
 import { styles } from '../style'
-export const SettingsButton = (props) => {
+
+function SettingsButton(props) {
   return (
     <button
       {...props}
@@ -11,4 +11,4 @@ export const SettingsButton = (props) => {
     )
 }
 
-// export default SettingsButton
+export default SettingsButton

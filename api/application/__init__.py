@@ -1,12 +1,15 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_redis import FlaskRedis
 from config import config
+import redis
 
 
 # Globally accessible libraries
 db = SQLAlchemy()
-r = FlaskRedis()
+r = redis.Redis(
+    host='localhost',
+    port=6379
+    )
 
 
 def init_app():
@@ -16,7 +19,8 @@ def init_app():
 
     # Initialize Plugins
     db.init_app(app)
-    r.init_app(app)
+    # r.init_app(app)
+    # r = redis.Redis('host', port=6379)
 
     with app.app_context():
         # Include our Routes
