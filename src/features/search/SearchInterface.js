@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { DrawPolygonMode } from 'react-map-gl-draw';
 import { searchPlaces, setBulkSearchCount, getData } from './searchSlice'
 import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager'
-import { SearchInterfaceButton } from '../../components/SearchInterfaceButton'
+import SearchInterfaceButton from '../../components/SearchInterfaceButton'
 
 export function SearchInterface(props) {
   const dispatch = useDispatch()

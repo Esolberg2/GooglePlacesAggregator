@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import * as turf from '@turf/turf'
 
-
 const initialState = {
   searchedAreas: {
     'type': 'FeatureCollection',
@@ -11,7 +10,6 @@ const initialState = {
   polygonCoordinates: null,
   mapPolygons: []
 }
-
 
 function buildCoordJSON(coords) {
   return {

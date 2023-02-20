@@ -1,8 +1,5 @@
-import React, { useRef, useState, useEffect, useDispatch } from "react";
-import { googlePlacesApiManager } from '../googleAPI/googlePlacesApiManager'
 import { TailSpin } from  'react-loader-spinner'
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
-import { settingsPanelActions } from '../features/settingsPanel/settingsPanelSlice'
 import styled from 'styled-components';
 
 const Button = styled.button`
@@ -23,7 +20,7 @@ const Button = styled.button`
   }
 `;
 
-const SpinnerButton = (props) => {
+function SpinnerButton(props) {
 
   const {
     text,
@@ -39,8 +36,6 @@ const SpinnerButton = (props) => {
     onClick
   } = props
 
-  const [inputUpdated, setInputUpdated] = useState(false)
-
   return (
     <div style={{}}>
       <Button
@@ -49,8 +44,11 @@ const SpinnerButton = (props) => {
         style={{...{padding: '5px', margin: '5px', whiteSpace: 'nowrap'}, ...buttonStyle}}
         disabled={props.disabled}
         >
-        <div key={props.textKey} style={{...{width: width, height: loading ? '0px' : height, visibility: loading ? 'hidden' : 'visible'}, ...textStyle}}>
-        {children}
+        <div
+          key={props.textKey}
+          style={{...{width: width, height: loading ? '0px' : height, visibility: loading ? 'hidden' : 'visible'}, ...textStyle}}
+        >
+          {children}
         </div>
         <TailSpin
           height={height}
@@ -59,7 +57,7 @@ const SpinnerButton = (props) => {
           ariaLabel='loading'
           visible={loading ? true : false}
           style={spinnerStyle}
-          />
+        />
       </Button>
     </div>)
 }

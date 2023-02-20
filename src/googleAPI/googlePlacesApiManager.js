@@ -3,13 +3,6 @@ import * as turf from '@turf/turf'
 import { store } from '../store'
 import { dummyGoogleCall } from './dummyCall.js'
 import { settingsPanelActions } from '../features/settingsPanel/settingsPanelSlice'
-// import { nearbySearch as nearbySearchThunk } from '../features/search/searchSlice'
-
-
-function testOutput(data) {
-	console.log(data)
-}
-
 
 class GooglePlacesApiManager {
 
@@ -18,15 +11,10 @@ class GooglePlacesApiManager {
 		this.map = undefined
 		this.service = undefined
 
-		// create library callBackScript
-		this.callBackScript = document.createElement('script');
-		this.callBackScript.text = function callback(results, status) {
+		function callback() {
 			return
 		}
-		this.callBackScript.async = false;
-		this.callBackScript.defer = false;
-		document.body.appendChild(this.callBackScript);
-
+		window.callback = callback
 	}
 
 	createMap() {
@@ -44,56 +32,6 @@ class GooglePlacesApiManager {
 		document.body.appendChild(this.mapElement);
 
 	}
-
-	// async nearbySearch() {
-	// 	try {
-	// 		let coords = store.getState().search.nextCenter;
-	// 		console.log(coords)
-	//     let searchType = store.getState().settingsPanel.searchEntityType;
-	//     let testMode = store.getState().settingsPanel.testMode;
-	//
-	// 		if (testMode) {
-	//     	let rawData = dummyGoogleCall()
-	// 			return rawData
-	//     }
-	//
-	// 		let origin = {lat: coords[1], lng: coords[0]};
-	// 		let request = {
-	//       location: origin,
-	//       rankBy: window.google.maps.places.RankBy.DISTANCE,
-	//       type: searchType
-	//       };
-	//
-	// 		function dataHandler(results) {
-	// 				results.forEach((item, i) => {
-	// 					delete item.opening_hours
-	// 					delete item.permanently_closed
-	// 				});
-	//
-	// 				results = JSON.parse(JSON.stringify(results))
-	//
-	//         let lastLat = results[results.length-1].geometry.location.lat
-	//         let lastLon = results[results.length-1].geometry.location.lng
-	//         let from = turf.point(coords);
-	//         let to = turf.point([lastLon, lastLat]);
-	//         let options = {units: 'miles'};
-	//         let distance = turf.distance(from, to, options);
-	//         let data =  {"radius": distance, "googleData": results}
-	// 				testOutput(data)
-	//         }
-	//
-	// 		function* callback(results) {
-	// 		  yield new Promise((resolve, reject) => {
-	// 		    resolve(results)
-	// 		  })
-	// 		}
-	//
-	// 		this.service.nearbySearch(request, callback);
-	// 	}
-	// 	catch (error) {
-	// 		console.log(error)
-	// 	}
-	// }
 
 	updateGoogleApi(apiKey) {
 		if (store.getState().settingsPanel.googlePlacesLibLoading) {
@@ -125,7 +63,6 @@ class GooglePlacesApiManager {
     }
     if (this.tag) {
 			this.tag.parentNode.removeChild(this.tag)
-      // this.tag.remove()
       this.tag = null
     }
   }

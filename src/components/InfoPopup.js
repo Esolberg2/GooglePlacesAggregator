@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback, useImperativeHandle } from 'react'
+import React, { useState, useImperativeHandle } from 'react'
 import Modal from 'react-modal';
 Modal.setAppElement('body')
 
@@ -11,7 +11,6 @@ const customStyles = {
     width: '25%',
     marginRight: '-50%',
     borderRadius: '10px',
-    // backgroundColor: '#3CCD65',
     backgroundColor: '#F8F8F8',
     fontWeight: '300',
     fontSize: '13px',
@@ -23,12 +22,9 @@ const customStyles = {
   }
 };
 
-// export const InfoPopup = React.memo(props => {
 export const InfoPopup = React.memo(React.forwardRef((props, ref) => {
   const {
     message,
-    // visible,
-    // setVisible,
     title
   } = props
 
@@ -43,7 +39,6 @@ export const InfoPopup = React.memo(React.forwardRef((props, ref) => {
            setVisible(!visible)
         }
      }));
-
 
   return (
     <Modal

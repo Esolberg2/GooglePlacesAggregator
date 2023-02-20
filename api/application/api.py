@@ -12,6 +12,11 @@ api_bp = Blueprint(
     'api_bp', __name__
 )
 
+@api_bp.route('/api/test', methods=['GET'])
+def test_route():
+    print("test route triggered")
+    return {"data": "some test message"}
+
 # load new search
 @api_bp.route('/api/searchSession', methods=['POST'])
 def set_user_search():

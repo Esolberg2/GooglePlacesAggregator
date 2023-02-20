@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { mapActions } from '../map/mapSlice'
 import { wrapperActions } from '../stateWrapper/wrapperSlice'
-import { SettingsButton } from '../../components/SettingsButton'
+import SettingsButton from '../../components/SettingsButton'
 import { InfoPopup } from '../../components/InfoPopup'
-import { SettingsTextContainer } from '../../components/SettingsTextContainer'
+import SettingsTextContainer from '../../components/SettingsTextContainer'
 import Switch from "react-switch";
 import SpinnerButton from '../../components/SpinnerButton'
 import CurrencyInput from 'react-currency-input-field';
@@ -255,26 +255,6 @@ export function SettingsPanel(props) {
             }
             >
           Clear Search
-          </SettingsButton>
-
-          <SettingsButton
-            onClick={() => {
-              console.log("running api request")
-              axios
-                .post(`/api/newSearchID`, {
-                testData: "this is test data"
-                })
-                .then((response) => {
-                  console.log(response)
-                })
-                .catch((error) => {
-                  console.log(error.msg)
-                })
-            }
-
-            }
-            >
-          test api
           </SettingsButton>
 
         </div>
