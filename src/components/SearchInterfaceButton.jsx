@@ -1,4 +1,6 @@
 import styled from 'styled-components';
+import React from 'react';
+import PropTypes from 'prop-types';
 
 const Button = styled.button`
   background-color: #36B569;
@@ -18,12 +20,18 @@ const Button = styled.button`
   }
 `;
 
-function SearchInterfaceButton (props) {
+function SearchInterfaceButton(props) {
+  const { children } = props;
   return (
+    // eslint-disable-next-line react/jsx-props-no-spreading
     <Button {...props}>
-      {props.children}
+      {children}
     </Button>
-  )
+  );
 }
 
-export default SearchInterfaceButton
+SearchInterfaceButton.propTypes = {
+  children: PropTypes.node.isRequired,
+};
+
+export default SearchInterfaceButton;

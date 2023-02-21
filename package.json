@@ -11,8 +11,10 @@
     "axios": "^0.27.2",
     "crypto-js": "^4.1.1",
     "deck.gl": "^8.6.6",
+    "eslint": "^7.32.0 || ^8.2.0",
     "md5": "^2.3.0",
     "node-fetch": "^3.3.0",
+    "prop-types": "^15.8.1",
     "react": "^17.0.2",
     "react-currency-input-field": "^3.6.4",
     "react-dom": "^17.0.2",
@@ -59,6 +61,12 @@
   },
   "proxy": "http://localhost:5000",
   "devDependencies": {
-    "cypress": "^12.5.1"
+    "cypress": "^12.5.1",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-react-app": "^7.0.1",
+    "eslint-plugin-import": "^2.25.3",
+    "eslint-plugin-jsx-a11y": "^6.5.1",
+    "eslint-plugin-react": "^7.28.0",
+    "eslint-plugin-react-hooks": "^4.3.0"
   }
 }
