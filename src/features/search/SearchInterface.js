@@ -92,7 +92,7 @@ export function SearchInterface(props) {
                 style={{padding: '5px', margin: '5px', width: '150px'}}
                 >
                 Bulk Search
-                </SearchInterfaceButton>
+              </SearchInterfaceButton>
 
                 <input
                   type="number"

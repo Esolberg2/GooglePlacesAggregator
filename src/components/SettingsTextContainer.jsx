@@ -1,7 +1,7 @@
-import React, { useRef } from "react";
+import React, { useRef } from 'react';
 import { IoInformationCircleOutline } from 'react-icons/io5';
-import { InfoPopup } from './InfoPopup'
-import { styles } from '../style'
+import InfoPopup from './InfoPopup';
+import { styles } from '../style';
 
 function SettingsTextContainer(props) {
 

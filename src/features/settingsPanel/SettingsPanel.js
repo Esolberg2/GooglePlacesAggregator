@@ -1,17 +1,17 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
-import { mapActions } from '../map/mapSlice'
-import { wrapperActions } from '../stateWrapper/wrapperSlice'
-import SettingsButton from '../../components/SettingsButton'
-import { InfoPopup } from '../../components/InfoPopup'
-import SettingsTextContainer from '../../components/SettingsTextContainer'
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { mapActions } from '../map/mapSlice';
+import { wrapperActions } from '../stateWrapper/wrapperSlice';
+import SettingsButton from '../../components/SettingsButton';
+import InfoPopup from '../../components/InfoPopup';
+import SettingsTextContainer from '../../components/SettingsTextContainer';
 import Switch from "react-switch";
-import SpinnerButton from '../../components/SpinnerButton'
+import SpinnerButton from '../../components/SpinnerButton';
 import CurrencyInput from 'react-currency-input-field';
-import { loadStateFromFile, setPriorSearch } from '../search/searchSlice'
-import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager'
-import { settingsPanelActions } from './settingsPanelSlice'
-import { buildModal } from '../modal/modalSlice'
+import { loadStateFromFile, setPriorSearch } from '../search/searchSlice';
+import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager';
+import { settingsPanelActions } from './settingsPanelSlice';
+import { buildModal } from '../modal/modalSlice';
 import axios from 'axios'
 
 import {
