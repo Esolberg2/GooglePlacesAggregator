@@ -1,35 +1,57 @@
 import React, { useRef } from 'react';
 import { IoInformationCircleOutline } from 'react-icons/io5';
+import PropTypes from 'prop-types';
 import InfoPopup from './InfoPopup';
 import { styles } from '../style';
 
-function SettingsTextContainer(props) {
-
-  const infoRef = useRef()
+function SettingsTextContainer({ style, title, description, popupTitle, children }) {
+  const infoRef = useRef();
 
   return (
-    <div style={{...props.style, ...styles.SettingsTextContainer}}>
+    <div style={{ ...style, ...styles.SettingsTextContainer }}>
       <div
-        style={{fontWeight: 'bold', color: '#36B569', display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
-        {props.title}
+        style={{
+          fontWeight: 'bold', color: '#36B569', display: 'flex', flexDirection: 'row', alignItems: 'center',
+        }}
+      >
+        {title}
         <IoInformationCircleOutline
-          style={{ paddingLeft: '2.5px'}}
+          style={{
+            paddingLeft: '2.5px',
+          }}
           onClick={() => {
-            infoRef.current.toggleVisible()
+            infoRef.current.toggleVisible();
           }}
         />
       </div>
       <InfoPopup
         ref={infoRef}
-        message={props.description}
-        title={props.popupTitle}
+        message={description}
+        title={popupTitle}
       />
-      <div style={{ flexGrow: '1'}}/>
-      <div style={{ display: 'flex', justifyContent: 'center'}}>
-        {props.children}
+      <div
+        style={{
+          flexGrow: '1',
+        }}
+      />
+      <div
+        style={{
+          display: 'flex', justifyContent: 'center',
+        }}
+      >
+        {children}
       </div>
     </div>
-  )
+  );
 }
+
+SettingsTextContainer.propTypes = {
+  children: PropTypes.node.isRequired,
+  selected: PropTypes.bool,
+};
+
+SettingsTextContainer.defaultProps = {
+  selected: false,
+};
 
 export default SettingsTextContainer

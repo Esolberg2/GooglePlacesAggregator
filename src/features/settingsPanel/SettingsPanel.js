@@ -10,7 +10,7 @@ import SpinnerButton from '../../components/SpinnerButton';
 import CurrencyInput from 'react-currency-input-field';
 import { loadStateFromFile, setPriorSearch } from '../search/searchSlice';
 import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager';
-import { settingsPanelActions } from './settingsPanelSlice';
+import { settingsPanelActions, debouncedUpdateGoogleApi } from './settingsPanelSlice';
 import { buildModal } from '../modal/modalSlice';
 import axios from 'axios'
 
@@ -321,7 +321,7 @@ export function SettingsPanel(props) {
               <SpinnerButton
                 height='15px'
                 width='55px'
-                onClick={() => {googlePlacesApiManager.updateGoogleApi(apiKey)}}
+                onClick={() => {dispatch(debouncedUpdateGoogleApi())}}
                 buttonStyle={{backgroundColor: apiKeyStale ? '#fde0e0' : 'none'}}
                 buttonKey={apiKeyStale}
                 disabled={testMode}

@@ -1,5 +1,5 @@
 import { initializeSearch } from '../features/search/searchSlice'
-import { store } from '../store'
+import store from '../store'
 import { buildModal } from '../features/modal/modalSlice'
 
 export async function debouncedBuildSearch() {
