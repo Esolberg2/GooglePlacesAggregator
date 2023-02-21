@@ -1,9 +1,8 @@
-import React from 'react';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import * as turf from '@turf/turf'
 import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager'
 import { dummyGoogleCall } from '../../googleAPI/dummyCall.js'
-import { store } from '../../store'
+import store from '../../store';
 import { checksumManager } from '../../data/checksumManager'
 import { buildModal } from '../modal/modalSlice'
 import axios from 'axios'
@@ -37,9 +36,9 @@ const initialState = {
 
 const debounce = (target, flag) => {
   if (!flag) {
-    store.dispatch(target())
+    store.dispatch(target());
   }
-}
+};
 
 export const debouncedSingleSearch = () => {
   debounce(singleSearch, store.getState().search.loading)
@@ -203,7 +202,7 @@ function processGoogleDataForceMismatch(searchID, searchPerimeter) {
 
 function googleAuthErrorHook(reject) {
   window.gm_authFailure = function() {
-    googlePlacesApiManager.updateGoogleApi(store.getState().search.apiKey)
+    googlePlacesApiManager.updateGoogleApi(store.getState().search.apiKey);
     let selection = window.confirm(
       'Google Maps API failed to load. Please check that your API key is correct' +
       ' and that the key is authorized for Google\'s "Maps JavaScript API" and "Places API".' +
@@ -221,6 +220,13 @@ function googleAuthErrorHook(reject) {
    }
   }
 }
+
+export const debounceUpdateGoogleApi = createAsyncThunk('searchSlice/updateGoogleApi', ({ apiKey }, b) => {
+  if (!b.getState().settingsPanel.googlePlacesLibLoading) {
+    googlePlacesApiManager.updateGoogleApi(apiKey);
+  }
+});
+
 
 export const searchPlaces = createAsyncThunk('searchSlice/searchPlaces', (a, b) => {
   let kwargs = {
@@ -363,6 +369,6 @@ export const {
   loadStateFromFile,
   setPriorSearch,
   setNearbySearchComplete,
-  setBulkSearchRunning
-} = searchSlice.actions
+  setBulkSearchRunning,
+} = searchSlice.actions;
 export default searchSlice.reducer

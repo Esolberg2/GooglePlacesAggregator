@@ -9,6 +9,7 @@ import { SearchInterface } from '../search/SearchInterface'
 import { debouncedBuildSearch } from '../../functions/buildSearch'
 import { debouncedBulkSearch, debouncedSingleSearch } from '../search/searchSlice'
 import { buildFromFile } from '../../functions/buildFromFile'
+import { SettingsPanel } from '../settingsPanel/SettingsPanel';
 
 
 const searchedAreaStyle = {
@@ -34,10 +35,12 @@ const MapComponent = React.forwardRef((props, ref) => {
   const setSelectedFeatureIndex = mapActions.setSelectedFeatureIndex
   const sliceSearchedAreas = mapData.searchedAreas
 
-  const searchData = useSelector(state => state.search)
+  const searchData = useSelector(state => state.search);
   const searchActive = searchData.searchActive
   const priorSearch = searchData.priorSearch
-  const budgetUsed = searchData.budgetUsed
+
+  const settingsPanel = useSelector(state => state.settingsPanel);
+  const budgetUsed = settingsPanel.budgetUsed;
 
   // refs
   const mapRef = useRef();

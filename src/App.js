@@ -1,11 +1,12 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { googlePlacesApiManager } from './googleAPI/googlePlacesApiManager'
-import SpinnerOverlay from './components/SpinnerOverlay'
-import { useSelector, useDispatch } from 'react-redux'
-import MapComponent from './features/map/MapComponent'
-import { SettingsPanel } from './features/settingsPanel/SettingsPanel'
-import 'mapbox-gl/dist/mapbox-gl.css'
-import "react-map-gl-geocoder/dist/mapbox-gl-geocoder.css"
+import React, {
+  useEffect, useRef,
+} from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { googlePlacesApiManager } from './googleAPI/googlePlacesApiManager';
+import SpinnerOverlay from './components/SpinnerOverlay';
+import MapComponent from './features/map/MapComponent';
+import { SettingsPanel } from './features/settingsPanel/SettingsPanel';
+import 'react-map-gl-geocoder/dist/mapbox-gl-geocoder.css';
 import { DynamicModal } from './features/modal/Modal'
 import { modalFunctionStore } from './features/modal/modalSlice'
 

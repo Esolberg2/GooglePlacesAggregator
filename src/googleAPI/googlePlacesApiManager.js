@@ -1,11 +1,8 @@
+/* eslint-disable */ 
 
-import * as turf from '@turf/turf'
-import { store } from '../store'
 import { dummyGoogleCall } from './dummyCall.js'
-import { settingsPanelActions } from '../features/settingsPanel/settingsPanelSlice'
 
 class GooglePlacesApiManager {
-
 	constructor() {
 		this.tag = undefined
 		this.map = undefined
@@ -33,29 +30,51 @@ class GooglePlacesApiManager {
 
 	}
 
-	updateGoogleApi(apiKey) {
-		if (store.getState().settingsPanel.googlePlacesLibLoading) {
-      return;
-    };
+// 	updateGoogleApi(apiKey) {
+// 		if (store.getState().settingsPanel.googlePlacesLibLoading) {
+//       return;
+//     };
 
-		store.dispatch(settingsPanelActions.setGooglePlacesLibLoading(true))
+// 		store.dispatch(settingsPanelActions.setGooglePlacesLibLoading(true))
 
-    this.removeGoogle();
-    this.tag = document.createElement('script');
-    this.tag.type = 'text/javascript';
-    this.tag.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=places&callback=callback`;
-    this.tag.id = 'googleMaps';
-    this.tag.async = false;
-    this.tag.defer = false;
+//     this.removeGoogle();
+//     this.tag = document.createElement('script');
+//     this.tag.type = 'text/javascript';
+//     this.tag.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=places&callback=callback`;
+//     this.tag.id = 'googleMaps';
+//     this.tag.async = false;
+//     this.tag.defer = false;
+// 		this.tag.onload = () => {
+// 			this.service = new window.google.maps.places.PlacesService(document.getElementById('map'));
+// 			store.dispatch(settingsPanelActions.setGooglePlacesLibLoading(false))
+// 		}
+//     document.body.appendChild(this.tag);
+
+// 		// rebuild the map and service
+// 		this.createMap();
+//   }
+
+updateGoogleApi(apiKey) {
+	console.log("updateGoogleApi", apiKey)
+	let promise = new Promise((resolve) => {
+		this.removeGoogle();
+		this.tag = document.createElement('script');
+		this.tag.type = 'text/javascript';
+		this.tag.src = `https://maps.googleapis.com/maps/api/js?key=` + apiKey + `&libraries=places&callback=callback`;
+		this.tag.id = 'googleMaps';
+		this.tag.async = false;
+		this.tag.defer = false;
 		this.tag.onload = () => {
 			this.service = new window.google.maps.places.PlacesService(document.getElementById('map'));
-			store.dispatch(settingsPanelActions.setGooglePlacesLibLoading(false))
+			console.log("onload")
+			resolve()
 		}
-    document.body.appendChild(this.tag);
+		document.body.appendChild(this.tag);
 
-		// rebuild the map and service
 		this.createMap();
-  }
+	})
+	return promise
+	}
 
   async removeGoogle() {
     if (window.google !== undefined) {
