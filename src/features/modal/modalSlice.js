@@ -1,7 +1,6 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { useSelector, useDispatch } from 'react-redux'
-import { alertManager } from '../../alerts/alertManager'
-import { store } from '../../store'
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import alertManager from '../../alerts/alertManager';
+import store from '../../store';
 
 const initialState = {
   visible: false,

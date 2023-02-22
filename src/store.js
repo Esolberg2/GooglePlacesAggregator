@@ -1,10 +1,10 @@
-import { configureStore, combineReducers } from '@reduxjs/toolkit'
-import mapReducer from './features/map/mapSlice'
-import settingsPanelReducer from './features/settingsPanel/settingsPanelSlice'
-import searchReducer from './features/search/searchSlice'
-import modalReducer from './features/modal/modalSlice'
-import loadFileReducer from './features/loadFile/loadFileSlice'
-import stateWrapperReducer from './features/stateWrapper/wrapperSlice'
+import { configureStore, combineReducers } from '@reduxjs/toolkit';
+import mapReducer from './features/map/mapSlice';
+import settingsPanelReducer from './features/settingsPanel/settingsPanelSlice';
+import searchReducer from './features/search/searchSlice';
+import modalReducer from './features/modal/modalSlice';
+import loadFileReducer from './features/loadFile/loadFileSlice';
+import stateWrapperReducer from './features/stateWrapper/wrapperSlice';
 
 const combinedReducer = combineReducers({
   map: mapReducer,
@@ -13,22 +13,21 @@ const combinedReducer = combineReducers({
   modal: modalReducer,
   loadFile: loadFileReducer,
   stateWrapper: stateWrapperReducer,
-})
+});
 
 const rootReducer = (state, action) => {
   if (action.type === 'stateWrapper/reset') {
-    state = undefined
+    state = undefined;
   }
-  return combinedReducer(state, action)
-}
+  return combinedReducer(state, action);
+};
 
-
-export const store = configureStore({
+const store = configureStore({
   reducer: rootReducer,
-})
+});
 
 if (window.Cypress) {
-  window.store = store
+  window.store = store;
 }
 
 export default store;

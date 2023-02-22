@@ -1,6 +1,9 @@
-import { TailSpin } from  'react-loader-spinner'
+import React from 'react';
+import { TailSpin } from 'react-loader-spinner';
 import Modal from 'react-modal';
-Modal.setAppElement('body')
+import PropTypes from 'prop-types';
+
+Modal.setAppElement('body');
 
 const customStyles = {
   content: {
@@ -12,18 +15,17 @@ const customStyles = {
     transform: 'translate(-50%, -50%)',
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   overlay: {
     zIndex: 9999,
-  }
+  },
 };
 
 function SpinnerOverlay(props) {
   const {
-    message,
-    visible
-  } = props
+    visible,
+  } = props;
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -37,13 +39,16 @@ function SpinnerOverlay(props) {
           width="80"
           color="#4fa94d"
           radius="1"
-          wrapperStyle={{padding: '20px'}}
+          wrapperStyle={{
+            padding: '20px',
+          }}
           wrapperClass=""
-          visible={true}
-          />
+          visible={visible}
+        />
         <button
+          type="button"
           onClick={() => {
-            window.loadingAbort()
+            window.loadingAbort();
           }}
         >
           cancel
@@ -53,4 +58,8 @@ function SpinnerOverlay(props) {
   );
 }
 
-export default SpinnerOverlay
+SpinnerOverlay.propTypes = {
+  visible: PropTypes.bool.isRequired,
+};
+
+export default SpinnerOverlay;

@@ -1,16 +1,14 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit';
 
-
-const initialState = {}
+const initialState = {};
 
 export const wrapperSlice = createSlice({
   name: 'stateWrapper',
   initialState,
   reducers: {
-    reset: (state) => {},
+    reset: () => {},
   },
-})
+});
 
- const { reset } = wrapperSlice.actions
-export const wrapperActions = wrapperSlice.actions
-export default wrapperSlice.reducer
+export const wrapperActions = wrapperSlice.actions;
+export default wrapperSlice.reducer;
