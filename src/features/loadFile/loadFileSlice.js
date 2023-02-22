@@ -1,22 +1,22 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   fileData: {},
-  fileName: ''
-}
+  fileName: '',
+};
 
 export const loadFileSlice = createSlice({
   name: 'loadFileSlice',
   initialState,
   reducers: {
-    setFileData: (state, action) => {state.fileData = action.payload},
-    setFileName: (state, action) => {state.fileName = action.payload},
+    setFileData: (state, action) => { state.fileData = action.payload; },
+    setFileName: (state, action) => { state.fileName = action.payload; },
   },
 })
 
 export const {
   setFileData,
-  setFileName
-} = loadFileSlice.actions
+  setFileName,
+} = loadFileSlice.actions;
 
-export default loadFileSlice.reducer
+export default loadFileSlice.reducer;

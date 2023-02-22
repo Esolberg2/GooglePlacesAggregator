@@ -1,10 +1,10 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
-import { setVisible, callbackDict } from './modalSlice'
-import { AlertModal } from './Alert'
-import { ConfirmationModal } from './Confirmation'
+import React from 'react';
 import Modal from 'react-modal';
-Modal.setAppElement('body')
+import { useSelector } from 'react-redux';
+import AlertModal from './Alert';
+import ConfirmationModal from './Confirmation';
+
+Modal.setAppElement('body');
 
 const customStyles = {
   content: {
@@ -20,50 +20,35 @@ const customStyles = {
     fontWeight: '300',
     fontSize: '13px',
     transform: 'translate(-50%, -50%)',
-    boxShadow: '0 0 10px 0 rgba(0, 0, 0, 0.5)'
+    boxShadow: '0 0 10px 0 rgba(0, 0, 0, 0.5)',
   },
   overlay: {
     zIndex: 9999,
-  }
+  },
 };
 
-// const customStyles = {
-//   content: {
-//     top: '50%',
-//     left: '50%',
-//     right: 'auto',
-//     bottom: 'auto',
-//     marginRight: '-50%',
-//     transform: 'translate(-50%, -50%)',
-//   },
-//   overlay: {
-//     zIndex: 9999,
-//   }
-// };
-
-export const DynamicModal = React.memo(props => {
-// export function DynamicModal(props) {
+const DynamicModal = React.memo((props) => {
   const {
     rejectCallback,
     confirmCallback,
     title,
     message,
     visible
-  } = props
+  } = props;
 
   const type = useSelector((state) => state.modal.dialogType)
 
   function renderModal() {
-    if (type == "Alert") {
+    if (type === 'Alert') {
       return (
         <AlertModal
           rejectCallback={rejectCallback}
           message={message}
           title={title}
         />
-      )
+      );
     }
-    if (type == "Confirmation") {
+    if (type === 'Confirmation') {
       return (
         <ConfirmationModal
           confirmCallback={confirmCallback}
@@ -71,10 +56,9 @@ export const DynamicModal = React.memo(props => {
           message={message}
           title={title}
         />
-      )
-    } else {
-      return null
+      );
     }
+    return null;
   }
 
   return (
@@ -84,5 +68,7 @@ export const DynamicModal = React.memo(props => {
     >
       {renderModal()}
     </Modal>
-  )
-})
+  );
+});
+
+export default DynamicModal;

@@ -4,7 +4,9 @@ import PropTypes from 'prop-types';
 import InfoPopup from './InfoPopup';
 import { styles } from '../style';
 
-function SettingsTextContainer({ style, title, description, popupTitle, children }) {
+function SettingsTextContainer({
+  style, title, description, popupTitle, children,
+}) {
   const infoRef = useRef();
 
   return (
@@ -47,11 +49,14 @@ function SettingsTextContainer({ style, title, description, popupTitle, children
 
 SettingsTextContainer.propTypes = {
   children: PropTypes.node.isRequired,
-  selected: PropTypes.bool,
+  style: PropTypes.object,
+  title: PropTypes.string.isRequired,
+  description: PropTypes.node.isRequired,
+  popupTitle: PropTypes.string.isRequired,
 };
 
 SettingsTextContainer.defaultProps = {
-  selected: false,
+  style: {},
 };
 
-export default SettingsTextContainer
+export default SettingsTextContainer;

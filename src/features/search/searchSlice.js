@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import * as turf from '@turf/turf'
 import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager'
-import { dummyGoogleCall } from '../../googleAPI/dummyCall.js'
+import dummyGoogleCall from '../../googleAPI/dummyCall.js'
 import store from '../../store';
 import { checksumManager } from '../../data/checksumManager'
 import { buildModal } from '../modal/modalSlice'
@@ -41,7 +41,8 @@ const debounce = (target, flag) => {
 };
 
 export const debouncedSingleSearch = () => {
-  debounce(singleSearch, store.getState().search.loading)
+  console.log("debouncedSingleSearch")
+  debounce(singleSearch, store.getState().search.loading);
 }
 
 export const debouncedBulkSearch = () => {
@@ -92,19 +93,17 @@ export const syncBackend = createAsyncThunk('searchSlice/syncBackend', async (a,
 })
 
 export const singleSearch = createAsyncThunk('searchSlice/singleSearch', async (a, b) => {
-    let selectedAction = await buildModal({
-      "alertKey": 'search',
-      "data": null,
-      "confirmCallback": () => {
-        return store.dispatch(searchPlaces())
-      },
-      "denyCallback": (error) => {
-        console.log(error)
-        }
-    })
-    let returned = await selectedAction()
-    return unwrapResult(returned)
-})
+  const selectedAction = await buildModal({
+    alertKey: 'search',
+    data: null,
+    confirmCallback: () => b.dispatch(searchPlaces()),
+    denyCallback: (error) => {
+      console.log(error);
+    },
+  });
+  const returned = await selectedAction();
+  return unwrapResult(returned);
+});
 
 export const bulkSearch = createAsyncThunk('searchSlice/bulkSearch', async (a, b) => {
   let selectedAction = await buildModal({
@@ -122,16 +121,17 @@ export const bulkSearch = createAsyncThunk('searchSlice/bulkSearch', async (a, b
   await selectedAction()
 })
 
-function searchCallback(results, status, kwargs){
-  let zero_results = "ZERO_RESULTS"
-  let ok = "OK"
+function searchCallback(results, status, kwargs) {
+  console.log(results)
+  const zero_results = 'ZERO_RESULTS';
+  const ok = 'OK';
   const {
     testMode,
     nextCenter,
     searchID,
     resolve,
-    reject
-  } = kwargs
+    reject,
+  } = kwargs;
 
   if (testMode
     || status == ok
@@ -229,13 +229,14 @@ export const debounceUpdateGoogleApi = createAsyncThunk('searchSlice/updateGoogl
 
 
 export const searchPlaces = createAsyncThunk('searchSlice/searchPlaces', (a, b) => {
-  let kwargs = {
+  console.log("searchPlaces run")
+  const kwargs = {
     coords: b.getState().search.nextCenter,
     searchType: b.getState().settingsPanel.searchEntityType,
     testMode: b.getState().settingsPanel.testMode,
     nextCenter: b.getState().search.nextCenter,
     searchID: b.getState().search.searchID,
-  }
+  };
 
   let origin = {lat: kwargs.coords[1], lng: kwargs.coords[0]};
   let request = {
@@ -251,12 +252,16 @@ export const searchPlaces = createAsyncThunk('searchSlice/searchPlaces', (a, b) 
     googleAuthErrorHook(b.abort, reject)
 
     if (b.getState().settingsPanel.testMode) {
-      dummyGoogleCall(request, (result, status) => searchCallback(result, status, kwargs))
+      try {
+        const res = dummyGoogleCall(request, (result, status) => searchCallback(result, status, kwargs))
+      console.log(res)
+      } catch(error) {
+        console.log(error)
+      }
     }
     else {
       let service = googlePlacesApiManager.service
-      let func = service.nearbySearch
-      let nbs = service.nearbySearch(request, (result, status) => searchCallback(result, status, kwargs));
+      service.nearbySearch(request, (result, status) => searchCallback(result, status, kwargs));
     }
   })
   .then((result) => {
