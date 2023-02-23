@@ -9,7 +9,7 @@ import { getFeatureStyle, getEditHandleStyle } from '../../style';
 import { mapActions, deletePolygon } from './mapSlice';
 import SearchInterface from '../search/SearchInterface';
 import debouncedBuildSearch from '../../functions/buildSearch';
-import { debouncedBulkSearch, debouncedSingleSearch } from '../search/searchSlice';
+import { bulkSearch, singleSearch } from '../search/searchSlice';
 import buildFromFile from '../../functions/buildFromFile';
 
 const searchedAreaStyle = {
@@ -33,7 +33,12 @@ function MapComponent() {
   const { setSelectedFeatureIndex } = mapActions;
 
   const searchData = useSelector((state) => state.search);
-  const { searchActive, priorSearch } = searchData;
+  const {
+    searchActive,
+    priorSearch,
+    loading,
+    bulkSearchRunning,
+  } = searchData;
 
   const settingsPanel = useSelector((state) => state.settingsPanel);
   const { budgetUsed } = settingsPanel;
@@ -167,13 +172,14 @@ function MapComponent() {
           setMode={setMode}
           onDelete={onDelete}
           initializeSearch={debouncedBuildSearch}
-          nearbySearch={debouncedSingleSearch}
+          singleSearch={singleSearch}
           buildFromFile={buildFromFile}
           editorRef={editorRef}
           searchActive={searchActive}
           priorSearch={priorSearch}
-          bulkSearch={debouncedBulkSearch}
+          bulkSearch={bulkSearch}
           budgetUsed={budgetUsed}
+          loading={loading || bulkSearchRunning}
         />
       </div>
     </div>

@@ -2,7 +2,6 @@ import React, {
   useEffect,
 } from 'react';
 import { useSelector } from 'react-redux';
-import { googlePlacesApiManager } from './googleAPI/googlePlacesApiManager';
 import SpinnerOverlay from './components/SpinnerOverlay';
 import MapComponent from './features/map/MapComponent';
 import SettingsPanel from './features/settingsPanel/SettingsPanel';
