@@ -12,9 +12,9 @@ import { modalFunctionStore } from './features/modal/modalSlice';
 
 function App() {
   useEffect(() => {
-    window.addEventListener('beforeunload', saveBeforeLeaving)
+    window.addEventListener('beforeunload', saveBeforeLeaving);
     return () => {
-      window.removeEventListener('beforeunload', saveBeforeLeaving)
+      window.removeEventListener('beforeunload', saveBeforeLeaving);
     };
   }, []);
 

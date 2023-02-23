@@ -32,21 +32,22 @@ function SpinnerButton(props) {
     children,
     loading,
     onClick,
+    buttonKey,
+    disabled,
   } = props;
 
   return (
     <div>
       <Button
-        key={props.buttonKey}
+        key={buttonKey}
         onClick={onClick}
         style={{
           ...{ padding: '5px', margin: '5px', whiteSpace: 'nowrap' },
           ...buttonStyle,
         }}
-        disabled={props.disabled}
+        disabled={disabled}
       >
         <div
-          key={props.textKey}
           style={{
             ...{ width: width, height: loading ? '0px' : height, visibility: loading ? 'hidden' : 'visible' },
             ...textStyle,
@@ -76,6 +77,8 @@ SpinnerButton.propTypes = {
   width: PropTypes.string,
   loading: PropTypes.bool.isRequired,
   onClick: PropTypes.func.isRequired,
+  buttonKey: PropTypes.bool.isRequired,
+  disabled: PropTypes.bool.isRequired,
 };
 
 SpinnerButton.defaultProps = {

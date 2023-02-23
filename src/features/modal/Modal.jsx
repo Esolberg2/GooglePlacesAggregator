@@ -1,5 +1,6 @@
 import React from 'react';
 import Modal from 'react-modal';
+import PropTypes from 'prop-types';
 import { useSelector } from 'react-redux';
 import AlertModal from './Alert';
 import ConfirmationModal from './Confirmation';
@@ -33,10 +34,10 @@ const DynamicModal = React.memo((props) => {
     confirmCallback,
     title,
     message,
-    visible
+    visible,
   } = props;
 
-  const type = useSelector((state) => state.modal.dialogType)
+  const type = useSelector((state) => state.modal.dialogType);
 
   function renderModal() {
     if (type === 'Alert') {
@@ -70,5 +71,18 @@ const DynamicModal = React.memo((props) => {
     </Modal>
   );
 });
+
+DynamicModal.propTypes = {
+  rejectCallback: PropTypes.func,
+  confirmCallback: PropTypes.func,
+  title: PropTypes.string.isRequired,
+  message: PropTypes.string.isRequired,
+  visible: PropTypes.bool.isRequired,
+};
+
+DynamicModal.defaultProps = {
+  rejectCallback: () => {},
+  confirmCallback: () => {},
+};
 
 export default DynamicModal;

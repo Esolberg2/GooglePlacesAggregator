@@ -15,7 +15,16 @@ function AlertModal(props) {
 
   return (
     <div>
-      <div style={{ fontSize: '16px', fontWeight: 'bold', textAlign: 'center', paddingBottom: '15px'}}> {title} </div>
+      <div
+        style={{
+          fontSize: '16px',
+          fontWeight: 'bold',
+          textAlign: 'center',
+          paddingBottom: '15px',
+        }}
+      >
+        {title}
+      </div>
       <div
         style={{
           margin: '10px',

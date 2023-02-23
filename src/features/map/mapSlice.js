@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { searchPlaces, loadStateFromFile} from '../search/searchSlice'
+import { searchPlaces, loadStateFromFile } from '../search/searchSlice';
 
 const initialState = {
   searchedAreas: {

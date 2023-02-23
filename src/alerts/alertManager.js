@@ -1,8 +1,6 @@
-import store from '../store'
-
 class AlertManager {
-  constructor() {
-    this.alertTasks = {
+  static alertTasks() {
+    return {
       search: [
         this.googleInitError,
         this.searchEntityError,
@@ -32,21 +30,17 @@ class AlertManager {
         this.confirmBulkSearch,
       ],
       googleApiError: [
-        this.googleApiError
-      ]
-    }
+        this.googleApiError,
+      ],
+    };
   }
 
-  hasAlert(alertKey, args) {
-    console.log(alertKey)
-    console.log(this.alertTasks)
-    const alerts = this.alertTasks[alertKey] || undefined;
+  static hasAlert(state, alertKey, args) {
+    const alerts = this.alertTasks()[alertKey] || undefined;
 
     if (alerts) {
       for (let i = 0; i < alerts.length; i += 1) {
-        console.log(alerts[i]);
-
-        const result = alerts[i](args);
+        const result = alerts[i](state, args);
         if (result) {
           return result;
         }
@@ -57,24 +51,7 @@ class AlertManager {
     return false;
   }
 
-  //   try {
-  //     if (alertKey in this.alertTasks) {
-  //       for (const func of this.alertTasks[alertKey]) {
-  //         const result = func(args)
-  //         if (result != false) {
-  //           return result
-  //         }
-  //       }
-  //     } else {
-  //       throw new Error('invalid alert key');
-  //     }
-  //     return false;
-  //   } catch (error) {
-  //     throw new Error(error);
-  //   }
-  // }
-
-  static fileError(args) {
+  static fileError(state, args) {
     const { dataFile } = args;
     const dataFileJson = JSON.parse(dataFile);
 
@@ -107,8 +84,8 @@ class AlertManager {
     return false;
   }
 
-  static fileLoadedError() {
-    if (Object.keys(store.getState().loadFile.fileData).length === 0) {
+  static fileLoadedError(state) {
+    if (Object.keys(state.loadFile.fileData).length === 0) {
       return {
         title: 'No File Selected',
         text: 'Please select a file to load prior to building your search.',
@@ -118,8 +95,8 @@ class AlertManager {
     return false;
   }
 
-  static noSearchInitializedError() {
-    if (store.getState().search.unsearchedCoords.length === 0) {
+  static noSearchInitializedError(state) {
+    if (state.search.unsearchedCoords.length === 0) {
       return {
         title: 'No Search Initialized',
         text: 'No coordinates are available to search.  Please make sure to "Build Search" or "Build Search From File" prior to conducting additional searches within your selected region.',
@@ -129,9 +106,9 @@ class AlertManager {
     return false;
   }
 
-  static googleInitError() {
-    if (!store.getState().settingsPanel.testMode) {
-      if (!window.google || store.getState().settingsPanel.apiKey === '') {
+  static googleInitError(state) {
+    if (!state.settingsPanel.testMode) {
+      if (!window.google || state.settingsPanel.apiKey === '') {
         return {
           title: 'Google Places API Key Required',
           text: 'Please make sure to enter your Google API key, and load it into your search using the "Set Key" button.',
@@ -142,10 +119,10 @@ class AlertManager {
     return false;
   }
 
-  static polygonError() {
+  static polygonError(state) {
     if (
-      !store.getState().map.polygonCoordinates
-      || store.getState().map.polygonCoordinates.length === 0
+      !state.map.polygonCoordinates
+      || state.map.polygonCoordinates.length === 0
     ) {
       return {
         title: 'No Search Area Selected',
@@ -156,10 +133,10 @@ class AlertManager {
     return false;
   }
 
-  static resolutionError() {
+  static resolutionError(state) {
     if (
-      store.getState().settingsPanel.searchResolution < 0.1
-      || !store.getState().settingsPanel.searchResolution
+      state.settingsPanel.searchResolution < 0.1
+      || !state.settingsPanel.searchResolution
     ) {
       return {
         title: 'Resolution Setting Required',
@@ -170,10 +147,10 @@ class AlertManager {
     return false;
   }
 
-  static searchEntityError() {
+  static searchEntityError(state) {
     if (
-      store.getState().settingsPanel.searchEntityType === 'Select'
-      || !store.getState().settingsPanel.searchEntityType
+      state.settingsPanel.searchEntityType === 'Select'
+      || !state.settingsPanel.searchEntityType
     ) {
       return {
         title: 'Search Entity Required',
@@ -184,10 +161,10 @@ class AlertManager {
     return false;
   }
 
-  static searchCompleteError() {
+  static searchCompleteError(state) {
     if (
-      store.getState().search.unsearchedCoords.length === 0
-      && store.getState().search.searchedCoords.length !== 0
+      state.search.unsearchedCoords.length === 0
+      && state.search.searchedCoords.length !== 0
     ) {
       return {
         title: 'Search Complete',
@@ -198,10 +175,10 @@ class AlertManager {
     return false;
   }
 
-  static budgetExceededError() {
+  static budgetExceededError(state) {
     if (
-      store.getState().settingsPanel.budgetUsed >= store.getState().settingsPanel.budget
-      || store.getState().settingsPanel.budget <= 0
+      state.settingsPanel.budgetUsed >= state.settingsPanel.budget
+      || state.settingsPanel.budget <= 0
     ) {
       return {
         title: 'Budget Has Been Exceeded',
@@ -212,13 +189,13 @@ class AlertManager {
     return false;
   }
 
-  static existingDataWarning() {
+  static existingDataWarning(state) {
     if (
-      ((store.getState().map.polygonCoordinates
-      && store.getState().map.polygonCoordinates.length > 0)
-      || store.getState().search.googleData.length !== 0
-      || store.getState().search.searchedCoords.length !== 0
-      || store.getState().search.unsearchedCoords.length !== 0)
+      ((state.map.polygonCoordinates
+      && state.map.polygonCoordinates.length > 0)
+      || state.search.googleData.length !== 0
+      || state.search.searchedCoords.length !== 0
+      || state.search.unsearchedCoords.length !== 0)
     ) {
       return {
         title: 'WARNING: Data Deletion',
@@ -231,8 +208,8 @@ class AlertManager {
     return false;
   }
 
-  static confirmBulkSearch() {
-    const { bulkSearchCount } = store.getState().search;
+  static confirmBulkSearch(state) {
+    const { bulkSearchCount } = state.search;
     const totalCost = 0.017 * parseInt(bulkSearchCount, 10);
     return {
       title: 'Bulk Search Confirmation',
@@ -258,6 +235,4 @@ class AlertManager {
   }
 }
 
-const alertManager = new AlertManager();
-
-export default alertManager;
+export default AlertManager;
