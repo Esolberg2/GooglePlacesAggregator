@@ -60,118 +60,11 @@ export const syncBackend = createAsyncThunk('searchSlice/syncBackend', async (a,
     .put('/api/loadSearch', {
       searched: searchedCoords,
       unsearched: unsearchedCoords,
-      searchID: searchID,
+      searchID,
     })
     .then((result) => result)
     .catch((error) => error.msg);
 });
-
-export const singleSearch = createAsyncThunk('searchSlice/singleSearch', async (a, b) => {
-  const selectedAction = await buildModal(
-    {
-      alertKey: 'search',
-      data: null,
-      confirmCallback: () => b.dispatch(searchPlaces()),
-      denyCallback: (error) => {
-        throw new Error(error);
-      },
-    },
-    b.getState(),
-    b.dispatch,
-  );
-  const returned = await selectedAction();
-  return unwrapResult(returned);
-});
-
-export const bulkSearch = createAsyncThunk('searchSlice/bulkSearch', async (a, b) => {
-  const selectedAction = await buildModal(
-    {
-      alertKey: 'bulkSearch',
-      data: null,
-      confirmCallback: async () => {
-        for (let i = 0; i < b.getState().search.bulkSearchCount; i += 1) {
-          unwrapResult(await b.dispatch(singleSearch()));
-        }
-      },
-      denyCallback: (error) => {
-        throw new Error(error);
-      },
-    },
-    b.getState(),
-    b.dispatch,
-  );
-  await selectedAction();
-});
-
-// for testing
-// eslint-disable-next-line no-unused-vars
-function processGoogleDataForceMismatch(searchID, searchPerimeter) {
-  return axios
-    .put('/api/searchSession', {
-      circleCoordinates: searchPerimeter,
-      searchID: searchID,
-      checksum: '9999999',
-    });
-}
-
-function processGoogleData(searchID, searchPerimeter, checksum) {
-  return axios
-    .put('/api/searchSession', {
-      circleCoordinates: searchPerimeter,
-      searchID: searchID,
-      checksum: checksum,
-    });
-}
-
-function searchCallback(results, status, kwargs) {
-  const zeroResults = 'ZERO_RESULTS';
-  const ok = 'OK';
-  const {
-    testMode,
-    nextCenter,
-    searchID,
-    resolve,
-    checksum,
-  } = kwargs;
-
-  if (
-    testMode
-    || status === ok
-    || status === zeroResults
-  ) {
-    results.forEach((item, i) => {
-      delete item.opening_hours;
-      delete item.permanently_closed;
-    });
-    const options = { units: 'miles' };
-    results = JSON.parse(JSON.stringify(results));
-
-    const testRadius = Math.random() * (1.5 - 0.1) + 0.1;
-    const lastLat = results[results.length - 1].geometry.location.lat;
-    const lastLon = results[results.length - 1].geometry.location.lng;
-    const from = turf.point(nextCenter);
-    const to = turf.point([lastLon, lastLat]);
-    const radius = testMode ? testRadius : turf.distance(from, to, options);
-
-    const polygon = turf.circle(nextCenter, radius, options);
-    const searchPerimeter = polygon.geometry.coordinates[0];
-
-    processGoogleData(searchID, searchPerimeter, checksum)
-    // processGoogleDataForceMismatch(searchID, searchPerimeter)
-      .then((apiData) => {
-        resolve({
-          lastSearchPerimeter: searchPerimeter,
-          googleData: results,
-          apiData: apiData.data,
-        });
-      })
-      .catch((error) => {
-        throw new Error(error);
-      });
-  } else {
-    return results;
-  }
-}
 
 function googleAuthErrorHook(reject, apiKey) {
   const googleApiService = GoogleApiService.getInstance();
@@ -195,6 +88,77 @@ function googleAuthErrorHook(reject, apiKey) {
       reject();
     }
   };
+}
+
+// for testing
+// eslint-disable-next-line no-unused-vars
+function processGoogleDataForceMismatch(searchID, searchPerimeter) {
+  return axios
+    .put('/api/searchSession', {
+      circleCoordinates: searchPerimeter,
+      searchID,
+      checksum: '9999999',
+    });
+}
+
+function processGoogleData(searchID, searchPerimeter, checksum) {
+  return axios
+    .put('/api/searchSession', {
+      circleCoordinates: searchPerimeter,
+      searchID,
+      checksum,
+    });
+}
+
+// eslint-disable-next-line consistent-return
+function searchCallback(results, status, kwargs) {
+  const zeroResults = 'ZERO_RESULTS';
+  const ok = 'OK';
+  const {
+    testMode,
+    nextCenter,
+    searchID,
+    resolve,
+    checksum,
+  } = kwargs;
+
+  if (
+    testMode
+    || status === ok
+    || status === zeroResults
+  ) {
+    results.forEach((item) => {
+      delete item.opening_hours;
+      delete item.permanently_closed;
+    });
+    const options = { units: 'miles' };
+    const resultsJson = JSON.parse(JSON.stringify(results));
+
+    const testRadius = Math.random() * (1.5 - 0.1) + 0.1;
+    const lastLat = resultsJson[resultsJson.length - 1].geometry.location.lat;
+    const lastLon = resultsJson[resultsJson.length - 1].geometry.location.lng;
+    const from = turf.point(nextCenter);
+    const to = turf.point([lastLon, lastLat]);
+    const radius = testMode ? testRadius : turf.distance(from, to, options);
+
+    const polygon = turf.circle(nextCenter, radius, options);
+    const searchPerimeter = polygon.geometry.coordinates[0];
+
+    processGoogleData(searchID, searchPerimeter, checksum)
+    // processGoogleDataForceMismatch(searchID, searchPerimeter)
+      .then((apiData) => {
+        resolve({
+          lastSearchPerimeter: searchPerimeter,
+          googleData: resultsJson,
+          apiData: apiData.data,
+        });
+      })
+      .catch((error) => {
+        throw new Error(error);
+      });
+  } else {
+    return results;
+  }
 }
 
 export const searchPlaces = createAsyncThunk('searchSlice/searchPlaces', (a, b) => {
@@ -228,8 +192,8 @@ export const searchPlaces = createAsyncThunk('searchSlice/searchPlaces', (a, b) 
         throw new Error(error);
       }
     } else {
-      const googleApiService = GoogleApiService.getInstance();
-      googleApiService.nearbySearch(request, (result, status) => {
+      const { service } = GoogleApiService.getInstance();
+      service.nearbySearch(request, (result, status) => {
         searchCallback(result, status, kwargs);
       });
     }
@@ -241,6 +205,44 @@ export const searchPlaces = createAsyncThunk('searchSlice/searchPlaces', (a, b) 
       }
       return error;
     });
+});
+
+export const singleSearch = createAsyncThunk('searchSlice/singleSearch', async (a, b) => {
+  const selectedAction = await buildModal(
+    {
+      alertKey: 'search',
+      data: null,
+      confirmCallback: () => b.dispatch(searchPlaces()),
+      denyCallback: (error) => {
+        throw new Error(error);
+      },
+    },
+    b.getState(),
+    b.dispatch,
+  );
+  const returned = await selectedAction();
+  return unwrapResult(returned);
+});
+
+export const bulkSearch = createAsyncThunk('searchSlice/bulkSearch', async (a, b) => {
+  const selectedAction = await buildModal(
+    {
+      alertKey: 'bulkSearch',
+      data: null,
+      confirmCallback: async () => {
+        for (let i = 0; i < b.getState().search.bulkSearchCount; i += 1) {
+          // eslint-disable-next-line no-await-in-loop
+          unwrapResult(await b.dispatch(singleSearch()));
+        }
+      },
+      denyCallback: (error) => {
+        throw new Error(error);
+      },
+    },
+    b.getState(),
+    b.dispatch,
+  );
+  await selectedAction();
 });
 
 // ============ Reducers ====================

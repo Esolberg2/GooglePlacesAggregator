@@ -1,6 +1,6 @@
-import {RENDER_STATE} from 'react-map-gl-draw';
+import { RENDER_STATE } from 'react-map-gl-draw';
 
-export function getEditHandleStyle({feature, state}) {
+export function getEditHandleStyle({ state }) {
   switch (state) {
     case RENDER_STATE.SELECTED:
     case RENDER_STATE.HOVERED:
@@ -10,7 +10,7 @@ export function getEditHandleStyle({feature, state}) {
         fillOpacity: 1,
         stroke: 'rgb(255, 255, 255)',
         strokeWidth: 2,
-        r: 7
+        r: 7,
       };
 
     default:
@@ -19,12 +19,12 @@ export function getEditHandleStyle({feature, state}) {
         fillOpacity: 1,
         stroke: 'rgb(255, 255, 255)',
         strokeWidth: 2,
-        r: 5
+        r: 5,
       };
   }
 }
 
-export function getFeatureStyle({feature, index, state}) {
+export function getFeatureStyle({ state }) {
   switch (state) {
     case RENDER_STATE.SELECTED:
     case RENDER_STATE.HOVERED:
@@ -35,7 +35,7 @@ export function getFeatureStyle({feature, index, state}) {
         strokeWidth: 2,
         fill: 'rgb(251, 176, 59)',
         fillOpacity: 0.3,
-        strokeDasharray: '4,2'
+        strokeDasharray: '4,2',
       };
 
     default:
@@ -43,18 +43,10 @@ export function getFeatureStyle({feature, index, state}) {
         stroke: 'rgb(60, 178, 208)',
         strokeWidth: 2,
         fill: 'rgb(60, 178, 208)',
-        fillOpacity: 0.1
+        fillOpacity: 0.1,
       };
   }
 }
-
-// const SettingsButton = {
-//   paddingTop: '10px',
-//   fontSize: '12px',
-//   display: 'flex',
-//   textAlign: 'center',
-//   justifyContent: 'center'
-// }
 
 const SettingsButton = {
   width: '150px',
@@ -62,24 +54,24 @@ const SettingsButton = {
   margin: '2px',
   borderRadius: '20px',
   backgroundColor: '#D2FAB8',
-  borderWidth: '0px'
-}
+  borderWidth: '0px',
+};
 
 const ButtonDisabled = {
-  backgroundColor:'#cccccc'
-}
+  backgroundColor: '#cccccc',
+};
 
 const ButtonSelected = {
-  backgroundColor:'#51DE3E'
-}
+  backgroundColor: '#51DE3E',
+};
 
 const SettingsDescription = {
   paddingTop: '10px',
   fontSize: '12px',
   display: 'flex',
   textAlign: 'center',
-  justifyContent: 'center'
-}
+  justifyContent: 'center',
+};
 
 const SettingsTextContainer = {
   paddingLeft: '5px',
@@ -91,7 +83,7 @@ const SettingsTextContainer = {
   textAlign: 'center',
   flex: '1',
   justifyContent: 'space-between',
-}
+};
 
 const SearchInterfaceButton = {
   width: '150px',
@@ -100,19 +92,19 @@ const SearchInterfaceButton = {
   borderRadius: '20px',
   backgroundColor: '#36B569',
   borderWidth: '0px',
-  textColor: 'red'
-}
+  textColor: 'red',
+};
 
 const SearchInterfaceButtonDisabled = {
   backgroundColor: '#CCC',
-}
+};
 
 export const styles = {
-  SearchInterfaceButtonDisabled: SearchInterfaceButtonDisabled,
-  SearchInterfaceButton: SearchInterfaceButton,
-  ButtonSelected: ButtonSelected,
-  SettingsButton: SettingsButton,
-  ButtonDisabled: ButtonDisabled,
-  SettingsDescription: SettingsDescription,
-  SettingsTextContainer: SettingsTextContainer,
-}
+  SearchInterfaceButtonDisabled,
+  SearchInterfaceButton,
+  ButtonSelected,
+  SettingsButton,
+  ButtonDisabled,
+  SettingsDescription,
+  SettingsTextContainer,
+};
