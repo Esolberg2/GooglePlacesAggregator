@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager';
-import { initializeSearch, searchPlaces, loadStateFromFile } from '../search/searchSlice'
+import { initializeSearch, searchPlaces, loadStateFromFile } from '../search/searchSlice';
 
 const initialState = {
   searchEntityType: 'Select',

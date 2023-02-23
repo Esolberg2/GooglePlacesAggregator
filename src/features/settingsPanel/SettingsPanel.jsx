@@ -16,6 +16,7 @@ const infoMessages = require('../../data/informationText.json');
 
 function SettingsPanel() {
   const dispatch = useDispatch();
+  const stateHook = useSelector((state) => state);
   const searchData = useSelector((state) => state.search);
   const settingsData = useSelector((state) => state.settingsPanel);
   const mapData = useSelector((state) => state.map);
@@ -118,18 +119,22 @@ function SettingsPanel() {
 
   async function togglePriorSearch(val) {
     if (val === true || val !== priorSearch) {
-      const selectedAction = await buildModal({
-        alertKey: 'clearSearch',
-        data: null,
-        confirmCallback: () => {
-          dispatch(wrapperActions.reset());
-          dispatch(setPriorSearch(val));
-          if (val === true) {
-            inputRef.current.click();
-          }
+      const selectedAction = await buildModal(
+        {
+          alertKey: 'clearSearch',
+          data: null,
+          confirmCallback: () => {
+            dispatch(wrapperActions.reset());
+            dispatch(setPriorSearch(val));
+            if (val === true) {
+              inputRef.current.click();
+            }
+          },
+          denyCallback: () => {},
         },
-        denyCallback: () => {},
-      });
+        stateHook,
+        dispatch,
+      );
       selectedAction();
     }
   }
@@ -234,20 +239,23 @@ function SettingsPanel() {
 
           <SettingsButton
             onClick={async () => {
-              const selectedAction = await buildModal({
-                alertKey: 'clearSearch',
-                data: null,
-                confirmCallback: () => {
-                  dispatch(wrapperActions.reset());
+              const selectedAction = await buildModal(
+                {
+                  alertKey: 'clearSearch',
+                  data: null,
+                  confirmCallback: () => {
+                    dispatch(wrapperActions.reset());
+                  },
+                  denyCallback: () => {},
                 },
-                denyCallback: () => {},
-              });
+                stateHook,
+                dispatch,
+              );
               selectedAction();
             }}
           >
             Clear Search
           </SettingsButton>
-
         </div>
         <div
           style={{

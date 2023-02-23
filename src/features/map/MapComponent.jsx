@@ -1,11 +1,13 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, {
+  useEffect, useRef, useState, useCallback,
+} from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import MapGL, {Source, Layer } from 'react-map-gl';
+import MapGL, { Source, Layer } from 'react-map-gl';
 import Geocoder from 'react-map-gl-geocoder';
 import { Editor, EditingMode } from 'react-map-gl-draw';
 import { getFeatureStyle, getEditHandleStyle } from '../../style';
 import { mapActions, deletePolygon } from './mapSlice';
-import { SearchInterface } from '../search/SearchInterface';
+import SearchInterface from '../search/SearchInterface';
 import debouncedBuildSearch from '../../functions/buildSearch';
 import { debouncedBulkSearch, debouncedSingleSearch } from '../search/searchSlice';
 import buildFromFile from '../../functions/buildFromFile';
@@ -30,10 +32,10 @@ function MapComponent() {
   const { searchedAreas, mapPolygons } = mapData;
   const { setSelectedFeatureIndex } = mapActions;
 
-  const searchData = useSelector(state => state.search);
+  const searchData = useSelector((state) => state.search);
   const { searchActive, priorSearch } = searchData;
 
-  const settingsPanel = useSelector(state => state.settingsPanel);
+  const settingsPanel = useSelector((state) => state.settingsPanel);
   const { budgetUsed } = settingsPanel;
 
   // refs
