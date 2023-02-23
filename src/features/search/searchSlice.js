@@ -1,11 +1,10 @@
 import { createSlice, createAsyncThunk, unwrapResult } from '@reduxjs/toolkit';
 import * as turf from '@turf/turf';
 import axios from 'axios';
-import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager';
 import dummyGoogleCall from '../../googleAPI/dummyCall';
-import store from '../../store';
 import ChecksumManager from '../../data/checksumManager';
 import { buildModal } from '../modal/modalSlice';
+import GoogleApiService from '../../googleAPI/googleApiService';
 
 const initialState = {
 // == api call meta ==
@@ -33,13 +32,7 @@ const initialState = {
   bulkSearchCount: 0,
 };
 
-const debounce = (target, flag) => {
-  if (!flag) {
-    store.dispatch(target());
-  }
-};
-
-export const initializeSearch = createAsyncThunk('searchSlice/initializeSearch',(a, b) => {
+export const initializeSearch = createAsyncThunk('searchSlice/initializeSearch', (a, b) => {
   const { polygonCoordinates } = b.getState().map;
   const { searchResolution } = b.getState().settingsPanel;
   window.loadingAbort = b.abort;
@@ -96,7 +89,7 @@ export const bulkSearch = createAsyncThunk('searchSlice/bulkSearch', async (a, b
       alertKey: 'bulkSearch',
       data: null,
       confirmCallback: async () => {
-        for (let i = 0; i < store.getState().search.bulkSearchCount; i += 1) {
+        for (let i = 0; i < b.getState().search.bulkSearchCount; i += 1) {
           unwrapResult(await b.dispatch(singleSearch()));
         }
       },
@@ -104,21 +97,14 @@ export const bulkSearch = createAsyncThunk('searchSlice/bulkSearch', async (a, b
         throw new Error(error);
       },
     },
-    store.getState(),
-    store.dispatch,
+    b.getState(),
+    b.dispatch,
   );
   await selectedAction();
 });
 
-export const debouncedSingleSearch = () => {
-  debounce(singleSearch, store.getState().search.loading);
-};
-
-export const debouncedBulkSearch = () => {
-  debounce(bulkSearch, store.getState().search.bulkSearchRunning);
-};
-
 // for testing
+// eslint-disable-next-line no-unused-vars
 function processGoogleDataForceMismatch(searchID, searchPerimeter) {
   return axios
     .put('/api/searchSession', {
@@ -128,31 +114,30 @@ function processGoogleDataForceMismatch(searchID, searchPerimeter) {
     });
 }
 
-function processGoogleData(searchID, searchPerimeter) {
-  const { searchedCoords, unsearchedCoords } = store.getState().search;
-
+function processGoogleData(searchID, searchPerimeter, checksum) {
   return axios
     .put('/api/searchSession', {
       circleCoordinates: searchPerimeter,
       searchID: searchID,
-      checksum: ChecksumManager.buildChecksum(searchedCoords, unsearchedCoords)
+      checksum: checksum,
     });
 }
 
 function searchCallback(results, status, kwargs) {
-  const zero_results = 'ZERO_RESULTS';
+  const zeroResults = 'ZERO_RESULTS';
   const ok = 'OK';
   const {
     testMode,
     nextCenter,
     searchID,
     resolve,
+    checksum,
   } = kwargs;
 
   if (
     testMode
     || status === ok
-    || status === zero_results
+    || status === zeroResults
   ) {
     results.forEach((item, i) => {
       delete item.opening_hours;
@@ -171,7 +156,7 @@ function searchCallback(results, status, kwargs) {
     const polygon = turf.circle(nextCenter, radius, options);
     const searchPerimeter = polygon.geometry.coordinates[0];
 
-    processGoogleData(searchID, searchPerimeter)
+    processGoogleData(searchID, searchPerimeter, checksum)
     // processGoogleDataForceMismatch(searchID, searchPerimeter)
       .then((apiData) => {
         resolve({
@@ -188,9 +173,12 @@ function searchCallback(results, status, kwargs) {
   }
 }
 
-function googleAuthErrorHook(reject) {
+function googleAuthErrorHook(reject, apiKey) {
+  const googleApiService = GoogleApiService.getInstance();
+
   window.gm_authFailure = function () {
-    googlePlacesApiManager.updateGoogleApi(store.getState().search.apiKey);
+    googleApiService.updateGoogleApi(apiKey);
+
     const selection = window.confirm(
       'Google Maps API failed to load. Please check that your API key is correct'
       + ' and that the key is authorized for Google\'s "Maps JavaScript API" and "Places API".'
@@ -209,19 +197,15 @@ function googleAuthErrorHook(reject) {
   };
 }
 
-export const debounceUpdateGoogleApi = createAsyncThunk('searchSlice/updateGoogleApi', ({ apiKey }, b) => {
-  if (!b.getState().settingsPanel.googlePlacesLibLoading) {
-    googlePlacesApiManager.updateGoogleApi(apiKey);
-  }
-});
-
 export const searchPlaces = createAsyncThunk('searchSlice/searchPlaces', (a, b) => {
+  const { searchedCoords, unsearchedCoords } = b.getState().search;
   const kwargs = {
     coords: b.getState().search.nextCenter,
     searchType: b.getState().settingsPanel.searchEntityType,
     testMode: b.getState().settingsPanel.testMode,
     nextCenter: b.getState().search.nextCenter,
     searchID: b.getState().search.searchID,
+    checksum: ChecksumManager.buildChecksum(searchedCoords, unsearchedCoords),
   };
 
   const origin = { lat: kwargs.coords[1], lng: kwargs.coords[0] };
@@ -235,7 +219,7 @@ export const searchPlaces = createAsyncThunk('searchSlice/searchPlaces', (a, b) 
     kwargs.resolve = resolve;
     kwargs.reject = reject;
 
-    googleAuthErrorHook(b.abort, reject);
+    googleAuthErrorHook(b.abort, reject, b.getState().search.apiKey);
 
     if (b.getState().settingsPanel.testMode) {
       try {
@@ -244,8 +228,10 @@ export const searchPlaces = createAsyncThunk('searchSlice/searchPlaces', (a, b) 
         throw new Error(error);
       }
     } else {
-      const { service } = googlePlacesApiManager;
-      service.nearbySearch(request, (result, status) => searchCallback(result, status, kwargs));
+      const googleApiService = GoogleApiService.getInstance();
+      googleApiService.nearbySearch(request, (result, status) => {
+        searchCallback(result, status, kwargs);
+      });
     }
   })
     .then((result) => result)
@@ -334,6 +320,7 @@ export const searchSlice = createSlice({
       state.googleData = file.googleData;
     },
     setBulkSearchRunning: (state, action) => { state.bulkSearchRunning = action.payload; },
+    setLoading: (state, action) => { state.loading = action.payload; },
     setPriorSearch: (state, action) => { state.priorSearch = action.payload; },
     setSearchActive: (state, action) => { state.searchActive = action.payload; },
     addSearchCallType: (state, action) => { state.searchCallType = action.payload; },
@@ -355,6 +342,7 @@ export const {
   setPriorSearch,
   setNearbySearchComplete,
   setBulkSearchRunning,
+  setLoading,
 } = searchSlice.actions;
 
 export default searchSlice.reducer;

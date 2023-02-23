@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { googlePlacesApiManager } from '../../googleAPI/googlePlacesApiManager';
+import GoogleApiService from '../../googleAPI/googleApiService';
 import { initializeSearch, searchPlaces, loadStateFromFile } from '../search/searchSlice';
 
 const initialState = {
@@ -25,12 +25,9 @@ function makeid(length) {
   return result;
 }
 
-export const debouncedUpdateGoogleApi = createAsyncThunk('settingsPanelSlice/debouncedUpdateGoogleApi', async (a, b) => {
-  if (!b.getState().settingsPanel.googlePlacesLibLoading) {
-    // eslint-disable-next-line no-use-before-define
-    b.dispatch(settingsPanelActions.setGooglePlacesLibLoading(true));
-    await googlePlacesApiManager.updateGoogleApi(b.getState().settingsPanel.apiKey);
-  }
+export const updateGoogleApi = createAsyncThunk('settingsPanelSlice/updateGoogleApi', async (a, b) => {
+  const googleApiService = GoogleApiService.getInstance();
+  await googleApiService.updateGoogleApi(b.getState().settingsPanel.apiKey);
 });
 
 export const settingsPanelSlice = createSlice({
@@ -56,11 +53,15 @@ export const settingsPanelSlice = createSlice({
       state.userSearchKey = file.userSearchKey;
     });
 
-    builder.addCase(debouncedUpdateGoogleApi.fulfilled, (state) => {
+    builder.addCase(updateGoogleApi.pending, (state) => {
+      state.googlePlacesLibLoading = true;
+    });
+
+    builder.addCase(updateGoogleApi.fulfilled, (state) => {
       state.googlePlacesLibLoading = false;
     });
 
-    builder.addCase(debouncedUpdateGoogleApi.rejected, (state) => {
+    builder.addCase(updateGoogleApi.rejected, (state) => {
       state.googlePlacesLibLoading = false;
     });
   },

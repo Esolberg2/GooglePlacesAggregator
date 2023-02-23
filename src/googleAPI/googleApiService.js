@@ -1,6 +1,13 @@
-import store from '../store';
+class GoogleApiService {
+  static googleServiceInstance = null;
 
-class GooglePlacesApiManager {
+  static getInstance() {
+    if (GoogleApiService.googleServiceInstance === null) {
+      GoogleApiService.googleServiceInstance = new GoogleApiService();
+    }
+    return this.googleServiceInstance;
+  }
+
   constructor() {
     this.tag = undefined;
     this.map = undefined;
@@ -55,4 +62,4 @@ class GooglePlacesApiManager {
   }
 }
 
-export const googlePlacesApiManager = new GooglePlacesApiManager()
+export default GoogleApiService;

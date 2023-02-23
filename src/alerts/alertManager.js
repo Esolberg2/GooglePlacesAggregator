@@ -213,8 +213,8 @@ class AlertManager {
     const totalCost = 0.017 * parseInt(bulkSearchCount, 10);
     return {
       title: 'Bulk Search Confirmation',
-      text: `Please confirm you would like to execute ${bulkSearchCount} calls to the Google Places Api` +
-      `for a projected total cost of $${totalCost}.`,
+      text: `Please confirm you would like to execute ${bulkSearchCount} calls to the Google Places Api`
+      + `for a projected total cost of $${totalCost}.`,
       type: 'Confirmation',
     };
   }

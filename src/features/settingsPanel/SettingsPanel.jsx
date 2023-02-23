@@ -8,7 +8,7 @@ import InfoPopup from '../../components/InfoPopup';
 import SettingsTextContainer from '../../components/SettingsTextContainer';
 import SpinnerButton from '../../components/SpinnerButton';
 import { loadStateFromFile, setPriorSearch } from '../search/searchSlice';
-import { settingsPanelActions, debouncedUpdateGoogleApi } from './settingsPanelSlice';
+import { settingsPanelActions, updateGoogleApi } from './settingsPanelSlice';
 import { buildModal } from '../modal/modalSlice';
 
 const placeTypes = require('../../data/placeTypes.json');
@@ -365,12 +365,12 @@ function SettingsPanel() {
             <SpinnerButton
               height="15px"
               width="55px"
-              onClick={() => { dispatch(debouncedUpdateGoogleApi()); }}
+              onClick={() => { dispatch(updateGoogleApi()); }}
               buttonStyle={{
                 backgroundColor: apiKeyStale ? '#fde0e0' : 'none',
               }}
               buttonKey={apiKeyStale}
-              disabled={testMode}
+              disabled={testMode || googlePlacesLibLoading}
               loading={googlePlacesLibLoading}
             >
               Load Key

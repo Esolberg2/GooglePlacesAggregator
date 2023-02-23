@@ -11,10 +11,11 @@ function SearchInterface(props) {
     setMode,
     onDelete,
     initializeSearch,
-    nearbySearch,
+    singleSearch,
     searchActive,
     bulkSearch,
     budgetUsed,
+    loading,
   } = props;
 
   const bulkSearchCount = useSelector((state) => state.search.bulkSearchCount);
@@ -89,7 +90,10 @@ function SearchInterface(props) {
               Build Search
             </SearchInterfaceButton>
             <SearchInterfaceButton
-              onClick={nearbySearch}
+              onClick={() => {
+                dispatch(singleSearch());
+              }}
+              disabled={loading}
               style={{
                 padding: '5px',
                 margin: '5px',
@@ -106,7 +110,10 @@ function SearchInterface(props) {
             }}
           >
             <SearchInterfaceButton
-              onClick={bulkSearch}
+              onClick={() => {
+                dispatch(bulkSearch());
+              }}
+              disabled={loading}
               style={{ padding: '5px', margin: '5px', width: '150px' }}
             >
               Bulk Search
@@ -164,10 +171,11 @@ SearchInterface.propTypes = {
   setMode: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
   initializeSearch: PropTypes.func.isRequired,
-  nearbySearch: PropTypes.func.isRequired,
+  singleSearch: PropTypes.func.isRequired,
   searchActive: PropTypes.bool.isRequired,
   bulkSearch: PropTypes.func.isRequired,
   budgetUsed: PropTypes.number.isRequired,
+  loading: PropTypes.bool.isRequired,
 };
 
 export default SearchInterface;
