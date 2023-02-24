@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define */
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { searchPlaces, loadStateFromFile } from '../search/searchSlice';
 

@@ -8,9 +8,7 @@ import { Editor, EditingMode } from 'react-map-gl-draw';
 import { getFeatureStyle, getEditHandleStyle } from '../../style';
 import { mapActions, deletePolygon } from './mapSlice';
 import SearchInterface from '../search/SearchInterface';
-// import debouncedBuildSearch from '../../functions/buildSearch';
 import { bulkSearch, singleSearch, buildSearch } from '../search/searchSlice';
-// import buildFromFile from '../../functions/buildFromFile';
 import { buildFromFile } from '../loadFile/loadFileSlice';
 
 const searchedAreaStyle = {
@@ -24,8 +22,7 @@ const searchedAreaStyle = {
 };
 
 function MapComponent() {
-  const TOKEN = 'pk.eyJ1IjoiZXNvbGJlcmc3NyIsImEiOiJja3l1ZmpqYWgwYzAxMnRxa3MxeHlvanVpIn0.co7_t1mXkXPRE8BOnOHJXQ';
-
+  const TOKEN = process.env.REACT_APP_MAPBOX_ACCESS_TOKEN;
   const dispatch = useDispatch();
 
   // map slice
