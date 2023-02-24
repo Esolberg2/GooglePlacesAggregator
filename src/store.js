@@ -17,6 +17,7 @@ const combinedReducer = combineReducers({
 
 const rootReducer = (state, action) => {
   if (action.type === 'stateWrapper/reset') {
+    // eslint-disable-next-line no-param-reassign
     state = undefined;
   }
   return combinedReducer(state, action);

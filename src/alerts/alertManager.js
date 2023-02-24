@@ -111,7 +111,7 @@ class AlertManager {
       if (!window.google || state.settingsPanel.apiKey === '') {
         return {
           title: 'Google Places API Key Required',
-          text: 'Please make sure to enter your Google API key, and load it into your search using the "Set Key" button.',
+          text: 'Please make sure to enter your Google API key, and load it into your search using the "Load Key" button.',
           type: 'Alert',
         };
       }

@@ -40,8 +40,8 @@ function ConfirmationModal(props) {
         {message}
       </div>
       <div style={{ paddingTop: '20px', display: 'flex', justifyContent: 'space-around' }}>
-        <button type="button" onClick={onConfirm}>confirm</button>
-        <button type="button" onClick={onDeny}>deny</button>
+        <button type="button" onClick={onConfirm}>continue</button>
+        <button type="button" onClick={onDeny}>cancel</button>
       </div>
     </div>
   );
