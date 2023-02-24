@@ -21,6 +21,7 @@ venv
 .env.production.local
 /api/.env
 /api/application/searches.sqlite3
+/api/db.sqlite3
 __pycache__
 
 npm-debug.log*

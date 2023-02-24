@@ -7,6 +7,7 @@ from fiona.fio import with_context_env
 
 logger = logging.getLogger(__name__)
 
+
 @click.command(help="Remove a datasource or an individual layer.")
 @click.argument("input", required=True)
 @click.option("--layer", type=str, default=None, required=False, help="Name of layer to remove.")
@@ -20,10 +21,10 @@ def rm(ctx, input, layer, yes):
         kind = "layer"
 
     if not yes:
-        click.confirm("The {} will be removed. Are you sure?".format(kind), abort=True)
+        click.confirm(f"The {kind} will be removed. Are you sure?", abort=True)
 
     try:
         fiona.remove(input, layer=layer)
     except Exception:
-        logger.exception("Failed to remove {}.".format(kind))
+        logger.exception(f"Failed to remove {kind}.")
         raise click.Abort()
