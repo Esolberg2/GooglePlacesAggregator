@@ -1,6 +1,3 @@
-# from .application import init_app
-# import application
-
 from application import init_app
 #
 # print()
