@@ -1,3 +1,4 @@
+/* eslint-disable react/forbid-prop-types */
 import React from 'react';
 import { TailSpin } from 'react-loader-spinner';
 import 'react-loader-spinner/dist/loader/css/react-spinner-loader.css';
@@ -49,7 +50,7 @@ function SpinnerButton(props) {
       >
         <div
           style={{
-            ...{ width: width, height: loading ? '0px' : height, visibility: loading ? 'hidden' : 'visible' },
+            ...{ width, height: loading ? '0px' : height, visibility: loading ? 'hidden' : 'visible' },
             ...textStyle,
           }}
         >

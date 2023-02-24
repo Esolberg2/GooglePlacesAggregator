@@ -6,21 +6,22 @@ import SpinnerOverlay from './components/SpinnerOverlay';
 import MapComponent from './features/map/MapComponent';
 import SettingsPanel from './features/settingsPanel/SettingsPanel';
 import 'react-map-gl-geocoder/dist/mapbox-gl-geocoder.css';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import DynamicModal from './features/modal/Modal';
 import { modalFunctionStore } from './features/modal/modalSlice';
 
 function App() {
+  const saveBeforeLeaving = (e) => {
+    e.preventDefault();
+    e.returnValue = '';
+  };
+
   useEffect(() => {
     window.addEventListener('beforeunload', saveBeforeLeaving);
     return () => {
       window.removeEventListener('beforeunload', saveBeforeLeaving);
     };
   }, []);
-
-  const saveBeforeLeaving = (e) => {
-    e.preventDefault();
-    e.returnValue = '';
-  };
 
   const buildingSearch = useSelector((state) => state.search.buildingSearch);
 

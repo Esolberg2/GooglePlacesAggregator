@@ -49,6 +49,7 @@ function SettingsTextContainer({
 
 SettingsTextContainer.propTypes = {
   children: PropTypes.node.isRequired,
+  // eslint-disable-next-line react/forbid-prop-types
   style: PropTypes.object,
   title: PropTypes.string.isRequired,
   description: PropTypes.node.isRequired,
