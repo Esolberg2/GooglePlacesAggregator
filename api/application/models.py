@@ -1,7 +1,6 @@
 """Data models."""
 from . import db
 
-
 class SearchID(db.Model):
     """Data model for user accounts."""
 

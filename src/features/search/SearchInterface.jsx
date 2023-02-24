@@ -147,7 +147,7 @@ function SearchInterface(props) {
           }}
         >
           Budget Spent: $
-          {budgetUsed}
+          {budgetUsed.toFixed(4)}
         </div>
       </div>
     );
