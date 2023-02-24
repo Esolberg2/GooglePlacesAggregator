@@ -53,6 +53,20 @@ export const initializeSearch = createAsyncThunk('searchSlice/initializeSearch',
     });
 });
 
+export const buildSearch = createAsyncThunk('searchSlice/buildSearch', async (a, b) => {
+  const selectedAction = await buildModal(
+    {
+      alertKey: 'buildSearch',
+      data: null,
+      confirmCallback: () => b.dispatch(initializeSearch()),
+      denyCallback: () => {},
+    },
+    b.getState(),
+    b.dispatch,
+  );
+  selectedAction();
+});
+
 export const syncBackend = createAsyncThunk('searchSlice/syncBackend', async (a, b) => {
   const { searchID, searchedCoords, unsearchedCoords } = b.getState().search;
 
@@ -72,6 +86,7 @@ function googleAuthErrorHook(reject, apiKey) {
   window.gm_authFailure = function () {
     googleApiService.updateGoogleApi(apiKey);
 
+    // eslint-disable-next-line no-alert
     const selection = window.confirm(
       'Google Maps API failed to load. Please check that your API key is correct'
       + ' and that the key is authorized for Google\'s "Maps JavaScript API" and "Places API".'
@@ -119,6 +134,7 @@ function searchCallback(results, status, kwargs) {
     nextCenter,
     searchID,
     resolve,
+    reject,
     checksum,
   } = kwargs;
 
@@ -133,14 +149,12 @@ function searchCallback(results, status, kwargs) {
     });
     const options = { units: 'miles' };
     const resultsJson = JSON.parse(JSON.stringify(results));
-
     const testRadius = Math.random() * (1.5 - 0.1) + 0.1;
     const lastLat = resultsJson[resultsJson.length - 1].geometry.location.lat;
     const lastLon = resultsJson[resultsJson.length - 1].geometry.location.lng;
     const from = turf.point(nextCenter);
     const to = turf.point([lastLon, lastLat]);
     const radius = testMode ? testRadius : turf.distance(from, to, options);
-
     const polygon = turf.circle(nextCenter, radius, options);
     const searchPerimeter = polygon.geometry.coordinates[0];
 
@@ -154,7 +168,7 @@ function searchCallback(results, status, kwargs) {
         });
       })
       .catch((error) => {
-        throw new Error(error);
+        reject(error);
       });
   } else {
     return results;
