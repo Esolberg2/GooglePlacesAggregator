@@ -79,7 +79,7 @@ function SearchInterface(props) {
             }}
           >
             <SearchInterfaceButton
-              onClick={initializeSearch}
+              onClick={() => dispatch(initializeSearch())}
               style={{
                 padding: '5px',
                 margin: '5px',

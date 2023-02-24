@@ -16,7 +16,6 @@ const customStyles = {
     width: '25%',
     marginRight: '-50%',
     borderRadius: '10px',
-    // backgroundColor: '#3CCD65',
     backgroundColor: '#F8F8F8',
     fontWeight: '300',
     fontSize: '13px',

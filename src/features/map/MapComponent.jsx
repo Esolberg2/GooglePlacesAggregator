@@ -8,9 +8,10 @@ import { Editor, EditingMode } from 'react-map-gl-draw';
 import { getFeatureStyle, getEditHandleStyle } from '../../style';
 import { mapActions, deletePolygon } from './mapSlice';
 import SearchInterface from '../search/SearchInterface';
-import debouncedBuildSearch from '../../functions/buildSearch';
-import { bulkSearch, singleSearch } from '../search/searchSlice';
-import buildFromFile from '../../functions/buildFromFile';
+// import debouncedBuildSearch from '../../functions/buildSearch';
+import { bulkSearch, singleSearch, buildSearch } from '../search/searchSlice';
+// import buildFromFile from '../../functions/buildFromFile';
+import { buildFromFile } from '../loadFile/loadFileSlice';
 
 const searchedAreaStyle = {
   id: 'searchedAreaLayers',
@@ -171,7 +172,7 @@ function MapComponent() {
         <SearchInterface
           setMode={setMode}
           onDelete={onDelete}
-          initializeSearch={debouncedBuildSearch}
+          initializeSearch={buildSearch}
           singleSearch={singleSearch}
           buildFromFile={buildFromFile}
           editorRef={editorRef}
