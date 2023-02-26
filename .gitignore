@@ -28,6 +28,7 @@ venv
 /api/dump.db
 /api/pyvenv.cfg
 /api/lib
+dump.rdb
 
 /api/db.sqlite3
 __pycache__
