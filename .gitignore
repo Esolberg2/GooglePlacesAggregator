@@ -19,8 +19,16 @@ venv
 .env.development.local
 .env.test.local
 .env.production.local
+/env
 /api/.env
 /api/application/searches.sqlite3
+/api/dbVol/searches.sqlite3
+/api/bin
+/api/include
+/api/dump.db
+/api/pyvenv.cfg
+/api/lib
+
 /api/db.sqlite3
 __pycache__
 
