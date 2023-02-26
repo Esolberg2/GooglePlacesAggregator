@@ -29,7 +29,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/Users/eric/Documents/_ReactJS/aggregator_clone/docker_clone/aggregator_clone_docker/api"
+set -gx VIRTUAL_ENV "/Users/eric/Documents/_ReactJS/aggregator_clone/docker_clone/test/testClone/api"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH

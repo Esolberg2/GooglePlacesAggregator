@@ -37,7 +37,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/Users/eric/Documents/_ReactJS/aggregator_clone/docker_clone/aggregator_clone_docker/api"
+VIRTUAL_ENV="/Users/eric/Documents/_ReactJS/aggregator_clone/docker_clone/test/testClone/api"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
