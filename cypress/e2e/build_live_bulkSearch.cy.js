@@ -15,7 +15,7 @@ it('Build search area, live, bulkSearch', { scrollBehavior: false }, () => {
 
   cy.get('[style="transition: all 100ms ease 0s; padding-top: 4px; padding-left: 52px;"]').click()
 
-  cy.get('[style="flex: 1 1 0%; display: flex; flex-direction: row; align-items: flex-end;"] > input').type('AIzaSyDrk3576gQUVtPrX92lpQgPUUfJoR6W6BM')
+  cy.get('[style="flex: 1 1 0%; display: flex; flex-direction: row; align-items: flex-end;"] > input').type('AIz')
 
   cy.wait(500)
   cy.get('[style="width: 47px; height: 15px; visibility: visible;"]').click()
