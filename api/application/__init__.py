@@ -1,16 +1,21 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from dotenv import load_dotenv
 from config import config
 import redis
+import os
 
+flaskEnv = os.getenv('FLASK_ENV')
+if flaskEnv == 'production':
+    redisHost = 'redis'
+else:
+    redisHost = 'localhost'
 
-# Globally accessible libraries
 db = SQLAlchemy()
 r = redis.Redis(
-    host='localhost',
+    host=redisHost,
     port=6379
     )
-
 
 def init_app():
     """Initialize the core application."""
@@ -19,8 +24,6 @@ def init_app():
 
     # Initialize Plugins
     db.init_app(app)
-    # r.init_app(app)
-    # r = redis.Redis('host', port=6379)
 
     with app.app_context():
         # Include our Routes

@@ -1,6 +1,5 @@
 from application import init_app
-#
-# print()
+
 app = init_app()
 
 if __name__ == "__main__":
