@@ -21,7 +21,6 @@ function App() {
   };
 
   useEffect(() => {
-    console.log(window.innerWidth);
     window.addEventListener('beforeunload', saveBeforeLeaving);
     return () => {
       window.removeEventListener('beforeunload', saveBeforeLeaving);

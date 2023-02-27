@@ -111,7 +111,7 @@ function SettingsPanel() {
     if (priorSearch) {
       return '#cccccc';
     }
-    if (searchResolution < 0.1) {
+    if (searchResolution > 10 || searchResolution < 0.1) {
       return '#fde0e0';
     }
     return undefined;
