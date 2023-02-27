@@ -10,6 +10,7 @@ import { mapActions, deletePolygon } from './mapSlice';
 import SearchInterface from '../search/SearchInterface';
 import { bulkSearch, singleSearch, buildSearch } from '../search/searchSlice';
 import { buildFromFile } from '../loadFile/loadFileSlice';
+import '../../App.css';
 
 const searchedAreaStyle = {
   id: 'searchedAreaLayers',
@@ -122,9 +123,7 @@ function MapComponent() {
     >
       <MapGL
         ref={mapRef}
-        {...viewport}
-        width="100%"
-        height="100%"
+        {...{ ...viewport, width: window.innerWidth }}
         mapboxApiAccessToken={TOKEN}
         mapStyle="mapbox://styles/mapbox/streets-v11"
         onViewportChange={onViewportChange}

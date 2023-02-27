@@ -11,6 +11,7 @@ const Button = styled.button`
   padding: 5px;
   margin: 5px;
   width: 150px;
+  height: 30px;
   color: white;
   &:active {
     opacity: 0.5;

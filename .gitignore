@@ -29,6 +29,7 @@ venv
 /api/pyvenv.cfg
 /api/lib
 dump.rdb
+/docker
 
 /api/db.sqlite3
 __pycache__

@@ -1,5 +1,6 @@
 import React, {
   useEffect,
+  useState,
 } from 'react';
 import { useSelector } from 'react-redux';
 import SpinnerOverlay from './components/SpinnerOverlay';
@@ -11,12 +12,16 @@ import DynamicModal from './features/modal/Modal';
 import { modalFunctionStore } from './features/modal/modalSlice';
 
 function App() {
+  // eslint-disable-next-line no-use-before-define
+  const size = useWindowSize();
+
   const saveBeforeLeaving = (e) => {
     e.preventDefault();
     e.returnValue = '';
   };
 
   useEffect(() => {
+    console.log(window.innerWidth);
     window.addEventListener('beforeunload', saveBeforeLeaving);
     return () => {
       window.removeEventListener('beforeunload', saveBeforeLeaving);
@@ -25,11 +30,31 @@ function App() {
 
   const buildingSearch = useSelector((state) => state.search.buildingSearch);
 
+  function useWindowSize() {
+    const [windowSize, setWindowSize] = useState({
+      width: undefined,
+      height: undefined,
+    });
+    useEffect(() => {
+      function handleResize() {
+        setWindowSize({
+          width: window.innerWidth,
+          height: window.innerHeight,
+        });
+      }
+      window.addEventListener('resize', handleResize);
+      handleResize();
+      return () => window.removeEventListener('resize', handleResize);
+    }, []);
+    return windowSize;
+  }
+
   return (
     <div
       style={{
         height: '100vh',
         flex: '1',
+        width: size.width,
       }}
     >
       <SpinnerOverlay
@@ -49,6 +74,7 @@ function App() {
           height: '2px',
           backgroundColor: 'black',
           flex: '1',
+          width: size.width,
         }}
       />
       <div

@@ -20,6 +20,7 @@ function SettingsTextContainer({
         <IoInformationCircleOutline
           style={{
             paddingLeft: '2.5px',
+            alignSelf: 'flex-start',
           }}
           onClick={() => {
             infoRef.current.toggleVisible();

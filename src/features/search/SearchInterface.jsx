@@ -39,17 +39,16 @@ function SearchInterface(props) {
           style={{
             padding: '10px',
             display: 'flex',
-            flexDirection: 'row',
+            flexDirection: 'column',
             justifyContent: 'flex-star',
             alignItems: 'flex-end',
           }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', flexDirection: 'row' }}>
             <SearchInterfaceButton
               onClick={() => {
                 setMode(new DrawPolygonMode());
               }}
-              style={{ padding: '5px', margin: '5px', width: '150px' }}
               disabled={searchActive}
             >
               Select Search Area
@@ -74,17 +73,12 @@ function SearchInterface(props) {
           <div
             style={{
               display: 'flex',
-              flexDirection: 'column',
+              flexDirection: 'row',
               justifyContent: 'flex-end',
             }}
           >
             <SearchInterfaceButton
               onClick={() => dispatch(initializeSearch())}
-              style={{
-                padding: '5px',
-                margin: '5px',
-                width: '150px',
-              }}
               disabled={searchActive}
             >
               Build Search
@@ -94,11 +88,6 @@ function SearchInterface(props) {
                 dispatch(singleSearch());
               }}
               disabled={loading}
-              style={{
-                padding: '5px',
-                margin: '5px',
-                width: '150px',
-              }}
             >
               Single Search
             </SearchInterfaceButton>
@@ -106,18 +95,9 @@ function SearchInterface(props) {
           <div
             style={{
               display: 'flex',
-              flexDirection: 'column',
+              flexDirection: 'row',
             }}
           >
-            <SearchInterfaceButton
-              onClick={() => {
-                dispatch(bulkSearch());
-              }}
-              disabled={loading}
-              style={{ padding: '5px', margin: '5px', width: '150px' }}
-            >
-              Bulk Search
-            </SearchInterfaceButton>
             <input
               type="number"
               value={bulkSearchCount === 0 ? '' : bulkSearchCount}
@@ -133,6 +113,14 @@ function SearchInterface(props) {
               }}
               placeholder="Bulk Search Qty"
             />
+            <SearchInterfaceButton
+              onClick={() => {
+                dispatch(bulkSearch());
+              }}
+              disabled={loading}
+            >
+              Bulk Search
+            </SearchInterfaceButton>
           </div>
 
         </div>

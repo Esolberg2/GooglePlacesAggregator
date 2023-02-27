@@ -184,7 +184,7 @@ function SettingsPanel() {
   }
 
   return (
-    <div style={{}}>
+    <div style={{ display: 'flex', flex: '1', flexDirection: 'column' }}>
       <InfoPopup
         message={infoMessages.about}
         title="About This Tool"
@@ -204,13 +204,49 @@ function SettingsPanel() {
       <div
         style={{
           display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
         }}
       >
         <div
           style={{
+            color: '#007018',
+            fontWeight: '600',
+            flex: '1',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            display: 'flex',
+            fontSize: '30px',
+            paddingTop: '20px',
+          }}
+        >
+          Google Places Data Helper
+          <button
+            type="button"
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0)',
+              margin: '5px',
+              marginBottom: '20px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              color: '#008800',
+              borderWidth: '0px',
+              textDecorationLine: 'underline',
+            }}
+            onClick={() => {
+              infoRef.current.toggleVisible();
+            }}
+          >
+            About
+          </button>
+        </div>
+        <div
+          style={{
             display: 'flex',
             padding: '20px',
-            flexDirection: 'column',
+            flexDirection: 'row',
           }}
         >
           <SettingsButton
@@ -257,41 +293,9 @@ function SettingsPanel() {
             Clear Search
           </SettingsButton>
         </div>
-        <div
-          style={{
-            color: '#007018',
-            fontWeight: '600',
-            flex: '1',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            display: 'flex',
-            fontSize: '30px',
-          }}
-        >
-          Google Places Data Helper
-          <button
-            type="button"
-            style={{
-              backgroundColor: 'rgba(255, 255, 255, 0)',
-              margin: '5px',
-              marginBottom: '30px',
-              fontSize: '12px',
-              fontWeight: 'bold',
-              color: '#008800',
-              borderWidth: '0px',
-              textDecorationLine: 'underline',
-            }}
-            onClick={() => {
-              infoRef.current.toggleVisible();
-            }}
-          >
-            About
-          </button>
-        </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'row' }}>
+      <div style={{ display: 'flex', flexDirection: 'row', paddingTop: '20px' }}>
         <SettingsTextContainer
           title="Test Mode"
           popupTitle="Test Mode"
@@ -349,6 +353,7 @@ function SettingsPanel() {
               style={{
                 borderWidth: '1px',
                 borderRadius: '15px',
+                minWidth: '55px',
                 width: '75%',
                 marginLeft: '5px',
                 height: '18px',

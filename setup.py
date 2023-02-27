@@ -2,7 +2,6 @@
 import os
 import sys
 import shutil
-import subprocess
 dir_path = os.path.dirname(os.path.realpath(__file__))
 python_version = sys.version
 env_exists = os.path.isdir('{}/env'.format(dir_path))
