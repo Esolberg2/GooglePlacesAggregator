@@ -273,7 +273,8 @@ export const searchSlice = createSlice({
       state.error = '';
       state.nearbySearchComplete = true;
       state.nextCenter = action.payload.apiData.center;
-      state.searchedCoords = action.payload.apiData.searched;
+      // state.searchedCoords = action.payload.apiData.searched;
+      state.searchedCoords = [...state.searchedCoords, ...action.payload.apiData.circleCoordinates];
       state.unsearchedCoords = action.payload.apiData.unsearched;
       state.googleData = [...state.googleData, ...action.payload.googleData];
     });

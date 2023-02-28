@@ -6,7 +6,7 @@ const initialState = {
   searchEntityType: 'Select',
   budget: 0,
   budgetUsed: 0,
-  searchResolution: 0.7,
+  searchResolution: 0.5,
   userSearchKey: '',
   apiKey: '',
   apiKeyStale: false,
