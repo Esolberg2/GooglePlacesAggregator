@@ -25,6 +25,7 @@ const customStyles = {
 function SpinnerOverlay(props) {
   const {
     visible,
+    title,
   } = props;
 
   return (
@@ -33,7 +34,9 @@ function SpinnerOverlay(props) {
         isOpen={visible}
         style={customStyles}
       >
-        <div> Loading </div>
+        <div>
+          {title}
+        </div>
         <TailSpin
           height="80"
           width="80"
@@ -60,6 +63,11 @@ function SpinnerOverlay(props) {
 
 SpinnerOverlay.propTypes = {
   visible: PropTypes.bool.isRequired,
+  title: PropTypes.string,
+};
+
+SpinnerOverlay.defaultProps = {
+  title: 'Loading',
 };
 
 export default SpinnerOverlay;

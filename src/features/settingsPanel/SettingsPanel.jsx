@@ -111,7 +111,7 @@ function SettingsPanel() {
     if (priorSearch) {
       return '#cccccc';
     }
-    if (searchResolution > 10 || searchResolution < 0.1) {
+    if (searchResolution > 10 || searchResolution < 0.25) {
       return '#fde0e0';
     }
     return undefined;
@@ -481,7 +481,7 @@ function SettingsPanel() {
                 find all venues that match the selected Entity Type. A smaller resolution
                 will also result in longer processing times for searches.
               </p>
-              <p>The smallest available resolution is 0.1 miles. </p>
+              <p>The smallest available resolution is 0.25 miles. </p>
             </div>
           )}
         >

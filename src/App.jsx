@@ -27,7 +27,7 @@ function App() {
     };
   }, []);
 
-  const buildingSearch = useSelector((state) => state.search.buildingSearch);
+  const { buildingSearch, loading, bulkSearchRunning } = useSelector((state) => state.search);
 
   function useWindowSize() {
     const [windowSize, setWindowSize] = useState({
@@ -48,6 +48,19 @@ function App() {
     return windowSize;
   }
 
+  const renderTitle = () => {
+    if (buildingSearch) {
+      return 'Building New Search';
+    }
+    if (bulkSearchRunning) {
+      return 'Running Bulk Search';
+    }
+    if (loading) {
+      return 'Running Search';
+    }
+    return 'Loading';
+  };
+
   return (
     <div
       style={{
@@ -57,7 +70,8 @@ function App() {
       }}
     >
       <SpinnerOverlay
-        visible={buildingSearch}
+        visible={buildingSearch || loading || bulkSearchRunning}
+        title={renderTitle()}
       />
       <DynamicModal
         confirmCallback={modalFunctionStore.resolve}

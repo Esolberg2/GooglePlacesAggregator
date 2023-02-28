@@ -136,12 +136,12 @@ class AlertManager {
   static resolutionError(state) {
     if (
       state.settingsPanel.searchResolution > 10
-      || state.settingsPanel.searchResolution < 0.1
+      || state.settingsPanel.searchResolution < 0.25
       || !state.settingsPanel.searchResolution
     ) {
       return {
         title: 'Resolution Setting Required',
-        text: 'Please enter a value for the "Search Resolution" between 0.1 miles and 10 miles.  This is the distance in miles between each potential search coordinate that will be evaluated. A smaller value results in longer run times for the tool, but increases the thoroughness of the search.',
+        text: 'Please enter a value for the "Search Resolution" between 0.25 miles and 10 miles.  This is the distance in miles between each potential search coordinate that will be evaluated. A smaller value results in longer run times for the tool, but increases the thoroughness of the search.',
         type: 'Alert',
       };
     }

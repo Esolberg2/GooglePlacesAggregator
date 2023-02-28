@@ -11,8 +11,9 @@ from application import r
 import pickle
 import bz2
 from flask import jsonify, make_response
-import js2py
 import hashlib
+import json
+import math
 
 def latStep(resolution):
     return round((resolution/69), 15)
@@ -103,8 +104,8 @@ def custom_error(status_code, message):
     return make_response(jsonify({"message": message}), status_code)
 
 def checksum(obj):
-    JSON = js2py.eval_js('JSON')
-    msg = JSON.stringify(obj);
+    msg = json.dumps(obj, separators=(',', ':'))
     msg = msg.encode(encoding='utf-8')
     hash = hashlib.md5(msg)
     return hash.hexdigest()
+    
