@@ -1,0 +1,18 @@
+services:
+  api:
+    build:
+      context: .
+    image: esolberg1/react-flask-app-api
+    volumes:
+      - dbVol:/dbVol
+  client:
+    build:
+      context: .
+    image: esolberg1/react-flask-app-client
+    ports:
+      - "3000:80"
+  redis:
+    image: "redis:alpine"
+    command: redis-server --maxmemory 500000000 --maxmemory-policy allkeys-lru
+volumes:
+  dbVol:
