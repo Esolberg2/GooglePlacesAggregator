@@ -13,6 +13,7 @@ venv
 /build
 
 # misc
+*.gif
 .env
 .DS_Store
 .env.local

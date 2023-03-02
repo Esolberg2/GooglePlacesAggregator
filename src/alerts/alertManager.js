@@ -232,8 +232,7 @@ class AlertManager {
         + 'Please complete your in-progress search polygon or click the "Select Search Area" button'
         + ' again to cancel drawing your current search polygon.',
         type: 'Alert',
-        // image: 'makePolygon.gif',
-        image: 'makePolygonTest.png',
+        image: 'makePolygon.gif',
       };
     }
     return false;
