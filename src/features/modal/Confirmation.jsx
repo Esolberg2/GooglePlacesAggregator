@@ -23,11 +23,9 @@ function ConfirmationModal(props) {
   function renderImage() {
     if (image) {
       return (
-        // eslint-disable-next-line jsx-a11y/alt-text
         <img
           width="100%"
           height="50%"
-          // eslint-disable-next-line import/no-dynamic-require, global-require
           src={require(`../../assets/images/${image}`)}
         />
       );
