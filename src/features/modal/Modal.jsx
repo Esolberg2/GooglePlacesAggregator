@@ -13,7 +13,7 @@ const customStyles = {
     left: '50%',
     right: 'auto',
     bottom: 'auto',
-    width: '25%',
+    width: '35%',
     marginRight: '-50%',
     borderRadius: '10px',
     backgroundColor: '#F8F8F8',
@@ -34,6 +34,7 @@ const DynamicModal = React.memo((props) => {
     title,
     message,
     visible,
+    image,
   } = props;
 
   const type = useSelector((state) => state.modal.dialogType);
@@ -45,6 +46,7 @@ const DynamicModal = React.memo((props) => {
           rejectCallback={rejectCallback}
           message={message}
           title={title}
+          image={image}
         />
       );
     }
@@ -55,6 +57,7 @@ const DynamicModal = React.memo((props) => {
           rejectCallback={rejectCallback}
           message={message}
           title={title}
+          image={image}
         />
       );
     }
@@ -77,11 +80,13 @@ DynamicModal.propTypes = {
   title: PropTypes.string.isRequired,
   message: PropTypes.string.isRequired,
   visible: PropTypes.bool.isRequired,
+  image: PropTypes.string,
 };
 
 DynamicModal.defaultProps = {
   rejectCallback: () => {},
   confirmCallback: () => {},
+  image: undefined,
 };
 
 export default DynamicModal;

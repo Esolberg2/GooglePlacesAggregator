@@ -122,7 +122,7 @@ function SettingsPanel() {
       const selectedAction = await buildModal(
         {
           alertKey: 'clearSearch',
-          data: null,
+          // data: null,
           confirmCallback: () => {
             dispatch(wrapperActions.reset());
             dispatch(setPriorSearch(val));
@@ -278,7 +278,7 @@ function SettingsPanel() {
               const selectedAction = await buildModal(
                 {
                   alertKey: 'clearSearch',
-                  data: null,
+                  // data: null,
                   confirmCallback: () => {
                     dispatch(wrapperActions.reset());
                   },

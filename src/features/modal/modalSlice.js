@@ -9,6 +9,7 @@ const initialState = {
   dialogType: '',
   promise: '',
   dialogTitle: '',
+  modalImage: undefined,
 };
 
 class ModalFunctionStore {
@@ -30,6 +31,7 @@ export const modalSlice = createSlice({
     setDialogType: (state, action) => { state.dialogType = action.payload; },
     setMessage: (state, action) => { state.message = action.payload; },
     setVisible: (state, action) => { state.visible = action.payload; },
+    setModalImage: (state, action) => { state.modalImage = action.payload; },
   },
 });
 
@@ -39,6 +41,7 @@ export const
     setMessage,
     setDialogType,
     setDialogTitle,
+    setModalImage,
   } = modalSlice.actions;
 
 export async function buildModal(kwargs, state, dispatch) {
@@ -57,6 +60,7 @@ export async function buildModal(kwargs, state, dispatch) {
       dispatch(setDialogType(false));
       dispatch(setVisible(false));
       dispatch(setDialogTitle(''));
+      dispatch(setModalImage(undefined));
       resolve(confirmCallback);
     };
     modalFunctionStore.reject = () => {
@@ -64,6 +68,7 @@ export async function buildModal(kwargs, state, dispatch) {
       dispatch(setDialogType(false));
       dispatch(setDialogTitle(''));
       dispatch(setVisible(false));
+      dispatch(setModalImage(undefined));
       reject(denyCallback);
     };
   });
@@ -73,6 +78,7 @@ export async function buildModal(kwargs, state, dispatch) {
     dispatch(setDialogType(alert.type));
     dispatch(setDialogTitle(alert.title));
     dispatch(setVisible(true));
+    dispatch(setModalImage(alert.image));
   } else {
     modalFunctionStore.resolve();
   }

@@ -12,7 +12,7 @@ export const buildFromFile = createAsyncThunk('loadFile/buildFromFile', async (a
   const selectedAction = await buildModal(
     {
       alertKey: 'loadFile',
-      data: null,
+      // data: null,
       confirmCallback: () => {
         b.dispatch(loadStateFromFile(fileData));
       },

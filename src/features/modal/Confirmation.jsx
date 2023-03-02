@@ -7,6 +7,7 @@ function ConfirmationModal(props) {
     rejectCallback,
     message,
     title,
+    image,
   } = props;
 
   function onConfirm() {
@@ -17,6 +18,21 @@ function ConfirmationModal(props) {
   function onDeny() {
     rejectCallback();
     return false;
+  }
+
+  function renderImage() {
+    if (image) {
+      return (
+        // eslint-disable-next-line jsx-a11y/alt-text
+        <img
+          width="100%"
+          height="50%"
+          // eslint-disable-next-line import/no-dynamic-require, global-require
+          src={require(`../../assets/images/${image}`)}
+        />
+      );
+    }
+    return null;
   }
 
   return (
@@ -39,6 +55,7 @@ function ConfirmationModal(props) {
       >
         {message}
       </div>
+      {renderImage()}
       <div style={{ paddingTop: '20px', display: 'flex', justifyContent: 'space-around' }}>
         <button type="button" onClick={onConfirm}>continue</button>
         <button type="button" onClick={onDeny}>cancel</button>
@@ -52,6 +69,11 @@ ConfirmationModal.propTypes = {
   rejectCallback: PropTypes.func.isRequired,
   message: PropTypes.node.isRequired,
   title: PropTypes.node.isRequired,
+  image: PropTypes.string,
+};
+
+ConfirmationModal.defaultProps = {
+  image: null,
 };
 
 export default ConfirmationModal;

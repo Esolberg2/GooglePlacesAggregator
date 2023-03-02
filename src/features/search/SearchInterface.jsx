@@ -16,6 +16,8 @@ function SearchInterface(props) {
     bulkSearch,
     budgetUsed,
     loading,
+    editorRef,
+    mode,
   } = props;
 
   const bulkSearchCount = useSelector((state) => state.search.bulkSearchCount);
@@ -78,7 +80,14 @@ function SearchInterface(props) {
             }}
           >
             <SearchInterfaceButton
-              onClick={() => dispatch(initializeSearch())}
+              onClick={() => {
+                const refMode = editorRef.current.props.mode;
+                const drawMode = mode.constructor.name === 'DrawPolygonMode';
+                // eslint-disable-next-line no-underscore-dangle
+                const vertexCount = drawMode ? refMode._clickSequence.length : 0;
+                const lineError = drawMode && vertexCount > 0;
+                dispatch(initializeSearch({ lineError }));
+              }}
               disabled={searchActive}
             >
               Build Search
@@ -164,6 +173,10 @@ SearchInterface.propTypes = {
   bulkSearch: PropTypes.func.isRequired,
   budgetUsed: PropTypes.number.isRequired,
   loading: PropTypes.bool.isRequired,
+  // eslint-disable-next-line react/forbid-prop-types
+  editorRef: PropTypes.object.isRequired,
+  // eslint-disable-next-line react/forbid-prop-types
+  mode: PropTypes.object.isRequired,
 };
 
 export default SearchInterface;

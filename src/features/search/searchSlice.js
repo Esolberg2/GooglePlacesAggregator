@@ -57,7 +57,7 @@ export const buildSearch = createAsyncThunk('searchSlice/buildSearch', async (a,
   const selectedAction = await buildModal(
     {
       alertKey: 'buildSearch',
-      data: null,
+      data: a,
       confirmCallback: () => b.dispatch(initializeSearch()),
       denyCallback: () => {},
     },
@@ -225,7 +225,7 @@ export const singleSearch = createAsyncThunk('searchSlice/singleSearch', async (
   const selectedAction = await buildModal(
     {
       alertKey: 'search',
-      data: null,
+      // data: null,
       confirmCallback: () => b.dispatch(searchPlaces()),
       denyCallback: (error) => {
         throw new Error(error);
@@ -242,7 +242,7 @@ export const bulkSearch = createAsyncThunk('searchSlice/bulkSearch', async (a, b
   const selectedAction = await buildModal(
     {
       alertKey: 'bulkSearch',
-      data: null,
+      // data: null,
       confirmCallback: async () => {
         for (let i = 0; i < b.getState().search.bulkSearchCount; i += 1) {
           // eslint-disable-next-line no-await-in-loop

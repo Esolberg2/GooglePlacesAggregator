@@ -48,7 +48,7 @@ function MapComponent() {
   const editorRef = useRef();
 
   // local state
-  const [mode, setMode] = useState(undefined);
+  const [mode, setMode] = useState(new EditingMode());
   const [viewport, setViewPort] = useState({
     width: '100%',
     height: 900,
@@ -172,6 +172,7 @@ function MapComponent() {
           singleSearch={singleSearch}
           buildFromFile={buildFromFile}
           editorRef={editorRef}
+          mode={mode}
           searchActive={searchActive}
           priorSearch={priorSearch}
           bulkSearch={bulkSearch}

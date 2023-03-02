@@ -79,6 +79,7 @@ function App() {
         message={useSelector((state) => state.modal.message)}
         visible={useSelector((state) => state.modal.visible)}
         title={useSelector((state) => state.modal.dialogTitle)}
+        image={useSelector((state) => state.modal.modalImage)}
       />
       <SettingsPanel />
       <div

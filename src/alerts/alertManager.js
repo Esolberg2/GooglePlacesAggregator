@@ -16,6 +16,7 @@ class AlertManager {
         this.existingDataWarning,
       ],
       buildSearch: [
+        this.incompletePolygon,
         this.resolutionError,
         this.searchEntityError,
         this.polygonError,
@@ -35,7 +36,7 @@ class AlertManager {
     };
   }
 
-  static hasAlert(state, alertKey, args) {
+  static hasAlert(state, alertKey, args = {}) {
     const alerts = this.alertTasks()[alertKey] || undefined;
 
     if (alerts) {
@@ -218,6 +219,24 @@ class AlertManager {
       + `for a projected total cost of $${totalCost}.`,
       type: 'Confirmation',
     };
+  }
+
+  static incompletePolygon(state, args) {
+    console.log(args);
+    const { lineError } = args;
+    if (lineError) {
+      return {
+        title: 'Incomplete Search Polygon',
+        text: 'Click an existing vertex to complete a search polygon.'
+        + 'If you do not complete the polygon, it will not be used when the search session is built.'
+        + 'Please complete your in-progress search polygon or click the "Select Search Area" button'
+        + ' again to cancel drawing your current search polygon.',
+        type: 'Alert',
+        // image: 'makePolygon.gif',
+        image: 'makePolygonTest.png',
+      };
+    }
+    return false;
   }
 
   static googleApiError() {
