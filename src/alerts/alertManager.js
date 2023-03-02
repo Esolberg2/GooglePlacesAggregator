@@ -227,8 +227,8 @@ class AlertManager {
     if (lineError) {
       return {
         title: 'Incomplete Search Polygon',
-        text: 'Click an existing vertex to complete a search polygon.'
-        + 'If you do not complete the polygon, it will not be used when the search session is built.'
+        text: 'Click an existing vertex to complete a search polygon. '
+        + 'If you do not complete the polygon, it will not be used when the search session is built. '
         + 'Please complete your in-progress search polygon or click the "Select Search Area" button'
         + ' again to cancel drawing your current search polygon.',
         type: 'Alert',

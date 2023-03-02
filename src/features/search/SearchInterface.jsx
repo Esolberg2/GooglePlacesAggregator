@@ -17,7 +17,6 @@ function SearchInterface(props) {
     budgetUsed,
     loading,
     editorRef,
-    mode,
   } = props;
 
   const bulkSearchCount = useSelector((state) => state.search.bulkSearchCount);
@@ -82,7 +81,8 @@ function SearchInterface(props) {
             <SearchInterfaceButton
               onClick={() => {
                 const refMode = editorRef.current.props.mode;
-                const drawMode = mode.constructor.name === 'DrawPolygonMode';
+                // eslint-disable-next-line no-underscore-dangle
+                const drawMode = !!refMode._clickSequence;
                 // eslint-disable-next-line no-underscore-dangle
                 const vertexCount = drawMode ? refMode._clickSequence.length : 0;
                 const lineError = drawMode && vertexCount > 0;
